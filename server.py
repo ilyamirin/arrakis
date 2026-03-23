@@ -1,9 +1,25 @@
+import os
+import socket
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 
 
 def main() -> None:
-    address = ("127.0.0.1", 8000)
-    print("Serving Arrakis Spice Harvest on http://127.0.0.1:8000")
+    host = os.environ.get("APP_HOST", "0.0.0.0")
+    port = int(os.environ.get("APP_PORT", "8000"))
+    address = (host, port)
+
+    print(f"Serving Arrakis Spice Harvest on http://{host}:{port}")
+
+    lan_addresses = sorted(
+        {
+            info[4][0]
+            for info in socket.getaddrinfo(socket.gethostname(), None, family=socket.AF_INET)
+            if not info[4][0].startswith("127.")
+        }
+    )
+    for lan_address in lan_addresses:
+        print(f"LAN access: http://{lan_address}:{port}")
+
     ThreadingHTTPServer(address, SimpleHTTPRequestHandler).serve_forever()
 
 
