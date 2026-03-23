@@ -1,8 +1,11 @@
 import { ArrakisGame } from "./game.js";
-import { CanvasRenderer, loadAssets } from "./renderer.js";
+import { CanvasRenderer, loadAssets, } from "./renderer.js";
 import { BOARD_SIZE } from "./types.js";
 import { LocalWormBrain } from "./worm-brain.js";
 const WORM_BRAIN_CONSENT_KEY = "arrakis.worm-brain-consent";
+const ORNITHOPTER_FLIGHT_MS = 760;
+const PICKUP_PHASE_END = 0.22;
+const DROPOFF_PHASE_START = 0.8;
 function boardLabel(x, y) {
     return `${String.fromCharCode(65 + x)}${BOARD_SIZE - y}`;
 }
@@ -47,6 +50,84 @@ function writeWormBrainConsent(value) {
         // Ignore storage failures and keep the game functional.
     }
 }
+function lerp(start, end, progress) {
+    return start + (end - start) * progress;
+}
+function interpolatePosition(from, to, progress) {
+    return {
+        x: lerp(from.x, to.x, progress),
+        y: lerp(from.y, to.y, progress),
+    };
+}
+function clamp01(value) {
+    return Math.min(1, Math.max(0, value));
+}
+function easeInOutCubic(value) {
+    return value < 0.5 ? 4 * value * value * value : 1 - Math.pow(-2 * value + 2, 3) / 2;
+}
+function easeOutCubic(value) {
+    return 1 - Math.pow(1 - value, 3);
+}
+function easeInCubic(value) {
+    return value * value * value;
+}
+function normalizeVector(deltaX, deltaY) {
+    const length = Math.hypot(deltaX, deltaY) || 1;
+    return {
+        x: deltaX / length,
+        y: deltaY / length,
+    };
+}
+function buildFlightFrame(source, target, progress) {
+    const direction = normalizeVector(target.x - source.x, target.y - source.y);
+    const perpendicular = { x: -direction.y, y: direction.x };
+    const heading = Math.atan2(direction.y, direction.x);
+    const approachStart = {
+        x: source.x - direction.x * 2.7,
+        y: source.y - direction.y * 2.7,
+    };
+    const departureEnd = {
+        x: target.x + direction.x * 2.35,
+        y: target.y + direction.y * 2.35,
+    };
+    if (progress <= PICKUP_PHASE_END) {
+        const phaseProgress = easeOutCubic(progress / PICKUP_PHASE_END);
+        return {
+            activeTarget: target,
+            carrier: interpolatePosition(approachStart, source, phaseProgress),
+            heading,
+            carriedHarvester: null,
+            landedHarvester: null,
+        };
+    }
+    if (progress < DROPOFF_PHASE_START) {
+        const phaseProgress = easeInOutCubic((progress - PICKUP_PHASE_END) / (DROPOFF_PHASE_START - PICKUP_PHASE_END));
+        const basePosition = interpolatePosition(source, target, phaseProgress);
+        const lift = Math.sin(phaseProgress * Math.PI) * 0.34;
+        const carrier = {
+            x: basePosition.x + perpendicular.x * lift,
+            y: basePosition.y + perpendicular.y * lift,
+        };
+        return {
+            activeTarget: target,
+            carrier,
+            heading,
+            carriedHarvester: {
+                x: carrier.x,
+                y: carrier.y + 0.12,
+            },
+            landedHarvester: null,
+        };
+    }
+    const phaseProgress = easeInCubic((progress - DROPOFF_PHASE_START) / (1 - DROPOFF_PHASE_START));
+    return {
+        activeTarget: target,
+        carrier: interpolatePosition(target, departureEnd, phaseProgress),
+        heading,
+        carriedHarvester: null,
+        landedHarvester: target,
+    };
+}
 async function main() {
     const canvas = document.querySelector("#game-canvas");
     const restartButton = document.querySelector("#restart-button");
@@ -74,18 +155,67 @@ async function main() {
     const game = new ArrakisGame();
     const wormBrain = new LocalWormBrain(window.localStorage);
     let currentState = game.getState();
+    let activeFlight = null;
     const setAdaptiveWorm = (enabled) => {
         game.setWormSpawnSelector(enabled ? (context) => wormBrain.chooseSpawnTarget(context) : null);
     };
+    const renderView = (now = performance.now()) => {
+        const flight = activeFlight;
+        const animation = flight === null
+            ? null
+            : buildFlightFrame(flight.source, flight.target, clamp01((now - flight.startedAt) / ORNITHOPTER_FLIGHT_MS));
+        renderer.render(currentState, animation);
+        if (animation && flight) {
+            statusTitleElement.textContent = "Airlift in progress";
+            statusTitleElement.className = "status-playing";
+            statusMessageElement.textContent =
+                `Орнитоптер переносит харвестер в сектор ${boardLabel(flight.target.x, flight.target.y)}.`;
+        }
+        else {
+            statusTitleElement.textContent = statusTitle(currentState);
+            statusTitleElement.className = statusClass(currentState);
+            statusMessageElement.textContent = currentState.message;
+        }
+        spiceValueElement.textContent = `${currentState.collectedSpice} / ${currentState.totalSpice}`;
+        movesValueElement.textContent = String(currentState.moves);
+        positionValueElement.textContent = animation && flight
+            ? `${boardLabel(currentState.harvester.x, currentState.harvester.y)} -> ${boardLabel(flight.target.x, flight.target.y)}`
+            : boardLabel(currentState.harvester.x, currentState.harvester.y);
+    };
+    const stopFlight = () => {
+        const flight = activeFlight;
+        if (flight && flight.animationFrameId !== null) {
+            window.cancelAnimationFrame(flight.animationFrameId);
+        }
+        activeFlight = null;
+    };
     const update = (state) => {
         currentState = state;
-        renderer.render(state);
-        statusTitleElement.textContent = statusTitle(state);
-        statusTitleElement.className = statusClass(state);
-        statusMessageElement.textContent = state.message;
-        spiceValueElement.textContent = `${state.collectedSpice} / ${state.totalSpice}`;
-        movesValueElement.textContent = String(state.moves);
-        positionValueElement.textContent = boardLabel(state.harvester.x, state.harvester.y);
+        renderView();
+    };
+    const startFlight = (target) => {
+        const source = { ...currentState.harvester };
+        activeFlight = {
+            source,
+            target: { ...target },
+            startedAt: performance.now(),
+            animationFrameId: null,
+        };
+        const step = (now) => {
+            if (!activeFlight) {
+                return;
+            }
+            renderView(now);
+            if (now - activeFlight.startedAt < ORNITHOPTER_FLIGHT_MS) {
+                activeFlight.animationFrameId = window.requestAnimationFrame(step);
+                return;
+            }
+            const destination = { ...activeFlight.target };
+            stopFlight();
+            update(game.moveTo(destination));
+        };
+        renderView(activeFlight.startedAt);
+        activeFlight.animationFrameId = window.requestAnimationFrame(step);
     };
     const consent = readWormBrainConsent();
     if (consent === "accepted") {
@@ -104,18 +234,29 @@ async function main() {
         setAdaptiveWorm(false);
         wormBrainBanner.hidden = true;
     });
-    restartButton.addEventListener("click", () => update(game.reset()));
+    restartButton.addEventListener("click", () => {
+        stopFlight();
+        update(game.reset());
+    });
     canvas.addEventListener("click", (event) => {
+        if (activeFlight) {
+            return;
+        }
         const target = renderer.cellFromClientPoint(event.clientX, event.clientY);
         if (!target) {
+            return;
+        }
+        const isValidMove = currentState.validMoves.some((move) => move.target.x === target.x && move.target.y === target.y);
+        if (!isValidMove) {
+            update(game.moveTo(target));
             return;
         }
         if (readWormBrainConsent() === "accepted") {
             wormBrain.learnFromChoice(currentState, target);
         }
-        update(game.moveTo(target));
+        startFlight(target);
     });
-    window.addEventListener("resize", () => renderer.rerender());
+    window.addEventListener("resize", () => renderView());
     update(game.getState());
 }
 void main();

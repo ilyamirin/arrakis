@@ -4,6 +4,7 @@ export class CanvasRenderer {
     ctx;
     assets;
     lastState = null;
+    lastAnimation = null;
     constructor(canvas, assets) {
         const context = canvas.getContext("2d");
         if (!context) {
@@ -13,21 +14,22 @@ export class CanvasRenderer {
         this.ctx = context;
         this.assets = assets;
     }
-    render(state) {
+    render(state, animation = null) {
         this.lastState = state;
+        this.lastAnimation = animation;
         this.resizeBackingStore();
         const metrics = this.getMetrics();
         const { ctx } = this;
         ctx.clearRect(0, 0, metrics.width, metrics.height);
         this.drawBackground(metrics);
-        this.drawCells(state, metrics);
+        this.drawCells(state, metrics, animation);
         this.drawGrid(metrics);
-        this.drawPieces(state, metrics);
+        this.drawPieces(state, metrics, animation);
         this.drawOverlay(state, metrics);
     }
     rerender() {
         if (this.lastState) {
-            this.render(this.lastState);
+            this.render(this.lastState, this.lastAnimation);
         }
     }
     cellFromClientPoint(clientX, clientY) {
@@ -78,12 +80,13 @@ export class CanvasRenderer {
         this.ctx.arc(metrics.width * 0.82, metrics.height * 0.78, metrics.width * 0.2, 0, Math.PI * 2);
         this.ctx.fill();
     }
-    drawCells(state, metrics) {
+    drawCells(state, metrics, animation) {
         for (let y = 0; y < BOARD_SIZE; y += 1) {
             for (let x = 0; x < BOARD_SIZE; x += 1) {
                 const px = metrics.originX + x * metrics.cellSize;
                 const py = metrics.originY + y * metrics.cellSize;
                 const isValidMove = state.validMoves.some((move) => move.target.x === x && move.target.y === y);
+                const isActiveTarget = animation?.activeTarget.x === x && animation.activeTarget.y === y;
                 const isHarvester = state.harvester.x === x && state.harvester.y === y;
                 const isWorm = state.worm?.x === x && state.worm?.y === y;
                 const cell = state.board[y][x];
@@ -101,6 +104,15 @@ export class CanvasRenderer {
                     this.ctx.strokeStyle = "rgba(247, 228, 186, 0.86)";
                     this.ctx.lineWidth = Math.max(2, metrics.cellSize * 0.04);
                     this.roundRect(px + metrics.cellSize * 0.1, py + metrics.cellSize * 0.1, metrics.cellSize * 0.8, metrics.cellSize * 0.8, metrics.radius * 0.8);
+                    this.ctx.stroke();
+                }
+                if (isActiveTarget && state.status === "playing") {
+                    this.ctx.fillStyle = "rgba(247, 228, 186, 0.16)";
+                    this.roundRect(px + metrics.cellSize * 0.16, py + metrics.cellSize * 0.16, metrics.cellSize * 0.68, metrics.cellSize * 0.68, metrics.radius * 0.8);
+                    this.ctx.fill();
+                    this.ctx.strokeStyle = "rgba(255, 244, 216, 0.96)";
+                    this.ctx.lineWidth = Math.max(2, metrics.cellSize * 0.05);
+                    this.roundRect(px + metrics.cellSize * 0.14, py + metrics.cellSize * 0.14, metrics.cellSize * 0.72, metrics.cellSize * 0.72, metrics.radius * 0.8);
                     this.ctx.stroke();
                 }
                 if (isHarvester) {
@@ -140,17 +152,27 @@ export class CanvasRenderer {
             this.ctx.stroke();
         }
     }
-    drawPieces(state, metrics) {
+    drawPieces(state, metrics, animation) {
         const wormConsumedHarvester = state.status === "lost" && state.lossReason === "worm_attack";
+        const isAnimatingHarvester = Boolean(animation?.carriedHarvester || animation?.landedHarvester);
         if (state.worm && !wormConsumedHarvester) {
             const px = metrics.originX + state.worm.x * metrics.cellSize;
             const py = metrics.originY + state.worm.y * metrics.cellSize;
             this.drawIcon(this.assets.worm, px, py, metrics.cellSize, 0.8);
         }
-        if (!wormConsumedHarvester) {
+        if (!wormConsumedHarvester && !isAnimatingHarvester) {
             const harvesterX = metrics.originX + state.harvester.x * metrics.cellSize;
             const harvesterY = metrics.originY + state.harvester.y * metrics.cellSize;
             this.drawIcon(this.assets.harvester, harvesterX, harvesterY, metrics.cellSize, 0.8);
+        }
+        if (animation?.landedHarvester && !wormConsumedHarvester) {
+            this.drawFloatingIcon(this.assets.harvester, animation.landedHarvester, metrics, 0.8, 0, 0);
+        }
+        if (animation?.carriedHarvester && !wormConsumedHarvester) {
+            this.drawFloatingIcon(this.assets.harvester, animation.carriedHarvester, metrics, 0.62, animation.heading, metrics.cellSize * 0.1);
+        }
+        if (animation) {
+            this.drawFloatingIcon(this.assets.ornithopter, animation.carrier, metrics, 1.12, animation.heading, 0);
         }
     }
     drawOverlay(state, metrics) {
@@ -196,6 +218,16 @@ export class CanvasRenderer {
         const size = cellSize * scale;
         const offset = (cellSize - size) / 2;
         this.ctx.drawImage(image, cellX + offset, cellY + offset, size, size);
+    }
+    drawFloatingIcon(image, position, metrics, scale, rotation, pixelOffsetY) {
+        const size = metrics.cellSize * scale;
+        const centerX = metrics.originX + (position.x + 0.5) * metrics.cellSize;
+        const centerY = metrics.originY + (position.y + 0.5) * metrics.cellSize + pixelOffsetY;
+        this.ctx.save();
+        this.ctx.translate(centerX, centerY);
+        this.ctx.rotate(rotation);
+        this.ctx.drawImage(image, -size / 2, -size / 2, size, size);
+        this.ctx.restore();
     }
     getMetrics() {
         const width = this.canvas.clientWidth;
@@ -245,13 +277,14 @@ export class CanvasRenderer {
     }
 }
 export async function loadAssets() {
-    const [harvester, worm, spice, wormFeast] = await Promise.all([
+    const [harvester, worm, spice, wormFeast, ornithopter] = await Promise.all([
         loadImage("./assets/harvester.svg"),
         loadImage("./assets/worm.svg"),
         loadImage("./assets/spice.svg"),
         loadImage("./assets/worm-feast.svg"),
+        loadImage("./assets/ornithopter.svg"),
     ]);
-    return { harvester, worm, spice, wormFeast };
+    return { harvester, worm, spice, wormFeast, ornithopter };
 }
 function loadImage(src) {
     return new Promise((resolve, reject) => {

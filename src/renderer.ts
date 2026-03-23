@@ -5,6 +5,15 @@ interface Assets {
   worm: HTMLImageElement;
   spice: HTMLImageElement;
   wormFeast: HTMLImageElement;
+  ornithopter: HTMLImageElement;
+}
+
+export interface FlightAnimationFrame {
+  activeTarget: Position;
+  carrier: Position;
+  heading: number;
+  carriedHarvester: Position | null;
+  landedHarvester: Position | null;
 }
 
 interface BoardMetrics {
@@ -22,6 +31,7 @@ export class CanvasRenderer {
   private readonly ctx: CanvasRenderingContext2D;
   private readonly assets: Assets;
   private lastState: GameState | null = null;
+  private lastAnimation: FlightAnimationFrame | null = null;
 
   constructor(canvas: HTMLCanvasElement, assets: Assets) {
     const context = canvas.getContext("2d");
@@ -34,8 +44,9 @@ export class CanvasRenderer {
     this.assets = assets;
   }
 
-  public render(state: GameState): void {
+  public render(state: GameState, animation: FlightAnimationFrame | null = null): void {
     this.lastState = state;
+    this.lastAnimation = animation;
     this.resizeBackingStore();
 
     const metrics = this.getMetrics();
@@ -43,15 +54,15 @@ export class CanvasRenderer {
 
     ctx.clearRect(0, 0, metrics.width, metrics.height);
     this.drawBackground(metrics);
-    this.drawCells(state, metrics);
+    this.drawCells(state, metrics, animation);
     this.drawGrid(metrics);
-    this.drawPieces(state, metrics);
+    this.drawPieces(state, metrics, animation);
     this.drawOverlay(state, metrics);
   }
 
   public rerender(): void {
     if (this.lastState) {
-      this.render(this.lastState);
+      this.render(this.lastState, this.lastAnimation);
     }
   }
 
@@ -118,7 +129,11 @@ export class CanvasRenderer {
     this.ctx.fill();
   }
 
-  private drawCells(state: GameState, metrics: BoardMetrics): void {
+  private drawCells(
+    state: GameState,
+    metrics: BoardMetrics,
+    animation: FlightAnimationFrame | null,
+  ): void {
     for (let y = 0; y < BOARD_SIZE; y += 1) {
       for (let x = 0; x < BOARD_SIZE; x += 1) {
         const px = metrics.originX + x * metrics.cellSize;
@@ -126,6 +141,8 @@ export class CanvasRenderer {
         const isValidMove = state.validMoves.some(
           (move) => move.target.x === x && move.target.y === y,
         );
+        const isActiveTarget =
+          animation?.activeTarget.x === x && animation.activeTarget.y === y;
         const isHarvester = state.harvester.x === x && state.harvester.y === y;
         const isWorm = state.worm?.x === x && state.worm?.y === y;
         const cell = state.board[y][x];
@@ -157,6 +174,29 @@ export class CanvasRenderer {
             py + metrics.cellSize * 0.1,
             metrics.cellSize * 0.8,
             metrics.cellSize * 0.8,
+            metrics.radius * 0.8,
+          );
+          this.ctx.stroke();
+        }
+
+        if (isActiveTarget && state.status === "playing") {
+          this.ctx.fillStyle = "rgba(247, 228, 186, 0.16)";
+          this.roundRect(
+            px + metrics.cellSize * 0.16,
+            py + metrics.cellSize * 0.16,
+            metrics.cellSize * 0.68,
+            metrics.cellSize * 0.68,
+            metrics.radius * 0.8,
+          );
+          this.ctx.fill();
+
+          this.ctx.strokeStyle = "rgba(255, 244, 216, 0.96)";
+          this.ctx.lineWidth = Math.max(2, metrics.cellSize * 0.05);
+          this.roundRect(
+            px + metrics.cellSize * 0.14,
+            py + metrics.cellSize * 0.14,
+            metrics.cellSize * 0.72,
+            metrics.cellSize * 0.72,
             metrics.radius * 0.8,
           );
           this.ctx.stroke();
@@ -231,8 +271,13 @@ export class CanvasRenderer {
     }
   }
 
-  private drawPieces(state: GameState, metrics: BoardMetrics): void {
+  private drawPieces(
+    state: GameState,
+    metrics: BoardMetrics,
+    animation: FlightAnimationFrame | null,
+  ): void {
     const wormConsumedHarvester = state.status === "lost" && state.lossReason === "worm_attack";
+    const isAnimatingHarvester = Boolean(animation?.carriedHarvester || animation?.landedHarvester);
 
     if (state.worm && !wormConsumedHarvester) {
       const px = metrics.originX + state.worm.x * metrics.cellSize;
@@ -240,10 +285,43 @@ export class CanvasRenderer {
       this.drawIcon(this.assets.worm, px, py, metrics.cellSize, 0.8);
     }
 
-    if (!wormConsumedHarvester) {
+    if (!wormConsumedHarvester && !isAnimatingHarvester) {
       const harvesterX = metrics.originX + state.harvester.x * metrics.cellSize;
       const harvesterY = metrics.originY + state.harvester.y * metrics.cellSize;
       this.drawIcon(this.assets.harvester, harvesterX, harvesterY, metrics.cellSize, 0.8);
+    }
+
+    if (animation?.landedHarvester && !wormConsumedHarvester) {
+      this.drawFloatingIcon(
+        this.assets.harvester,
+        animation.landedHarvester,
+        metrics,
+        0.8,
+        0,
+        0,
+      );
+    }
+
+    if (animation?.carriedHarvester && !wormConsumedHarvester) {
+      this.drawFloatingIcon(
+        this.assets.harvester,
+        animation.carriedHarvester,
+        metrics,
+        0.62,
+        animation.heading,
+        metrics.cellSize * 0.1,
+      );
+    }
+
+    if (animation) {
+      this.drawFloatingIcon(
+        this.assets.ornithopter,
+        animation.carrier,
+        metrics,
+        1.12,
+        animation.heading,
+        0,
+      );
     }
   }
 
@@ -322,6 +400,25 @@ export class CanvasRenderer {
     this.ctx.drawImage(image, cellX + offset, cellY + offset, size, size);
   }
 
+  private drawFloatingIcon(
+    image: HTMLImageElement,
+    position: Position,
+    metrics: BoardMetrics,
+    scale: number,
+    rotation: number,
+    pixelOffsetY: number,
+  ): void {
+    const size = metrics.cellSize * scale;
+    const centerX = metrics.originX + (position.x + 0.5) * metrics.cellSize;
+    const centerY = metrics.originY + (position.y + 0.5) * metrics.cellSize + pixelOffsetY;
+
+    this.ctx.save();
+    this.ctx.translate(centerX, centerY);
+    this.ctx.rotate(rotation);
+    this.ctx.drawImage(image, -size / 2, -size / 2, size, size);
+    this.ctx.restore();
+  }
+
   private getMetrics(): BoardMetrics {
     const width = this.canvas.clientWidth;
     const height = this.canvas.clientHeight;
@@ -384,14 +481,15 @@ export class CanvasRenderer {
 }
 
 export async function loadAssets(): Promise<Assets> {
-  const [harvester, worm, spice, wormFeast] = await Promise.all([
+  const [harvester, worm, spice, wormFeast, ornithopter] = await Promise.all([
     loadImage("./assets/harvester.svg"),
     loadImage("./assets/worm.svg"),
     loadImage("./assets/spice.svg"),
     loadImage("./assets/worm-feast.svg"),
+    loadImage("./assets/ornithopter.svg"),
   ]);
 
-  return { harvester, worm, spice, wormFeast };
+  return { harvester, worm, spice, wormFeast, ornithopter };
 }
 
 function loadImage(src: string): Promise<HTMLImageElement> {
