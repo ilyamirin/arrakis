@@ -1,6 +1,8 @@
 import { ArrakisGame } from "./game.js";
 import { CanvasRenderer, loadAssets } from "./renderer.js";
 import { BOARD_SIZE } from "./types.js";
+import { LocalWormBrain } from "./worm-brain.js";
+const WORM_BRAIN_CONSENT_KEY = "arrakis.worm-brain-consent";
 function boardLabel(x, y) {
     return `${String.fromCharCode(65 + x)}${BOARD_SIZE - y}`;
 }
@@ -25,6 +27,26 @@ function statusClass(state) {
     }
     return "status-playing";
 }
+function readWormBrainConsent() {
+    try {
+        const value = window.localStorage.getItem(WORM_BRAIN_CONSENT_KEY);
+        if (value === "accepted" || value === "declined") {
+            return value;
+        }
+    }
+    catch {
+        return null;
+    }
+    return null;
+}
+function writeWormBrainConsent(value) {
+    try {
+        window.localStorage.setItem(WORM_BRAIN_CONSENT_KEY, value);
+    }
+    catch {
+        // Ignore storage failures and keep the game functional.
+    }
+}
 async function main() {
     const canvas = document.querySelector("#game-canvas");
     const restartButton = document.querySelector("#restart-button");
@@ -33,18 +55,30 @@ async function main() {
     const spiceValueElement = document.querySelector("#spice-value");
     const movesValueElement = document.querySelector("#moves-value");
     const positionValueElement = document.querySelector("#position-value");
+    const wormBrainBanner = document.querySelector("#worm-brain-banner");
+    const wormBrainAccept = document.querySelector("#worm-brain-accept");
+    const wormBrainDecline = document.querySelector("#worm-brain-decline");
     if (!canvas ||
         !restartButton ||
         !statusTitleElement ||
         !statusMessageElement ||
         !spiceValueElement ||
         !movesValueElement ||
-        !positionValueElement) {
+        !positionValueElement ||
+        !wormBrainBanner ||
+        !wormBrainAccept ||
+        !wormBrainDecline) {
         throw new Error("The UI shell is incomplete.");
     }
     const renderer = new CanvasRenderer(canvas, await loadAssets());
     const game = new ArrakisGame();
+    const wormBrain = new LocalWormBrain(window.localStorage);
+    let currentState = game.getState();
+    const setAdaptiveWorm = (enabled) => {
+        game.setWormSpawnSelector(enabled ? (context) => wormBrain.chooseSpawnTarget(context) : null);
+    };
     const update = (state) => {
+        currentState = state;
         renderer.render(state);
         statusTitleElement.textContent = statusTitle(state);
         statusTitleElement.className = statusClass(state);
@@ -53,11 +87,31 @@ async function main() {
         movesValueElement.textContent = String(state.moves);
         positionValueElement.textContent = boardLabel(state.harvester.x, state.harvester.y);
     };
+    const consent = readWormBrainConsent();
+    if (consent === "accepted") {
+        setAdaptiveWorm(true);
+    }
+    else if (!consent) {
+        wormBrainBanner.hidden = false;
+    }
+    wormBrainAccept.addEventListener("click", () => {
+        writeWormBrainConsent("accepted");
+        setAdaptiveWorm(true);
+        wormBrainBanner.hidden = true;
+    });
+    wormBrainDecline.addEventListener("click", () => {
+        writeWormBrainConsent("declined");
+        setAdaptiveWorm(false);
+        wormBrainBanner.hidden = true;
+    });
     restartButton.addEventListener("click", () => update(game.reset()));
     canvas.addEventListener("click", (event) => {
         const target = renderer.cellFromClientPoint(event.clientX, event.clientY);
         if (!target) {
             return;
+        }
+        if (readWormBrainConsent() === "accepted") {
+            wormBrain.learnFromChoice(currentState, target);
         }
         update(game.moveTo(target));
     });

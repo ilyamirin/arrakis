@@ -1,4 +1,5 @@
 import { BOARD_SIZE, CENTER_INDEX, TOTAL_SPICE, } from "./types.js";
+const ADAPTIVE_SPAWN_RATE = 0.72;
 const KNIGHT_OFFSETS = [
     { x: -2, y: -1 },
     { x: -2, y: 1 },
@@ -18,6 +19,7 @@ export class ArrakisGame {
     status = "playing";
     lossReason = null;
     message = "";
+    wormSpawnSelector = null;
     constructor() {
         this.reset();
     }
@@ -37,7 +39,7 @@ export class ArrakisGame {
             board: this.board.map((row) => row.map((cell) => ({ ...cell }))),
             harvester: { ...this.harvester },
             worm: this.worm ? { ...this.worm } : null,
-            validMoves: this.computeValidMoves(),
+            validMoves: this.computeValidMoves(this.worm),
             totalSpice: TOTAL_SPICE,
             collectedSpice: this.collectedSpice,
             moves: this.moves,
@@ -46,11 +48,14 @@ export class ArrakisGame {
             lossReason: this.lossReason,
         };
     }
+    setWormSpawnSelector(selector) {
+        this.wormSpawnSelector = selector;
+    }
     moveTo(target) {
         if (this.status !== "playing") {
             return this.getState();
         }
-        const validMove = this.computeValidMoves().find((move) => this.positionsEqual(move.target, target));
+        const validMove = this.computeValidMoves(this.worm).find((move) => this.positionsEqual(move.target, target));
         if (!validMove) {
             this.message = "Этот прыжок недоступен. Используйте подсвеченные клетки.";
             return this.getState();
@@ -73,7 +78,7 @@ export class ArrakisGame {
             return this.getState();
         }
         this.spawnWorm();
-        if (this.status === "playing" && this.computeValidMoves().length === 0) {
+        if (this.status === "playing" && this.computeValidMoves(this.worm).length === 0) {
             this.status = "lost";
             this.lossReason = "trapped";
             this.message = "Ходы закончились: харвестер загнан в тупик.";
@@ -97,7 +102,7 @@ export class ArrakisGame {
         }
         return board;
     }
-    computeValidMoves() {
+    computeValidMoves(blockedCell) {
         return KNIGHT_OFFSETS.map((delta) => ({
             target: {
                 x: this.harvester.x + delta.x,
@@ -111,7 +116,7 @@ export class ArrakisGame {
             notation: this.toDeltaNotation(delta),
         }))
             .filter((move) => this.isInside(move.target))
-            .filter((move) => !this.worm || !this.positionsEqual(move.target, this.worm))
+            .filter((move) => !blockedCell || !this.positionsEqual(move.target, blockedCell))
             .sort((left, right) => left.target.y - right.target.y || left.target.x - right.target.x);
     }
     spawnWorm() {
@@ -129,7 +134,8 @@ export class ArrakisGame {
             this.worm = null;
             return;
         }
-        const nextWorm = candidates[Math.floor(Math.random() * candidates.length)];
+        const preferredTarget = this.pickAdaptiveTarget();
+        const nextWorm = preferredTarget ?? candidates[Math.floor(Math.random() * candidates.length)];
         this.worm = nextWorm;
         if (this.positionsEqual(nextWorm, this.harvester)) {
             this.status = "lost";
@@ -138,6 +144,47 @@ export class ArrakisGame {
             return;
         }
         this.message = `Червь замечен в секторе ${this.toBoardNotation(nextWorm)}.`;
+    }
+    pickAdaptiveTarget() {
+        if (!this.wormSpawnSelector) {
+            return null;
+        }
+        if (Math.random() > ADAPTIVE_SPAWN_RATE) {
+            return null;
+        }
+        const nextMoves = this.computeValidMoves(null).filter((move) => !this.worm || !this.positionsEqual(move.target, this.worm));
+        const spawnCandidates = [];
+        for (let y = 0; y < BOARD_SIZE; y += 1) {
+            for (let x = 0; x < BOARD_SIZE; x += 1) {
+                const candidate = { x, y };
+                if (this.worm && this.positionsEqual(candidate, this.worm)) {
+                    continue;
+                }
+                if (this.positionsEqual(candidate, this.harvester)) {
+                    continue;
+                }
+                spawnCandidates.push(candidate);
+            }
+        }
+        if (spawnCandidates.length === 0) {
+            return null;
+        }
+        const preferred = this.wormSpawnSelector({
+            board: this.board,
+            harvester: this.harvester,
+            previousWorm: this.worm ? { ...this.worm } : null,
+            nextMoves,
+            spawnCandidates,
+        });
+        if (!preferred) {
+            return null;
+        }
+        if (this.worm && this.positionsEqual(preferred, this.worm)) {
+            return null;
+        }
+        return spawnCandidates.some((candidate) => this.positionsEqual(candidate, preferred))
+            ? { ...preferred }
+            : null;
     }
     toBoardNotation(position) {
         const file = String.fromCharCode(65 + position.x);

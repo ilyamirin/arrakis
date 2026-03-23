@@ -9,6 +9,18 @@ import {
   type Position,
 } from "./types.js";
 
+export interface WormSpawnContext {
+  board: CellState[][];
+  harvester: Position;
+  previousWorm: Position | null;
+  nextMoves: MoveOption[];
+  spawnCandidates: Position[];
+}
+
+export type WormSpawnSelector = (context: WormSpawnContext) => Position | null;
+
+const ADAPTIVE_SPAWN_RATE = 0.72;
+
 const KNIGHT_OFFSETS: Position[] = [
   { x: -2, y: -1 },
   { x: -2, y: 1 },
@@ -29,6 +41,7 @@ export class ArrakisGame {
   private status: GameState["status"] = "playing";
   private lossReason: LossReason = null;
   private message = "";
+  private wormSpawnSelector: WormSpawnSelector | null = null;
 
   constructor() {
     this.reset();
@@ -51,7 +64,7 @@ export class ArrakisGame {
       board: this.board.map((row) => row.map((cell) => ({ ...cell }))),
       harvester: { ...this.harvester },
       worm: this.worm ? { ...this.worm } : null,
-      validMoves: this.computeValidMoves(),
+      validMoves: this.computeValidMoves(this.worm),
       totalSpice: TOTAL_SPICE,
       collectedSpice: this.collectedSpice,
       moves: this.moves,
@@ -61,12 +74,16 @@ export class ArrakisGame {
     };
   }
 
+  public setWormSpawnSelector(selector: WormSpawnSelector | null): void {
+    this.wormSpawnSelector = selector;
+  }
+
   public moveTo(target: Position): GameState {
     if (this.status !== "playing") {
       return this.getState();
     }
 
-    const validMove = this.computeValidMoves().find((move) =>
+    const validMove = this.computeValidMoves(this.worm).find((move) =>
       this.positionsEqual(move.target, target),
     );
 
@@ -96,7 +113,7 @@ export class ArrakisGame {
 
     this.spawnWorm();
 
-    if (this.status === "playing" && this.computeValidMoves().length === 0) {
+    if (this.status === "playing" && this.computeValidMoves(this.worm).length === 0) {
       this.status = "lost";
       this.lossReason = "trapped";
       this.message = "Ходы закончились: харвестер загнан в тупик.";
@@ -130,7 +147,7 @@ export class ArrakisGame {
     return board;
   }
 
-  private computeValidMoves(): MoveOption[] {
+  private computeValidMoves(blockedCell: Position | null): MoveOption[] {
     return KNIGHT_OFFSETS.map((delta) => ({
       target: {
         x: this.harvester.x + delta.x,
@@ -144,7 +161,7 @@ export class ArrakisGame {
       notation: this.toDeltaNotation(delta),
     }))
       .filter((move) => this.isInside(move.target))
-      .filter((move) => !this.worm || !this.positionsEqual(move.target, this.worm))
+      .filter((move) => !blockedCell || !this.positionsEqual(move.target, blockedCell))
       .sort((left, right) => left.target.y - right.target.y || left.target.x - right.target.x);
   }
 
@@ -166,7 +183,8 @@ export class ArrakisGame {
       return;
     }
 
-    const nextWorm = candidates[Math.floor(Math.random() * candidates.length)];
+    const preferredTarget = this.pickAdaptiveTarget();
+    const nextWorm = preferredTarget ?? candidates[Math.floor(Math.random() * candidates.length)];
     this.worm = nextWorm;
 
     if (this.positionsEqual(nextWorm, this.harvester)) {
@@ -177,6 +195,58 @@ export class ArrakisGame {
     }
 
     this.message = `Червь замечен в секторе ${this.toBoardNotation(nextWorm)}.`;
+  }
+
+  private pickAdaptiveTarget(): Position | null {
+    if (!this.wormSpawnSelector) {
+      return null;
+    }
+
+    if (Math.random() > ADAPTIVE_SPAWN_RATE) {
+      return null;
+    }
+
+    const nextMoves = this.computeValidMoves(null).filter(
+      (move) => !this.worm || !this.positionsEqual(move.target, this.worm),
+    );
+    const spawnCandidates: Position[] = [];
+
+    for (let y = 0; y < BOARD_SIZE; y += 1) {
+      for (let x = 0; x < BOARD_SIZE; x += 1) {
+        const candidate = { x, y };
+        if (this.worm && this.positionsEqual(candidate, this.worm)) {
+          continue;
+        }
+        if (this.positionsEqual(candidate, this.harvester)) {
+          continue;
+        }
+        spawnCandidates.push(candidate);
+      }
+    }
+
+    if (spawnCandidates.length === 0) {
+      return null;
+    }
+
+    const preferred = this.wormSpawnSelector({
+      board: this.board,
+      harvester: this.harvester,
+      previousWorm: this.worm ? { ...this.worm } : null,
+      nextMoves,
+      spawnCandidates,
+    });
+
+    if (!preferred) {
+      return null;
+    }
+
+    if (this.worm && this.positionsEqual(preferred, this.worm)) {
+      return null;
+    }
+
+    return spawnCandidates.some((candidate) => this.positionsEqual(candidate, preferred))
+      ? { ...preferred }
+      : null;
   }
 
   private toBoardNotation(position: Position): string {

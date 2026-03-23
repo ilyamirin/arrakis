@@ -149,6 +149,29 @@
       </main>
     </div>
 
+    <section
+      id="worm-brain-banner"
+      class="consent-banner"
+      hidden
+      aria-live="polite"
+      aria-label="Разрешение на cookies с мозгом червя"
+    >
+      <p class="consent-kicker">Worm memory</p>
+      <h2>Разрешить cookies с мозгом червя?</h2>
+      <p class="consent-copy">
+        Если разрешишь, червь будет локально запоминать твои ходы и со временем
+        учиться охотиться именно на этого игрока.
+      </p>
+      <div class="consent-actions">
+        <button id="worm-brain-accept" class="primary-button consent-accept" type="button">
+          Allow brain
+        </button>
+        <button id="worm-brain-decline" class="consent-button" type="button">
+          Keep random
+        </button>
+      </div>
+    </section>
+
     <script type="module" src="./dist/main.js"></script>
   </body>
 </html>
