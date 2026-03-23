@@ -149,33 +149,39 @@ export class CanvasRenderer {
             return;
         }
         const isWormAttack = state.status === "lost" && state.lossReason === "worm_attack";
-        const overlayHeight = isWormAttack ? metrics.cellSize * 3.5 : metrics.cellSize * 2.2;
-        const overlayY = isWormAttack ? metrics.originY + metrics.cellSize * 2.6 : metrics.originY + metrics.cellSize * 3.2;
-        const overlayX = metrics.originX + metrics.cellSize * 1.1;
-        const overlayWidth = metrics.boardSize - metrics.cellSize * 2.2;
+        const overlayHeight = isWormAttack ? metrics.cellSize * 4.9 : metrics.cellSize * 2.45;
+        const overlayY = isWormAttack
+            ? metrics.originY + metrics.cellSize * 1.9
+            : metrics.originY + metrics.cellSize * 3.05;
+        const overlayX = metrics.originX + metrics.cellSize * 1.0;
+        const overlayWidth = metrics.boardSize - metrics.cellSize * 2.0;
         this.ctx.fillStyle = "rgba(16, 11, 8, 0.72)";
         this.roundRect(overlayX, overlayY, overlayWidth, overlayHeight, metrics.radius * 1.5);
         this.ctx.fill();
         if (isWormAttack) {
-            const artSize = metrics.cellSize * 1.8;
+            const artSize = metrics.cellSize * 2.45;
             this.ctx.drawImage(this.assets.wormFeast, metrics.width / 2 - artSize / 2, overlayY + metrics.cellSize * 0.18, artSize, artSize);
         }
         this.ctx.fillStyle = state.status === "won" ? "#8fb96a" : "#d96c42";
-        this.ctx.font = `700 ${metrics.cellSize * 0.42}px "IBM Plex Mono", monospace`;
+        this.ctx.font = `700 ${isWormAttack ? metrics.cellSize * 0.5 : metrics.cellSize * 0.42}px "IBM Plex Mono", monospace`;
         this.ctx.textAlign = "center";
         this.ctx.textBaseline = "middle";
         this.ctx.fillText(state.status === "won"
             ? "HARVEST COMPLETE"
             : isWormAttack
                 ? "HARVESTER CONSUMED"
-                : "SANDWORM STRIKE", metrics.width / 2, isWormAttack ? overlayY + metrics.cellSize * 2.35 : metrics.originY + metrics.cellSize * 4.0);
+                : "SANDWORM STRIKE", metrics.width / 2, isWormAttack ? overlayY + metrics.cellSize * 3.15 : metrics.originY + metrics.cellSize * 4.0);
         this.ctx.fillStyle = "rgba(249, 241, 223, 0.86)";
         this.ctx.font = `${metrics.cellSize * 0.22}px "IBM Plex Mono", monospace`;
-        this.ctx.fillText(state.status === "won"
+        const bodyText = state.status === "won"
             ? "Запустите New Run для новой раскладки."
             : isWormAttack
-                ? "Отдельный арт фиксирует момент атаки. Новая партия доступна по кнопке New Run."
-                : "Новая партия доступна по кнопке New Run.", metrics.width / 2, isWormAttack ? overlayY + metrics.cellSize * 2.95 : metrics.originY + metrics.cellSize * 4.7);
+                ? "Червь поглотил харвестер. Запустите New Run, чтобы начать новую экспедицию."
+                : "Новая партия доступна по кнопке New Run.";
+        const bodyY = isWormAttack ? overlayY + metrics.cellSize * 3.75 : metrics.originY + metrics.cellSize * 4.7;
+        const maxTextWidth = overlayWidth - metrics.cellSize * 0.8;
+        const lineHeight = metrics.cellSize * 0.34;
+        this.drawWrappedCenteredText(bodyText, metrics.width / 2, bodyY, maxTextWidth, lineHeight);
     }
     drawIcon(image, cellX, cellY, cellSize, scale) {
         const size = cellSize * scale;
@@ -202,6 +208,31 @@ export class CanvasRenderer {
     roundRect(x, y, width, height, radius) {
         this.ctx.beginPath();
         this.ctx.roundRect(x, y, width, height, radius);
+    }
+    drawWrappedCenteredText(text, centerX, startY, maxWidth, lineHeight) {
+        const words = text.split(" ");
+        const lines = [];
+        let currentLine = "";
+        for (const word of words) {
+            const candidate = currentLine ? `${currentLine} ${word}` : word;
+            if (this.ctx.measureText(candidate).width <= maxWidth) {
+                currentLine = candidate;
+                continue;
+            }
+            if (currentLine) {
+                lines.push(currentLine);
+            }
+            currentLine = word;
+        }
+        if (currentLine) {
+            lines.push(currentLine);
+        }
+        const blockHeight = (lines.length - 1) * lineHeight;
+        let y = startY - blockHeight / 2;
+        for (const line of lines) {
+            this.ctx.fillText(line, centerX, y);
+            y += lineHeight;
+        }
     }
 }
 export async function loadAssets() {
