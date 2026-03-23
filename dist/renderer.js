@@ -109,6 +109,15 @@ export class CanvasRenderer {
                     this.ctx.fill();
                 }
                 if (isWorm) {
+                    if (cell.hasSpice) {
+                        this.ctx.fillStyle = "rgba(241, 193, 107, 0.30)";
+                        this.roundRect(px + metrics.cellSize * 0.12, py + metrics.cellSize * 0.12, metrics.cellSize * 0.76, metrics.cellSize * 0.76, metrics.radius * 0.9);
+                        this.ctx.fill();
+                        this.ctx.strokeStyle = "rgba(247, 228, 186, 0.46)";
+                        this.ctx.lineWidth = Math.max(2, metrics.cellSize * 0.03);
+                        this.roundRect(px + metrics.cellSize * 0.14, py + metrics.cellSize * 0.14, metrics.cellSize * 0.72, metrics.cellSize * 0.72, metrics.radius * 0.8);
+                        this.ctx.stroke();
+                    }
                     this.ctx.fillStyle = "rgba(217, 108, 66, 0.18)";
                     this.roundRect(px + metrics.cellSize * 0.05, py + metrics.cellSize * 0.05, metrics.cellSize * 0.9, metrics.cellSize * 0.9, metrics.radius);
                     this.ctx.fill();
