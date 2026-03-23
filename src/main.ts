@@ -11,6 +11,9 @@ function statusTitle(state: GameState): string {
     return "Harvest complete";
   }
   if (state.status === "lost") {
+    if (state.lossReason === "worm_attack") {
+      return "Harvester consumed";
+    }
     return "Operation lost";
   }
   return "Harvest in progress";

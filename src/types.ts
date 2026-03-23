@@ -3,6 +3,7 @@ export const TOTAL_SPICE = 25;
 export const CENTER_INDEX = Math.floor(BOARD_SIZE / 2);
 
 export type GameStatus = "playing" | "won" | "lost";
+export type LossReason = "worm_attack" | "trapped" | null;
 
 export interface Position {
   x: number;
@@ -30,4 +31,5 @@ export interface GameState {
   moves: number;
   status: GameStatus;
   message: string;
+  lossReason: LossReason;
 }

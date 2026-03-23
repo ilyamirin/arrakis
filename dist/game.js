@@ -16,6 +16,7 @@ export class ArrakisGame {
     moves = 0;
     collectedSpice = 0;
     status = "playing";
+    lossReason = null;
     message = "";
     constructor() {
         this.reset();
@@ -27,6 +28,7 @@ export class ArrakisGame {
         this.moves = 0;
         this.collectedSpice = 0;
         this.status = "playing";
+        this.lossReason = null;
         this.message = "Выберите подсвеченную клетку, чтобы начать маршрут.";
         return this.getState();
     }
@@ -41,6 +43,7 @@ export class ArrakisGame {
             moves: this.moves,
             status: this.status,
             message: this.message,
+            lossReason: this.lossReason,
         };
     }
     moveTo(target) {
@@ -64,6 +67,7 @@ export class ArrakisGame {
         }
         if (this.collectedSpice >= TOTAL_SPICE) {
             this.status = "won";
+            this.lossReason = null;
             this.worm = null;
             this.message = `Маршрут завершён за ${this.moves} ходов. Весь спайс собран.`;
             return this.getState();
@@ -71,6 +75,7 @@ export class ArrakisGame {
         this.spawnWorm();
         if (this.status === "playing" && this.computeValidMoves().length === 0) {
             this.status = "lost";
+            this.lossReason = "trapped";
             this.message = "Ходы закончились: харвестер загнан в тупик.";
         }
         return this.getState();
@@ -128,6 +133,7 @@ export class ArrakisGame {
         this.worm = nextWorm;
         if (this.positionsEqual(nextWorm, this.harvester)) {
             this.status = "lost";
+            this.lossReason = "worm_attack";
             this.message = "Червь вынырнул прямо под харвестером. Экспедиция потеряна.";
             return;
         }

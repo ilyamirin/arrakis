@@ -4,20 +4,28 @@
       <stop stop-color="#F6E0B3"/>
       <stop offset="1" stop-color="#AF7A3B"/>
     </linearGradient>
+    <linearGradient id="harvesterCabin" x1="128" y1="92" x2="128" y2="152" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2D221A"/>
+      <stop offset="1" stop-color="#17110D"/>
+    </linearGradient>
     <linearGradient id="harvesterShadow" x1="48" y1="176" x2="216" y2="176" gradientUnits="userSpaceOnUse">
       <stop stop-color="#3B2818" stop-opacity="0"/>
       <stop offset="0.5" stop-color="#3B2818" stop-opacity="0.48"/>
       <stop offset="1" stop-color="#3B2818" stop-opacity="0"/>
     </linearGradient>
   </defs>
-  <rect x="12" y="12" width="232" height="232" rx="56" fill="#2A1D13"/>
   <ellipse cx="128" cy="196" rx="84" ry="22" fill="url(#harvesterShadow)"/>
+  <path d="M52 123L30 136" stroke="#D8A85A" stroke-width="12" stroke-linecap="round"/>
   <path d="M62 158L84 82H170L194 158H62Z" fill="url(#harvesterBody)" stroke="#F8EED5" stroke-width="10" stroke-linejoin="round"/>
   <path d="M94 82L110 58H146L162 82H94Z" fill="#D8A85A" stroke="#F8EED5" stroke-width="10" stroke-linejoin="round"/>
-  <rect x="84" y="104" width="88" height="28" rx="12" fill="#3A2819"/>
+  <path d="M88 162L74 134V106L88 96V162Z" fill="#C68450"/>
+  <path d="M168 162L182 134V106L168 96V162Z" fill="#C68450"/>
+  <rect x="84" y="104" width="88" height="28" rx="12" fill="url(#harvesterCabin)"/>
+  <path d="M104 104L120 132" stroke="#F8EED5" stroke-opacity="0.65" stroke-width="6" stroke-linecap="round"/>
+  <path d="M152 104L136 132" stroke="#F8EED5" stroke-opacity="0.65" stroke-width="6" stroke-linecap="round"/>
   <path d="M76 168H180" stroke="#6E4B29" stroke-width="10" stroke-linecap="round"/>
   <circle cx="92" cy="174" r="12" fill="#F3D49A"/>
   <circle cx="164" cy="174" r="12" fill="#F3D49A"/>
-  <path d="M54 118H30" stroke="#D8A85A" stroke-width="12" stroke-linecap="round"/>
   <path d="M226 118H202" stroke="#D8A85A" stroke-width="12" stroke-linecap="round"/>
+  <path d="M204 140L220 154" stroke="#D8A85A" stroke-width="12" stroke-linecap="round"/>
 </svg>

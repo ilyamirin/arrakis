@@ -4,6 +4,7 @@ interface Assets {
   harvester: HTMLImageElement;
   worm: HTMLImageElement;
   spice: HTMLImageElement;
+  wormFeast: HTMLImageElement;
 }
 
 interface BoardMetrics {
@@ -208,15 +209,19 @@ export class CanvasRenderer {
   }
 
   private drawPieces(state: GameState, metrics: BoardMetrics): void {
-    if (state.worm) {
+    const wormConsumedHarvester = state.status === "lost" && state.lossReason === "worm_attack";
+
+    if (state.worm && !wormConsumedHarvester) {
       const px = metrics.originX + state.worm.x * metrics.cellSize;
       const py = metrics.originY + state.worm.y * metrics.cellSize;
       this.drawIcon(this.assets.worm, px, py, metrics.cellSize, 0.8);
     }
 
-    const harvesterX = metrics.originX + state.harvester.x * metrics.cellSize;
-    const harvesterY = metrics.originY + state.harvester.y * metrics.cellSize;
-    this.drawIcon(this.assets.harvester, harvesterX, harvesterY, metrics.cellSize, 0.8);
+    if (!wormConsumedHarvester) {
+      const harvesterX = metrics.originX + state.harvester.x * metrics.cellSize;
+      const harvesterY = metrics.originY + state.harvester.y * metrics.cellSize;
+      this.drawIcon(this.assets.harvester, harvesterX, harvesterY, metrics.cellSize, 0.8);
+    }
   }
 
   private drawOverlay(state: GameState, metrics: BoardMetrics): void {
@@ -224,32 +229,57 @@ export class CanvasRenderer {
       return;
     }
 
+    const isWormAttack = state.status === "lost" && state.lossReason === "worm_attack";
+    const overlayHeight = isWormAttack ? metrics.cellSize * 3.5 : metrics.cellSize * 2.2;
+    const overlayY = isWormAttack ? metrics.originY + metrics.cellSize * 2.6 : metrics.originY + metrics.cellSize * 3.2;
+    const overlayX = metrics.originX + metrics.cellSize * 1.1;
+    const overlayWidth = metrics.boardSize - metrics.cellSize * 2.2;
+
     this.ctx.fillStyle = "rgba(16, 11, 8, 0.72)";
     this.roundRect(
-      metrics.originX + metrics.cellSize * 1.1,
-      metrics.originY + metrics.cellSize * 3.2,
-      metrics.boardSize - metrics.cellSize * 2.2,
-      metrics.cellSize * 2.2,
+      overlayX,
+      overlayY,
+      overlayWidth,
+      overlayHeight,
       metrics.radius * 1.5,
     );
     this.ctx.fill();
+
+    if (isWormAttack) {
+      const artSize = metrics.cellSize * 1.8;
+      this.ctx.drawImage(
+        this.assets.wormFeast,
+        metrics.width / 2 - artSize / 2,
+        overlayY + metrics.cellSize * 0.18,
+        artSize,
+        artSize,
+      );
+    }
 
     this.ctx.fillStyle = state.status === "won" ? "#8fb96a" : "#d96c42";
     this.ctx.font = `700 ${metrics.cellSize * 0.42}px "IBM Plex Mono", monospace`;
     this.ctx.textAlign = "center";
     this.ctx.textBaseline = "middle";
     this.ctx.fillText(
-      state.status === "won" ? "HARVEST COMPLETE" : "SANDWORM STRIKE",
+      state.status === "won"
+        ? "HARVEST COMPLETE"
+        : isWormAttack
+          ? "HARVESTER CONSUMED"
+          : "SANDWORM STRIKE",
       metrics.width / 2,
-      metrics.originY + metrics.cellSize * 4.0,
+      isWormAttack ? overlayY + metrics.cellSize * 2.35 : metrics.originY + metrics.cellSize * 4.0,
     );
 
     this.ctx.fillStyle = "rgba(249, 241, 223, 0.86)";
     this.ctx.font = `${metrics.cellSize * 0.22}px "IBM Plex Mono", monospace`;
     this.ctx.fillText(
-      state.status === "won" ? "Запустите New Run для новой раскладки." : "Новая партия доступна по кнопке New Run.",
+      state.status === "won"
+        ? "Запустите New Run для новой раскладки."
+        : isWormAttack
+          ? "Отдельный арт фиксирует момент атаки. Новая партия доступна по кнопке New Run."
+          : "Новая партия доступна по кнопке New Run.",
       metrics.width / 2,
-      metrics.originY + metrics.cellSize * 4.7,
+      isWormAttack ? overlayY + metrics.cellSize * 2.95 : metrics.originY + metrics.cellSize * 4.7,
     );
   }
 
@@ -290,13 +320,14 @@ export class CanvasRenderer {
 }
 
 export async function loadAssets(): Promise<Assets> {
-  const [harvester, worm, spice] = await Promise.all([
+  const [harvester, worm, spice, wormFeast] = await Promise.all([
     loadImage("./assets/harvester.svg"),
     loadImage("./assets/worm.svg"),
     loadImage("./assets/spice.svg"),
+    loadImage("./assets/worm-feast.svg"),
   ]);
 
-  return { harvester, worm, spice };
+  return { harvester, worm, spice, wormFeast };
 }
 
 function loadImage(src: string): Promise<HTMLImageElement> {

@@ -5,8 +5,12 @@
       <stop offset="0.48" stop-color="#F2C15E"/>
       <stop offset="1" stop-color="#B97022"/>
     </linearGradient>
+    <radialGradient id="spiceGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(128 144) rotate(90) scale(84 72)">
+      <stop stop-color="#FFD576" stop-opacity="0.34"/>
+      <stop offset="1" stop-color="#FFD576" stop-opacity="0"/>
+    </radialGradient>
   </defs>
-  <rect x="12" y="12" width="232" height="232" rx="56" fill="#261B13"/>
+  <ellipse cx="128" cy="146" rx="80" ry="64" fill="url(#spiceGlow)"/>
   <path d="M128 42L188 108L156 212H100L68 108L128 42Z" fill="url(#spiceCrystal)" stroke="#F8EED5" stroke-width="10" stroke-linejoin="round"/>
   <path d="M128 42V212" stroke="#F8EED5" stroke-opacity="0.6" stroke-width="8"/>
   <path d="M68 108H188" stroke="#F8EED5" stroke-opacity="0.4" stroke-width="8"/>
