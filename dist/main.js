@@ -33,28 +33,17 @@ async function main() {
     const spiceValueElement = document.querySelector("#spice-value");
     const movesValueElement = document.querySelector("#moves-value");
     const positionValueElement = document.querySelector("#position-value");
-    const moveListElement = document.querySelector("#move-list");
     if (!canvas ||
         !restartButton ||
         !statusTitleElement ||
         !statusMessageElement ||
         !spiceValueElement ||
         !movesValueElement ||
-        !positionValueElement ||
-        !moveListElement) {
+        !positionValueElement) {
         throw new Error("The UI shell is incomplete.");
     }
     const renderer = new CanvasRenderer(canvas, await loadAssets());
     const game = new ArrakisGame();
-    const renderMoveButton = (move, disabled) => {
-        const button = document.createElement("button");
-        button.className = "move-button";
-        button.disabled = disabled;
-        button.type = "button";
-        button.innerHTML = `<strong>${move.label}</strong><span>${move.notation}</span>`;
-        button.addEventListener("click", () => update(game.moveTo(move.target)));
-        return button;
-    };
     const update = (state) => {
         renderer.render(state);
         statusTitleElement.textContent = statusTitle(state);
@@ -63,17 +52,6 @@ async function main() {
         spiceValueElement.textContent = `${state.collectedSpice} / ${state.totalSpice}`;
         movesValueElement.textContent = String(state.moves);
         positionValueElement.textContent = boardLabel(state.harvester.x, state.harvester.y);
-        if (state.validMoves.length === 0) {
-            const emptyState = document.createElement("div");
-            emptyState.className = "move-empty";
-            emptyState.textContent =
-                state.status === "playing"
-                    ? "Маршрут заблокирован."
-                    : "Партия завершена. Запустите New Run.";
-            moveListElement.replaceChildren(emptyState);
-            return;
-        }
-        moveListElement.replaceChildren(...state.validMoves.map((move) => renderMoveButton(move, state.status !== "playing")));
     };
     restartButton.addEventListener("click", () => update(game.reset()));
     canvas.addEventListener("click", (event) => {

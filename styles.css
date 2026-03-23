@@ -102,8 +102,7 @@ select {
   max-width: 42rem;
 }
 
-.primary-button,
-.move-button {
+.primary-button {
   border: 1px solid rgba(241, 201, 123, 0.24);
   border-radius: 999px;
   color: var(--ink);
@@ -116,8 +115,7 @@ select {
     background 160ms ease;
 }
 
-.primary-button:hover,
-.move-button:hover {
+.primary-button:hover {
   transform: translateY(-1px);
   border-color: rgba(241, 201, 123, 0.42);
   background:
@@ -249,45 +247,6 @@ select {
   font-size: 0.92rem;
 }
 
-.move-list {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem;
-}
-
-.move-button {
-  padding: 0.85rem 1rem;
-  text-align: left;
-}
-
-.move-button strong,
-.move-button span {
-  display: block;
-}
-
-.move-button strong {
-  margin-bottom: 0.3rem;
-}
-
-.move-button span {
-  color: var(--muted);
-  font-size: 0.9rem;
-}
-
-.move-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.45;
-  transform: none;
-}
-
-.move-empty {
-  padding: 1rem;
-  border: 1px dashed rgba(241, 201, 123, 0.18);
-  border-radius: 1rem;
-  color: var(--muted);
-  background: rgba(255, 245, 225, 0.03);
-}
-
 .rules-panel ul {
   margin: 0;
   padding-left: 1.2rem;
@@ -331,8 +290,7 @@ select {
     padding: 1.1rem;
   }
 
-  .metrics-panel,
-  .move-list {
+  .metrics-panel {
     grid-template-columns: 1fr;
   }
 
