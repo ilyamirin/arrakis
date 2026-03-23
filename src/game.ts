@@ -17,8 +17,15 @@ export class Game {
     private renderer: Renderer;
 
     constructor(canvas: HTMLCanvasElement) {
+        console.log('Инициализация игры...');
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d')!;
+        
+        if (!this.ctx) {
+            console.error('Не удалось получить 2D контекст canvas!');
+            return;
+        }
+        
         this.harvester = new Harvester();
         this.worms = [];
         this.spicePositions = new Set();
@@ -29,8 +36,10 @@ export class Game {
         this.won = false;
         this.renderer = new Renderer(this.ctx);
 
+        console.log('Инициализируем игру...');
         this.initializeGame();
         this.setupEventListeners();
+        console.log('Игра инициализирована');
     }
 
     private initializeGame(): void {
@@ -40,6 +49,7 @@ export class Game {
     }
 
     private generateSpice(): void {
+        console.log('Генерируем спайс...');
         this.spicePositions.clear();
         const harvesterPos = `${this.harvester.position.x},${this.harvester.position.y}`;
         
@@ -52,6 +62,9 @@ export class Game {
                 this.spicePositions.add(posKey);
             }
         }
+        
+        console.log(`Сгенерировано ${this.spicePositions.size} единиц спайса`);
+        console.log('Позиции спайса:', Array.from(this.spicePositions));
     }
 
     private setupEventListeners(): void {
@@ -132,6 +145,7 @@ export class Game {
     }
 
     private render(): void {
+        console.log('Рендерим игру...');
         this.renderer.clear();
         this.renderer.drawGrid();
         this.renderer.drawSpice(Array.from(this.spicePositions));
@@ -141,6 +155,7 @@ export class Game {
         if (!this.gameOver) {
             this.renderer.drawPossibleMoves(this.harvester.getPossibleMoves());
         }
+        console.log('Рендеринг завершен');
     }
 
     private updateUI(): void {
