@@ -1,0 +1,14 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="spiceCrystal" x1="128" y1="40" x2="128" y2="208" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF0C8"/>
+      <stop offset="0.48" stop-color="#F2C15E"/>
+      <stop offset="1" stop-color="#B97022"/>
+    </linearGradient>
+  </defs>
+  <rect x="12" y="12" width="232" height="232" rx="56" fill="#261B13"/>
+  <path d="M128 42L188 108L156 212H100L68 108L128 42Z" fill="url(#spiceCrystal)" stroke="#F8EED5" stroke-width="10" stroke-linejoin="round"/>
+  <path d="M128 42V212" stroke="#F8EED5" stroke-opacity="0.6" stroke-width="8"/>
+  <path d="M68 108H188" stroke="#F8EED5" stroke-opacity="0.4" stroke-width="8"/>
+  <path d="M100 212L128 108L156 212" fill="#E1A946" fill-opacity="0.4"/>
+</svg>

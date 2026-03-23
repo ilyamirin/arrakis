@@ -1,0 +1,9 @@
+{
+  "name": "arrakis-spice-harvest",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "serve": "python3 server.py"
+  }
+}

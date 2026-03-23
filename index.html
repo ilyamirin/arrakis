@@ -1,38 +1,113 @@
 <!DOCTYPE html>
 <html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Arrakis Spice Harvest</title>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-    <div class="game-container">
-        <h1>Arrakis Spice Harvest</h1>
-        <div class="game-info">
-            <div class="stats">
-                <div class="stat">
-                    <span class="label">Спайс:</span>
-                    <span id="spice-count">0</span>/<span id="total-spice">25</span>
-                </div>
-                <div class="stat">
-                    <span class="label">Ходы:</span>
-                    <span id="moves-count">0</span>
-                </div>
-            </div>
-            <div class="game-status">
-                <span id="game-status">Собирайте спайс, избегайте червей!</span>
-            </div>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Dune / Tactical Harvest</p>
+          <h1>Arrakis Spice Harvest</h1>
+          <p class="hero-text">
+            Собери весь спайс на сетке 9x9. Харвестер ходит как шахматный конь,
+            а песчаный червь каждый раз меняет точку появления.
+          </p>
         </div>
-        <canvas id="game-canvas" width="450" height="450"></canvas>
-        <div class="controls">
-            <button id="restart-btn">Новая игра</button>
-            <div class="instructions">
-                <p>Используйте клики мыши для перемещения харвестера</p>
-                <p>Харвестер движется буквой "Г" как шахматный конь</p>
+        <button id="restart-button" class="primary-button" type="button">
+          New Run
+        </button>
+      </header>
+
+      <main class="layout">
+        <section class="board-card">
+          <div class="board-frame">
+            <canvas
+              id="game-canvas"
+              width="900"
+              height="900"
+              aria-label="Игровое поле Arrakis Spice Harvest"
+            ></canvas>
+          </div>
+        </section>
+
+        <aside class="sidebar">
+          <section class="panel status-panel">
+            <div class="panel-header">
+              <p class="panel-kicker">Current state</p>
+              <h2 id="status-title">Harvest in progress</h2>
             </div>
-        </div>
+            <p id="status-message" class="status-message">
+              Выберите подсвеченную клетку, чтобы переместить харвестер.
+            </p>
+          </section>
+
+          <section class="panel metrics-panel">
+            <div class="metric">
+              <span class="metric-label">Spice</span>
+              <strong id="spice-value">0 / 25</strong>
+            </div>
+            <div class="metric">
+              <span class="metric-label">Moves</span>
+              <strong id="moves-value">0</strong>
+            </div>
+            <div class="metric">
+              <span class="metric-label">Position</span>
+              <strong id="position-value">E5</strong>
+            </div>
+          </section>
+
+          <section class="panel legend-panel">
+            <div class="legend-item">
+              <img src="./assets/harvester.svg" alt="" />
+              <div>
+                <span>Harvester</span>
+                <p>Собирает спайс при приземлении.</p>
+              </div>
+            </div>
+            <div class="legend-item">
+              <img src="./assets/worm.svg" alt="" />
+              <div>
+                <span>Worm</span>
+                <p>Появляется после каждого хода и блокирует клетку.</p>
+              </div>
+            </div>
+            <div class="legend-item">
+              <img src="./assets/spice.svg" alt="" />
+              <div>
+                <span>Spice</span>
+                <p>Нужно собрать все 25 залежей.</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel moves-panel">
+            <div class="panel-header compact">
+              <p class="panel-kicker">Valid jumps</p>
+              <h2>Available targets</h2>
+            </div>
+            <div id="move-list" class="move-list"></div>
+          </section>
+
+          <section class="panel rules-panel">
+            <div class="panel-header compact">
+              <p class="panel-kicker">Rules</p>
+              <h2>Mission brief</h2>
+            </div>
+            <ul>
+              <li>Харвестер ходит буквой Г.</li>
+              <li>Подсветка на поле показывает допустимые клетки.</li>
+              <li>Если червь появляется на харвестере, партия проиграна.</li>
+              <li>Победа наступает сразу после сбора последней залежи.</li>
+            </ul>
+          </section>
+        </aside>
+      </main>
     </div>
-    <script type="module" src="dist/main.js"></script>
-</body>
+
+    <script type="module" src="./dist/main.js"></script>
+  </body>
 </html>

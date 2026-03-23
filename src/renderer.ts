@@ -1,112 +1,309 @@
-import { Position } from './types.js';
-import { Harvester } from './harvester.js';
-import { Worm } from './worm.js';
+import { BOARD_SIZE, type GameState, type Position } from "./types.js";
 
-export class Renderer {
-    private ctx: CanvasRenderingContext2D;
-    private cellSize: number = 50;
+interface Assets {
+  harvester: HTMLImageElement;
+  worm: HTMLImageElement;
+  spice: HTMLImageElement;
+}
 
-    constructor(ctx: CanvasRenderingContext2D) {
-        this.ctx = ctx;
+interface BoardMetrics {
+  width: number;
+  height: number;
+  boardSize: number;
+  cellSize: number;
+  originX: number;
+  originY: number;
+  radius: number;
+}
+
+export class CanvasRenderer {
+  private readonly canvas: HTMLCanvasElement;
+  private readonly ctx: CanvasRenderingContext2D;
+  private readonly assets: Assets;
+  private lastState: GameState | null = null;
+
+  constructor(canvas: HTMLCanvasElement, assets: Assets) {
+    const context = canvas.getContext("2d");
+    if (!context) {
+      throw new Error("Canvas 2D context is not available.");
     }
 
-    clear(): void {
-        this.ctx.fillStyle = '#F4A460'; // Sandy brown background
-        this.ctx.fillRect(0, 0, 450, 450);
+    this.canvas = canvas;
+    this.ctx = context;
+    this.assets = assets;
+  }
+
+  public render(state: GameState): void {
+    this.lastState = state;
+    this.resizeBackingStore();
+
+    const metrics = this.getMetrics();
+    const { ctx } = this;
+
+    ctx.clearRect(0, 0, metrics.width, metrics.height);
+    this.drawBackground(metrics);
+    this.drawCells(state, metrics);
+    this.drawGrid(metrics);
+    this.drawPieces(state, metrics);
+    this.drawOverlay(state, metrics);
+  }
+
+  public rerender(): void {
+    if (this.lastState) {
+      this.render(this.lastState);
+    }
+  }
+
+  public cellFromClientPoint(clientX: number, clientY: number): Position | null {
+    const rect = this.canvas.getBoundingClientRect();
+    const metrics = this.getMetrics();
+    const localX = clientX - rect.left;
+    const localY = clientY - rect.top;
+
+    if (
+      localX < metrics.originX ||
+      localY < metrics.originY ||
+      localX > metrics.originX + metrics.boardSize ||
+      localY > metrics.originY + metrics.boardSize
+    ) {
+      return null;
     }
 
-    drawGrid(): void {
-        this.ctx.strokeStyle = '#8B4513';
-        this.ctx.lineWidth = 1;
+    const x = Math.floor((localX - metrics.originX) / metrics.cellSize);
+    const y = Math.floor((localY - metrics.originY) / metrics.cellSize);
 
-        for (let i = 0; i <= 9; i++) {
-            // Вертикальные линии
-            this.ctx.beginPath();
-            this.ctx.moveTo(i * this.cellSize, 0);
-            this.ctx.lineTo(i * this.cellSize, 450);
-            this.ctx.stroke();
-
-            // Горизонтальные линии
-            this.ctx.beginPath();
-            this.ctx.moveTo(0, i * this.cellSize);
-            this.ctx.lineTo(450, i * this.cellSize);
-            this.ctx.stroke();
-        }
+    if (x < 0 || x >= BOARD_SIZE || y < 0 || y >= BOARD_SIZE) {
+      return null;
     }
 
-    drawSpice(spicePositions: string[]): void {
-        this.ctx.fillStyle = '#FFD700'; // Gold color for spice
-        
-        for (const posKey of spicePositions) {
-            const [x, y] = posKey.split(',').map(Number);
-            const centerX = x * this.cellSize + this.cellSize / 2;
-            const centerY = y * this.cellSize + this.cellSize / 2;
-            
-            this.ctx.beginPath();
-            this.ctx.arc(centerX, centerY, 15, 0, Math.PI * 2);
-            this.ctx.fill();
-            
-            // Добавляем блеск
-            this.ctx.fillStyle = '#FFFF99';
-            this.ctx.beginPath();
-            this.ctx.arc(centerX - 5, centerY - 5, 5, 0, Math.PI * 2);
-            this.ctx.fill();
-            
-            this.ctx.fillStyle = '#FFD700';
-        }
+    return { x, y };
+  }
+
+  private resizeBackingStore(): void {
+    const rect = this.canvas.getBoundingClientRect();
+    const width = Math.max(1, Math.round(rect.width));
+    const height = Math.max(1, Math.round(rect.height));
+    const ratio = window.devicePixelRatio || 1;
+
+    if (
+      this.canvas.width === Math.round(width * ratio) &&
+      this.canvas.height === Math.round(height * ratio)
+    ) {
+      this.ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      return;
     }
 
-    drawHarvester(harvester: Harvester): void {
-        const x = harvester.position.x * this.cellSize + this.cellSize / 2;
-        const y = harvester.position.y * this.cellSize + this.cellSize / 2;
-        
-        // Основное тело харвестера
-        this.ctx.fillStyle = '#4169E1'; // Royal blue
-        this.ctx.fillRect(x - 20, y - 20, 40, 40);
-        
-        // Детали харвестера
-        this.ctx.fillStyle = '#1E90FF'; // Dodger blue
-        this.ctx.fillRect(x - 15, y - 15, 30, 30);
-        
-        // Центральная часть
-        this.ctx.fillStyle = '#00BFFF'; // Deep sky blue
-        this.ctx.beginPath();
-        this.ctx.arc(x, y, 8, 0, Math.PI * 2);
+    this.canvas.width = Math.round(width * ratio);
+    this.canvas.height = Math.round(height * ratio);
+    this.ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+  }
+
+  private drawBackground(metrics: BoardMetrics): void {
+    const gradient = this.ctx.createLinearGradient(0, 0, metrics.width, metrics.height);
+    gradient.addColorStop(0, "rgba(246, 214, 146, 0.10)");
+    gradient.addColorStop(0.5, "rgba(89, 63, 36, 0.18)");
+    gradient.addColorStop(1, "rgba(12, 9, 6, 0.08)");
+    this.ctx.fillStyle = gradient;
+    this.ctx.fillRect(0, 0, metrics.width, metrics.height);
+
+    this.ctx.fillStyle = "rgba(255, 237, 204, 0.04)";
+    this.ctx.beginPath();
+    this.ctx.arc(metrics.width * 0.18, metrics.height * 0.12, metrics.width * 0.18, 0, Math.PI * 2);
+    this.ctx.fill();
+
+    this.ctx.fillStyle = "rgba(217, 132, 68, 0.08)";
+    this.ctx.beginPath();
+    this.ctx.arc(metrics.width * 0.82, metrics.height * 0.78, metrics.width * 0.2, 0, Math.PI * 2);
+    this.ctx.fill();
+  }
+
+  private drawCells(state: GameState, metrics: BoardMetrics): void {
+    for (let y = 0; y < BOARD_SIZE; y += 1) {
+      for (let x = 0; x < BOARD_SIZE; x += 1) {
+        const px = metrics.originX + x * metrics.cellSize;
+        const py = metrics.originY + y * metrics.cellSize;
+        const isValidMove = state.validMoves.some(
+          (move) => move.target.x === x && move.target.y === y,
+        );
+        const isHarvester = state.harvester.x === x && state.harvester.y === y;
+        const isWorm = state.worm?.x === x && state.worm?.y === y;
+        const cell = state.board[y][x];
+
+        const baseTone = (x + y) % 2 === 0 ? 0.16 : 0.11;
+        this.ctx.fillStyle = `rgba(248, 227, 184, ${baseTone})`;
+        this.roundRect(px, py, metrics.cellSize - 2, metrics.cellSize - 2, metrics.radius);
         this.ctx.fill();
+
+        if (cell.hasSpice) {
+          this.ctx.fillStyle = "rgba(236, 188, 89, 0.26)";
+          this.roundRect(
+            px + metrics.cellSize * 0.08,
+            py + metrics.cellSize * 0.08,
+            metrics.cellSize * 0.84,
+            metrics.cellSize * 0.84,
+            metrics.radius * 0.8,
+          );
+          this.ctx.fill();
+
+          this.drawIcon(this.assets.spice, px, py, metrics.cellSize, 0.52);
+        }
+
+        if (isValidMove && state.status === "playing") {
+          this.ctx.strokeStyle = "rgba(247, 228, 186, 0.86)";
+          this.ctx.lineWidth = Math.max(2, metrics.cellSize * 0.04);
+          this.roundRect(
+            px + metrics.cellSize * 0.1,
+            py + metrics.cellSize * 0.1,
+            metrics.cellSize * 0.8,
+            metrics.cellSize * 0.8,
+            metrics.radius * 0.8,
+          );
+          this.ctx.stroke();
+        }
+
+        if (isHarvester) {
+          this.ctx.fillStyle = "rgba(247, 228, 186, 0.08)";
+          this.roundRect(
+            px + metrics.cellSize * 0.05,
+            py + metrics.cellSize * 0.05,
+            metrics.cellSize * 0.9,
+            metrics.cellSize * 0.9,
+            metrics.radius,
+          );
+          this.ctx.fill();
+        }
+
+        if (isWorm) {
+          this.ctx.fillStyle = "rgba(217, 108, 66, 0.18)";
+          this.roundRect(
+            px + metrics.cellSize * 0.05,
+            py + metrics.cellSize * 0.05,
+            metrics.cellSize * 0.9,
+            metrics.cellSize * 0.9,
+            metrics.radius,
+          );
+          this.ctx.fill();
+        }
+      }
+    }
+  }
+
+  private drawGrid(metrics: BoardMetrics): void {
+    this.ctx.strokeStyle = "rgba(248, 227, 184, 0.14)";
+    this.ctx.lineWidth = 1;
+
+    for (let index = 0; index <= BOARD_SIZE; index += 1) {
+      const offset = index * metrics.cellSize;
+
+      this.ctx.beginPath();
+      this.ctx.moveTo(metrics.originX, metrics.originY + offset);
+      this.ctx.lineTo(metrics.originX + metrics.boardSize, metrics.originY + offset);
+      this.ctx.stroke();
+
+      this.ctx.beginPath();
+      this.ctx.moveTo(metrics.originX + offset, metrics.originY);
+      this.ctx.lineTo(metrics.originX + offset, metrics.originY + metrics.boardSize);
+      this.ctx.stroke();
+    }
+  }
+
+  private drawPieces(state: GameState, metrics: BoardMetrics): void {
+    if (state.worm) {
+      const px = metrics.originX + state.worm.x * metrics.cellSize;
+      const py = metrics.originY + state.worm.y * metrics.cellSize;
+      this.drawIcon(this.assets.worm, px, py, metrics.cellSize, 0.8);
     }
 
-    drawWorms(worms: Worm[]): void {
-        this.ctx.fillStyle = '#8B0000'; // Dark red for worms
-        
-        for (const worm of worms) {
-            const x = worm.position.x * this.cellSize + this.cellSize / 2;
-            const y = worm.position.y * this.cellSize + this.cellSize / 2;
-            
-            // Тело червя
-            this.ctx.beginPath();
-            this.ctx.arc(x, y, 18, 0, Math.PI * 2);
-            this.ctx.fill();
-            
-            // Сегменты червя
-            this.ctx.fillStyle = '#A52A2A'; // Brown
-            for (let i = 0; i < 3; i++) {
-                this.ctx.beginPath();
-                this.ctx.arc(x + (i - 1) * 6, y + (i - 1) * 6, 12 - i * 2, 0, Math.PI * 2);
-                this.ctx.fill();
-            }
-            
-            this.ctx.fillStyle = '#8B0000';
-        }
+    const harvesterX = metrics.originX + state.harvester.x * metrics.cellSize;
+    const harvesterY = metrics.originY + state.harvester.y * metrics.cellSize;
+    this.drawIcon(this.assets.harvester, harvesterX, harvesterY, metrics.cellSize, 0.8);
+  }
+
+  private drawOverlay(state: GameState, metrics: BoardMetrics): void {
+    if (state.status === "playing") {
+      return;
     }
 
-    drawPossibleMoves(moves: Position[]): void {
-        this.ctx.fillStyle = 'rgba(0, 255, 0, 0.3)'; // Semi-transparent green
-        
-        for (const move of moves) {
-            const x = move.x * this.cellSize;
-            const y = move.y * this.cellSize;
-            
-            this.ctx.fillRect(x + 2, y + 2, this.cellSize - 4, this.cellSize - 4);
-        }
-    }
+    this.ctx.fillStyle = "rgba(16, 11, 8, 0.72)";
+    this.roundRect(
+      metrics.originX + metrics.cellSize * 1.1,
+      metrics.originY + metrics.cellSize * 3.2,
+      metrics.boardSize - metrics.cellSize * 2.2,
+      metrics.cellSize * 2.2,
+      metrics.radius * 1.5,
+    );
+    this.ctx.fill();
+
+    this.ctx.fillStyle = state.status === "won" ? "#8fb96a" : "#d96c42";
+    this.ctx.font = `700 ${metrics.cellSize * 0.42}px "IBM Plex Mono", monospace`;
+    this.ctx.textAlign = "center";
+    this.ctx.textBaseline = "middle";
+    this.ctx.fillText(
+      state.status === "won" ? "HARVEST COMPLETE" : "SANDWORM STRIKE",
+      metrics.width / 2,
+      metrics.originY + metrics.cellSize * 4.0,
+    );
+
+    this.ctx.fillStyle = "rgba(249, 241, 223, 0.86)";
+    this.ctx.font = `${metrics.cellSize * 0.22}px "IBM Plex Mono", monospace`;
+    this.ctx.fillText(
+      state.status === "won" ? "Запустите New Run для новой раскладки." : "Новая партия доступна по кнопке New Run.",
+      metrics.width / 2,
+      metrics.originY + metrics.cellSize * 4.7,
+    );
+  }
+
+  private drawIcon(
+    image: HTMLImageElement,
+    cellX: number,
+    cellY: number,
+    cellSize: number,
+    scale: number,
+  ): void {
+    const size = cellSize * scale;
+    const offset = (cellSize - size) / 2;
+    this.ctx.drawImage(image, cellX + offset, cellY + offset, size, size);
+  }
+
+  private getMetrics(): BoardMetrics {
+    const width = this.canvas.clientWidth;
+    const height = this.canvas.clientHeight;
+    const boardSize = Math.min(width, height) * 0.86;
+    const originX = (width - boardSize) / 2;
+    const originY = (height - boardSize) / 2;
+    const cellSize = boardSize / BOARD_SIZE;
+    return {
+      width,
+      height,
+      boardSize,
+      cellSize,
+      originX,
+      originY,
+      radius: Math.max(6, cellSize * 0.12),
+    };
+  }
+
+  private roundRect(x: number, y: number, width: number, height: number, radius: number): void {
+    this.ctx.beginPath();
+    this.ctx.roundRect(x, y, width, height, radius);
+  }
+}
+
+export async function loadAssets(): Promise<Assets> {
+  const [harvester, worm, spice] = await Promise.all([
+    loadImage("./assets/harvester.svg"),
+    loadImage("./assets/worm.svg"),
+    loadImage("./assets/spice.svg"),
+  ]);
+
+  return { harvester, worm, spice };
+}
+
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error(`Failed to load asset: ${src}`));
+    image.src = src;
+  });
 }

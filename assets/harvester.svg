@@ -1,0 +1,23 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="harvesterBody" x1="34" y1="48" x2="198" y2="212" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F6E0B3"/>
+      <stop offset="1" stop-color="#AF7A3B"/>
+    </linearGradient>
+    <linearGradient id="harvesterShadow" x1="48" y1="176" x2="216" y2="176" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#3B2818" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#3B2818" stop-opacity="0.48"/>
+      <stop offset="1" stop-color="#3B2818" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect x="12" y="12" width="232" height="232" rx="56" fill="#2A1D13"/>
+  <ellipse cx="128" cy="196" rx="84" ry="22" fill="url(#harvesterShadow)"/>
+  <path d="M62 158L84 82H170L194 158H62Z" fill="url(#harvesterBody)" stroke="#F8EED5" stroke-width="10" stroke-linejoin="round"/>
+  <path d="M94 82L110 58H146L162 82H94Z" fill="#D8A85A" stroke="#F8EED5" stroke-width="10" stroke-linejoin="round"/>
+  <rect x="84" y="104" width="88" height="28" rx="12" fill="#3A2819"/>
+  <path d="M76 168H180" stroke="#6E4B29" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="92" cy="174" r="12" fill="#F3D49A"/>
+  <circle cx="164" cy="174" r="12" fill="#F3D49A"/>
+  <path d="M54 118H30" stroke="#D8A85A" stroke-width="12" stroke-linecap="round"/>
+  <path d="M226 118H202" stroke="#D8A85A" stroke-width="12" stroke-linecap="round"/>
+</svg>

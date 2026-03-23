@@ -1,0 +1,21 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="wormBody" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(128 128) rotate(90) scale(104)">
+      <stop stop-color="#E8B56C"/>
+      <stop offset="0.58" stop-color="#C26F45"/>
+      <stop offset="1" stop-color="#5B2C1F"/>
+    </radialGradient>
+  </defs>
+  <rect x="12" y="12" width="232" height="232" rx="56" fill="#2A1A13"/>
+  <circle cx="128" cy="128" r="86" fill="url(#wormBody)"/>
+  <circle cx="128" cy="128" r="52" fill="#26150F"/>
+  <path d="M128 62L142 92" stroke="#F6E0B3" stroke-width="8" stroke-linecap="round"/>
+  <path d="M171 84L154 108" stroke="#F6E0B3" stroke-width="8" stroke-linecap="round"/>
+  <path d="M192 128H160" stroke="#F6E0B3" stroke-width="8" stroke-linecap="round"/>
+  <path d="M171 172L154 148" stroke="#F6E0B3" stroke-width="8" stroke-linecap="round"/>
+  <path d="M128 194L142 164" stroke="#F6E0B3" stroke-width="8" stroke-linecap="round"/>
+  <path d="M85 172L102 148" stroke="#F6E0B3" stroke-width="8" stroke-linecap="round"/>
+  <path d="M64 128H96" stroke="#F6E0B3" stroke-width="8" stroke-linecap="round"/>
+  <path d="M85 84L102 108" stroke="#F6E0B3" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="128" cy="128" r="18" fill="#D96C42"/>
+</svg>

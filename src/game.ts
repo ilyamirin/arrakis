@@ -1,192 +1,206 @@
-import { Position, GameState } from './types.js';
-import { Harvester } from './harvester.js';
-import { Worm } from './worm.js';
-import { Renderer } from './renderer.js';
+import {
+  BOARD_SIZE,
+  CENTER_INDEX,
+  TOTAL_SPICE,
+  type CellState,
+  type GameState,
+  type MoveOption,
+  type Position,
+} from "./types.js";
 
-export class Game {
-    private canvas: HTMLCanvasElement;
-    private ctx: CanvasRenderingContext2D;
-    private harvester: Harvester;
-    private worms: Worm[];
-    private spicePositions: Set<string>;
-    private collectedSpice: number;
-    private totalSpice: number;
-    private moves: number;
-    private gameOver: boolean;
-    private won: boolean;
-    private renderer: Renderer;
+const KNIGHT_OFFSETS: Position[] = [
+  { x: -2, y: -1 },
+  { x: -2, y: 1 },
+  { x: -1, y: -2 },
+  { x: -1, y: 2 },
+  { x: 1, y: -2 },
+  { x: 1, y: 2 },
+  { x: 2, y: -1 },
+  { x: 2, y: 1 },
+];
 
-    constructor(canvas: HTMLCanvasElement) {
-        console.log('Инициализация игры...');
-        this.canvas = canvas;
-        this.ctx = canvas.getContext('2d')!;
-        
-        if (!this.ctx) {
-            console.error('Не удалось получить 2D контекст canvas!');
-            return;
+export class ArrakisGame {
+  private board: CellState[][] = [];
+  private harvester: Position = { x: CENTER_INDEX, y: CENTER_INDEX };
+  private worm: Position | null = null;
+  private moves = 0;
+  private collectedSpice = 0;
+  private status: GameState["status"] = "playing";
+  private message = "";
+
+  constructor() {
+    this.reset();
+  }
+
+  public reset(): GameState {
+    this.board = this.createBoard();
+    this.harvester = { x: CENTER_INDEX, y: CENTER_INDEX };
+    this.worm = null;
+    this.moves = 0;
+    this.collectedSpice = 0;
+    this.status = "playing";
+    this.message = "Выберите подсвеченную клетку, чтобы начать маршрут.";
+    return this.getState();
+  }
+
+  public getState(): GameState {
+    return {
+      board: this.board.map((row) => row.map((cell) => ({ ...cell }))),
+      harvester: { ...this.harvester },
+      worm: this.worm ? { ...this.worm } : null,
+      validMoves: this.computeValidMoves(),
+      totalSpice: TOTAL_SPICE,
+      collectedSpice: this.collectedSpice,
+      moves: this.moves,
+      status: this.status,
+      message: this.message,
+    };
+  }
+
+  public moveTo(target: Position): GameState {
+    if (this.status !== "playing") {
+      return this.getState();
+    }
+
+    const validMove = this.computeValidMoves().find((move) =>
+      this.positionsEqual(move.target, target),
+    );
+
+    if (!validMove) {
+      this.message = "Этот прыжок недоступен. Используйте подсвеченные клетки.";
+      return this.getState();
+    }
+
+    this.harvester = { ...validMove.target };
+    this.moves += 1;
+
+    if (this.board[target.y][target.x].hasSpice) {
+      this.board[target.y][target.x].hasSpice = false;
+      this.collectedSpice += 1;
+      this.message = "Спайс собран. Червь уже чувствует вибрацию.";
+    } else {
+      this.message = "Пустой песок. Продолжайте маршрут.";
+    }
+
+    if (this.collectedSpice >= TOTAL_SPICE) {
+      this.status = "won";
+      this.worm = null;
+      this.message = `Маршрут завершён за ${this.moves} ходов. Весь спайс собран.`;
+      return this.getState();
+    }
+
+    this.spawnWorm();
+
+    if (this.status === "playing" && this.computeValidMoves().length === 0) {
+      this.status = "lost";
+      this.message = "Ходы закончились: харвестер загнан в тупик.";
+    }
+
+    return this.getState();
+  }
+
+  private createBoard(): CellState[][] {
+    const board = Array.from({ length: BOARD_SIZE }, () =>
+      Array.from({ length: BOARD_SIZE }, () => ({ hasSpice: false })),
+    );
+
+    const available: Position[] = [];
+
+    for (let y = 0; y < BOARD_SIZE; y += 1) {
+      for (let x = 0; x < BOARD_SIZE; x += 1) {
+        if (x === CENTER_INDEX && y === CENTER_INDEX) {
+          continue;
         }
-        
-        this.harvester = new Harvester();
-        this.worms = [];
-        this.spicePositions = new Set();
-        this.collectedSpice = 0;
-        this.totalSpice = 25;
-        this.moves = 0;
-        this.gameOver = false;
-        this.won = false;
-        this.renderer = new Renderer(this.ctx);
-
-        console.log('Инициализируем игру...');
-        this.initializeGame();
-        this.setupEventListeners();
-        console.log('Игра инициализирована');
+        available.push({ x, y });
+      }
     }
 
-    private initializeGame(): void {
-        this.generateSpice();
-        this.render();
-        this.updateUI();
+    this.shuffle(available);
+
+    for (const cell of available.slice(0, TOTAL_SPICE)) {
+      board[cell.y][cell.x].hasSpice = true;
     }
 
-    private generateSpice(): void {
-        console.log('Генерируем спайс...');
-        this.spicePositions.clear();
-        const harvesterPos = `${this.harvester.position.x},${this.harvester.position.y}`;
-        
-        while (this.spicePositions.size < this.totalSpice) {
-            const x = Math.floor(Math.random() * 9);
-            const y = Math.floor(Math.random() * 9);
-            const posKey = `${x},${y}`;
-            
-            if (posKey !== harvesterPos) {
-                this.spicePositions.add(posKey);
-            }
+    return board;
+  }
+
+  private computeValidMoves(): MoveOption[] {
+    return KNIGHT_OFFSETS.map((delta) => ({
+      target: {
+        x: this.harvester.x + delta.x,
+        y: this.harvester.y + delta.y,
+      },
+      delta,
+      label: this.toBoardNotation({
+        x: this.harvester.x + delta.x,
+        y: this.harvester.y + delta.y,
+      }),
+      notation: this.toDeltaNotation(delta),
+    }))
+      .filter((move) => this.isInside(move.target))
+      .filter((move) => !this.worm || !this.positionsEqual(move.target, this.worm))
+      .sort((left, right) => left.target.y - right.target.y || left.target.x - right.target.x);
+  }
+
+  private spawnWorm(): void {
+    const candidates: Position[] = [];
+
+    for (let y = 0; y < BOARD_SIZE; y += 1) {
+      for (let x = 0; x < BOARD_SIZE; x += 1) {
+        const next = { x, y };
+        if (this.worm && this.positionsEqual(next, this.worm)) {
+          continue;
         }
-        
-        console.log(`Сгенерировано ${this.spicePositions.size} единиц спайса`);
-        console.log('Позиции спайса:', Array.from(this.spicePositions));
+        candidates.push(next);
+      }
     }
 
-    private setupEventListeners(): void {
-        this.canvas.addEventListener('click', (event) => {
-            if (this.gameOver) return;
-
-            const rect = this.canvas.getBoundingClientRect();
-            const x = Math.floor((event.clientX - rect.left) / 50);
-            const y = Math.floor((event.clientY - rect.top) / 50);
-            
-            this.handleMove({ x, y });
-        });
+    if (candidates.length === 0) {
+      this.worm = null;
+      return;
     }
 
-    private handleMove(targetPosition: Position): void {
-        const possibleMoves = this.harvester.getPossibleMoves();
-        const isValidMove = possibleMoves.some(move => 
-            move.x === targetPosition.x && move.y === targetPosition.y
-        );
+    const nextWorm = candidates[Math.floor(Math.random() * candidates.length)];
+    this.worm = nextWorm;
 
-        if (!isValidMove) return;
-
-        // Проверяем, есть ли червь на целевой позиции
-        const wormOnTarget = this.worms.some(worm => 
-            worm.position.x === targetPosition.x && worm.position.y === targetPosition.y
-        );
-
-        if (wormOnTarget) {
-            this.gameOver = true;
-            this.updateUI();
-            this.render();
-            return;
-        }
-
-        // Перемещаем харвестер
-        this.harvester.moveTo(targetPosition);
-        this.moves++;
-
-        // Проверяем сбор спайса
-        const posKey = `${targetPosition.x},${targetPosition.y}`;
-        if (this.spicePositions.has(posKey)) {
-            this.spicePositions.delete(posKey);
-            this.collectedSpice++;
-        }
-
-        // Проверяем победу
-        if (this.collectedSpice === this.totalSpice) {
-            this.won = true;
-            this.gameOver = true;
-            this.updateUI();
-            this.render();
-            return;
-        }
-
-        // Спавним червя
-        this.spawnWorm();
-
-        this.render();
-        this.updateUI();
+    if (this.positionsEqual(nextWorm, this.harvester)) {
+      this.status = "lost";
+      this.message = "Червь вынырнул прямо под харвестером. Экспедиция потеряна.";
+      return;
     }
 
-    private spawnWorm(): void {
-        const occupiedPositions: Position[] = [
-            this.harvester.position,
-            ...this.worms.map(worm => worm.position)
-        ];
+    this.message = `Червь замечен в секторе ${this.toBoardNotation(nextWorm)}.`;
+  }
 
-        const newWorm = Worm.spawnRandomWorm(occupiedPositions);
-        if (newWorm) {
-            this.worms.push(newWorm);
+  private toBoardNotation(position: Position): string {
+    const file = String.fromCharCode(65 + position.x);
+    const rank = BOARD_SIZE - position.y;
+    return `${file}${rank}`;
+  }
 
-            // Проверяем, не появился ли червь на харвестере
-            if (newWorm.position.x === this.harvester.position.x && 
-                newWorm.position.y === this.harvester.position.y) {
-                this.gameOver = true;
-            }
-        }
+  private toDeltaNotation(delta: Position): string {
+    const horizontal = delta.x > 0 ? `+${delta.x}` : `${delta.x}`;
+    const vertical = delta.y > 0 ? `+${delta.y}` : `${delta.y}`;
+    return `${horizontal} / ${vertical}`;
+  }
+
+  private isInside(position: Position): boolean {
+    return (
+      position.x >= 0 &&
+      position.x < BOARD_SIZE &&
+      position.y >= 0 &&
+      position.y < BOARD_SIZE
+    );
+  }
+
+  private positionsEqual(left: Position, right: Position): boolean {
+    return left.x === right.x && left.y === right.y;
+  }
+
+  private shuffle<T>(items: T[]): void {
+    for (let index = items.length - 1; index > 0; index -= 1) {
+      const swapIndex = Math.floor(Math.random() * (index + 1));
+      [items[index], items[swapIndex]] = [items[swapIndex], items[index]];
     }
-
-    private render(): void {
-        console.log('Рендерим игру...');
-        this.renderer.clear();
-        this.renderer.drawGrid();
-        this.renderer.drawSpice(Array.from(this.spicePositions));
-        this.renderer.drawWorms(this.worms);
-        this.renderer.drawHarvester(this.harvester);
-        
-        if (!this.gameOver) {
-            this.renderer.drawPossibleMoves(this.harvester.getPossibleMoves());
-        }
-        console.log('Рендеринг завершен');
-    }
-
-    private updateUI(): void {
-        const spiceCountEl = document.getElementById('spice-count')!;
-        const movesCountEl = document.getElementById('moves-count')!;
-        const gameStatusEl = document.getElementById('game-status')!;
-
-        spiceCountEl.textContent = this.collectedSpice.toString();
-        movesCountEl.textContent = this.moves.toString();
-
-        if (this.won) {
-            gameStatusEl.textContent = 'Победа! Весь спайс собран!';
-            gameStatusEl.style.color = '#228B22';
-        } else if (this.gameOver) {
-            gameStatusEl.textContent = 'Поражение! Червь поймал харвестер!';
-            gameStatusEl.style.color = '#DC143C';
-        } else {
-            gameStatusEl.textContent = 'Собирайте спайс, избегайте червей!';
-            gameStatusEl.style.color = '#8B4513';
-        }
-    }
-
-    public restart(): void {
-        this.harvester.reset();
-        this.worms = [];
-        this.spicePositions.clear();
-        this.collectedSpice = 0;
-        this.moves = 0;
-        this.gameOver = false;
-        this.won = false;
-        
-        this.initializeGame();
-    }
+  }
 }
