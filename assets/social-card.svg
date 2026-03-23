@@ -54,11 +54,11 @@
     <path d="M112 0L118 -11H132L138 -2L132 17H114L112 0Z" fill="#D8A85A" stroke="#F7E4BA" stroke-width="5" stroke-linejoin="round"/>
   </g>
 
-  <text x="118" y="150" fill="#E1BF7B" font-family="IBM Plex Mono, Menlo, monospace" font-size="24" letter-spacing="6">DUNE / TACTICAL HARVEST</text>
-  <text x="118" y="248" fill="#F7E4BA" font-family="IBM Plex Mono, Menlo, monospace" font-size="82" font-weight="700">ARRAKIS</text>
-  <text x="118" y="332" fill="#D98448" font-family="IBM Plex Mono, Menlo, monospace" font-size="82" font-weight="700">SPICE HARVEST</text>
+  <text x="118" y="150" fill="#E1BF7B" font-family="IBM Plex Mono, Menlo, monospace" font-size="24" letter-spacing="6">RETRO-FUTURIST DESERT GAME</text>
+  <text x="118" y="248" fill="#F7E4BA" font-family="IBM Plex Mono, Menlo, monospace" font-size="82" font-weight="700">AMBER DUNES</text>
+  <text x="118" y="332" fill="#D98448" font-family="IBM Plex Mono, Menlo, monospace" font-size="82" font-weight="700">HARVEST</text>
   <text x="118" y="404" fill="#F9F1DF" font-family="IBM Plex Mono, Menlo, monospace" font-size="30">
-    Harvest spice. Move like a knight. Avoid sandworms.
+    Gather amber. Move like a knight. Evade Sinkjaw strikes.
   </text>
   <text x="118" y="452" fill="#CBB69A" font-family="IBM Plex Mono, Menlo, monospace" font-size="24">
     Browser game by Ilya Mirin

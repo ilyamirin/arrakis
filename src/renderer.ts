@@ -5,7 +5,7 @@ interface Assets {
   worm: HTMLImageElement;
   spice: HTMLImageElement;
   wormFeast: HTMLImageElement;
-  ornithopter: HTMLImageElement;
+  skimmer: HTMLImageElement;
 }
 
 export interface FlightAnimationFrame {
@@ -315,7 +315,7 @@ export class CanvasRenderer {
 
     if (animation) {
       this.drawFloatingIcon(
-        this.assets.ornithopter,
+        this.assets.skimmer,
         animation.carrier,
         metrics,
         1.12,
@@ -365,10 +365,10 @@ export class CanvasRenderer {
     this.ctx.textBaseline = "middle";
     this.ctx.fillText(
       state.status === "won"
-        ? "HARVEST COMPLETE"
+        ? "AMBER SECURED"
         : isWormAttack
-          ? "HARVESTER CONSUMED"
-          : "SANDWORM STRIKE",
+          ? "COLLECTOR CONSUMED"
+          : "SINKJAW STRIKE",
       metrics.width / 2,
       isWormAttack ? overlayY + metrics.cellSize * 3.15 : metrics.originY + metrics.cellSize * 4.0,
     );
@@ -378,9 +378,9 @@ export class CanvasRenderer {
 
     const bodyText =
       state.status === "won"
-        ? "Запустите New Run для новой раскладки."
+        ? "Запустите New Run для нового маршрута по The Amber Waste."
         : isWormAttack
-          ? "Червь поглотил харвестер. Запустите New Run, чтобы начать новую экспедицию."
+          ? "Sinkjaw поглотил Collector. Запустите New Run, чтобы начать новую экспедицию."
           : "Новая партия доступна по кнопке New Run.";
     const bodyY = isWormAttack ? overlayY + metrics.cellSize * 3.75 : metrics.originY + metrics.cellSize * 4.7;
     const maxTextWidth = overlayWidth - metrics.cellSize * 0.8;
@@ -481,15 +481,15 @@ export class CanvasRenderer {
 }
 
 export async function loadAssets(): Promise<Assets> {
-  const [harvester, worm, spice, wormFeast, ornithopter] = await Promise.all([
+  const [harvester, worm, spice, wormFeast, skimmer] = await Promise.all([
     loadImage("./assets/harvester.svg"),
     loadImage("./assets/worm.svg"),
     loadImage("./assets/spice.svg"),
     loadImage("./assets/worm-feast.svg"),
-    loadImage("./assets/ornithopter.svg"),
+    loadImage("./assets/skimmer.svg"),
   ]);
 
-  return { harvester, worm, spice, wormFeast, ornithopter };
+  return { harvester, worm, spice, wormFeast, skimmer };
 }
 
 function loadImage(src: string): Promise<HTMLImageElement> {

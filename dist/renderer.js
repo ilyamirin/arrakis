@@ -172,7 +172,7 @@ export class CanvasRenderer {
             this.drawFloatingIcon(this.assets.harvester, animation.carriedHarvester, metrics, 0.62, animation.heading, metrics.cellSize * 0.1);
         }
         if (animation) {
-            this.drawFloatingIcon(this.assets.ornithopter, animation.carrier, metrics, 1.12, animation.heading, 0);
+            this.drawFloatingIcon(this.assets.skimmer, animation.carrier, metrics, 1.12, animation.heading, 0);
         }
     }
     drawOverlay(state, metrics) {
@@ -198,16 +198,16 @@ export class CanvasRenderer {
         this.ctx.textAlign = "center";
         this.ctx.textBaseline = "middle";
         this.ctx.fillText(state.status === "won"
-            ? "HARVEST COMPLETE"
+            ? "AMBER SECURED"
             : isWormAttack
-                ? "HARVESTER CONSUMED"
-                : "SANDWORM STRIKE", metrics.width / 2, isWormAttack ? overlayY + metrics.cellSize * 3.15 : metrics.originY + metrics.cellSize * 4.0);
+                ? "COLLECTOR CONSUMED"
+                : "SINKJAW STRIKE", metrics.width / 2, isWormAttack ? overlayY + metrics.cellSize * 3.15 : metrics.originY + metrics.cellSize * 4.0);
         this.ctx.fillStyle = "rgba(249, 241, 223, 0.86)";
         this.ctx.font = `${metrics.cellSize * 0.22}px "IBM Plex Mono", monospace`;
         const bodyText = state.status === "won"
-            ? "Запустите New Run для новой раскладки."
+            ? "Запустите New Run для нового маршрута по The Amber Waste."
             : isWormAttack
-                ? "Червь поглотил харвестер. Запустите New Run, чтобы начать новую экспедицию."
+                ? "Sinkjaw поглотил Collector. Запустите New Run, чтобы начать новую экспедицию."
                 : "Новая партия доступна по кнопке New Run.";
         const bodyY = isWormAttack ? overlayY + metrics.cellSize * 3.75 : metrics.originY + metrics.cellSize * 4.7;
         const maxTextWidth = overlayWidth - metrics.cellSize * 0.8;
@@ -277,14 +277,14 @@ export class CanvasRenderer {
     }
 }
 export async function loadAssets() {
-    const [harvester, worm, spice, wormFeast, ornithopter] = await Promise.all([
+    const [harvester, worm, spice, wormFeast, skimmer] = await Promise.all([
         loadImage("./assets/harvester.svg"),
         loadImage("./assets/worm.svg"),
         loadImage("./assets/spice.svg"),
         loadImage("./assets/worm-feast.svg"),
-        loadImage("./assets/ornithopter.svg"),
+        loadImage("./assets/skimmer.svg"),
     ]);
-    return { harvester, worm, spice, wormFeast, ornithopter };
+    return { harvester, worm, spice, wormFeast, skimmer };
 }
 function loadImage(src) {
     return new Promise((resolve, reject) => {

@@ -1,4 +1,4 @@
-import { ArrakisGame } from "./game.js";
+import { AmberDunesGame } from "./game.js";
 import {
   CanvasRenderer,
   loadAssets,
@@ -7,8 +7,8 @@ import {
 import { BOARD_SIZE, type GameState, type Position } from "./types.js";
 import { LocalWormBrain } from "./worm-brain.js";
 
-const WORM_BRAIN_CONSENT_KEY = "arrakis.worm-brain-consent";
-const ORNITHOPTER_FLIGHT_MS = 760;
+const WORM_BRAIN_CONSENT_KEY = "amber-dunes-harvest.sinkjaw-consent";
+const SKIMMER_FLIGHT_MS = 760;
 const PICKUP_PHASE_END = 0.22;
 const DROPOFF_PHASE_START = 0.8;
 
@@ -18,15 +18,15 @@ function boardLabel(x: number, y: number): string {
 
 function statusTitle(state: GameState): string {
   if (state.status === "won") {
-    return "Harvest complete";
+    return "Amber secured";
   }
   if (state.status === "lost") {
     if (state.lossReason === "worm_attack") {
-      return "Harvester consumed";
+      return "Collector consumed";
     }
-    return "Operation lost";
+    return "Route lost";
   }
-  return "Harvest in progress";
+  return "Run in progress";
 }
 
 function statusClass(state: GameState): string {
@@ -184,7 +184,7 @@ async function main(): Promise<void> {
   }
 
   const renderer = new CanvasRenderer(canvas, await loadAssets());
-  const game = new ArrakisGame();
+  const game = new AmberDunesGame();
   const wormBrain = new LocalWormBrain(window.localStorage);
   let currentState = game.getState();
   let activeFlight:
@@ -210,16 +210,16 @@ async function main(): Promise<void> {
         : buildFlightFrame(
             flight.source,
             flight.target,
-            clamp01((now - flight.startedAt) / ORNITHOPTER_FLIGHT_MS),
+            clamp01((now - flight.startedAt) / SKIMMER_FLIGHT_MS),
           );
 
     renderer.render(currentState, animation);
 
     if (animation && flight) {
-      statusTitleElement.textContent = "Airlift in progress";
+      statusTitleElement.textContent = "Skimmer in transit";
       statusTitleElement.className = "status-playing";
       statusMessageElement.textContent =
-        `Орнитоптер переносит харвестер в сектор ${boardLabel(flight.target.x, flight.target.y)}.`;
+        `Skimmer переносит Collector в сектор ${boardLabel(flight.target.x, flight.target.y)}.`;
     } else {
       statusTitleElement.textContent = statusTitle(currentState);
       statusTitleElement.className = statusClass(currentState);
@@ -262,7 +262,7 @@ async function main(): Promise<void> {
 
       renderView(now);
 
-      if (now - activeFlight.startedAt < ORNITHOPTER_FLIGHT_MS) {
+      if (now - activeFlight.startedAt < SKIMMER_FLIGHT_MS) {
         activeFlight.animationFrameId = window.requestAnimationFrame(step);
         return;
       }

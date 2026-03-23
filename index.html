@@ -5,29 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Arrakis Spice Harvest is a 100% AI-generated, minimalist Dune-inspired browser tactics game. Pilot a harvester across a 9x9 desert grid, collect spice, dodge sandworms, and survive long enough to finish the route."
+      content="Amber Dunes Harvest is a 100% AI-generated retro-futurist desert game. Guide a collector across a 9x9 grid in The Amber Waste, secure amber, evade Sinkjaw strikes, and survive the route."
     />
     <meta name="theme-color" content="#130f0b" />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="Arrakis Spice Harvest" />
+    <meta property="og:title" content="Amber Dunes Harvest" />
     <meta
       property="og:description"
-      content="A 100% AI-generated Dune-inspired browser tactics game by Ilya Mirin: harvest spice, move like a knight, and avoid sandworms on a 9x9 desert board."
+      content="A 100% AI-generated retro-futurist desert game by Ilya Mirin: guide a collector through The Amber Waste, gather amber, and evade Sinkjaw strikes on a 9x9 board."
     />
-    <meta property="og:site_name" content="Arrakis Spice Harvest" />
-    <meta property="og:image" content="/assets/social-card.svg" />
+    <meta property="og:site_name" content="Amber Dunes Harvest" />
+    <meta property="og:image" content="./assets/social-card.svg" />
     <meta
       property="og:image:alt"
-      content="Arrakis Spice Harvest social preview card with desert palette and game title."
+      content="Amber Dunes Harvest social preview card with desert palette and game title."
     />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Arrakis Spice Harvest" />
+    <meta name="twitter:title" content="Amber Dunes Harvest" />
     <meta
       name="twitter:description"
-      content="A 100% AI-generated Dune-inspired browser tactics game: harvest spice, move like a knight, and evade sandworms."
+      content="A 100% AI-generated retro-futurist desert game: gather amber, move like a knight, and evade Sinkjaw strikes."
     />
-    <meta name="twitter:image" content="/assets/social-card.svg" />
-    <title>Arrakis Spice Harvest</title>
+    <meta name="twitter:image" content="./assets/social-card.svg" />
+    <title>Amber Dunes Harvest</title>
     <link rel="icon" type="image/svg+xml" href="./assets/favicon-worm.svg" />
     <link rel="stylesheet" href="./styles.css" />
   </head>
@@ -35,11 +35,12 @@
     <div class="page-shell">
       <header class="hero">
         <div class="hero-copy">
-          <p class="eyebrow">Dune / Tactical Harvest</p>
-          <h1>Arrakis Spice Harvest</h1>
+          <p class="eyebrow">Retro-Futurist Desert Game</p>
+          <h1>Amber Dunes Harvest</h1>
           <p class="hero-text">
-            Собери весь спайс на сетке 9x9. Харвестер ходит как шахматный конь,
-            а песчаный червь каждый раз меняет точку появления.
+            Собери весь amber на сетке 9x9 в пределах The Amber Waste.
+            Collector ходит как шахматный конь, а Sinkjaw после каждого хода
+            меняет точку появления.
           </p>
           <p class="project-note">100% AI-generated project: code, art, copy, and interface.</p>
         </div>
@@ -55,7 +56,7 @@
               id="game-canvas"
               width="900"
               height="900"
-              aria-label="Игровое поле Arrakis Spice Harvest"
+              aria-label="Игровое поле Amber Dunes Harvest"
             ></canvas>
           </div>
         </section>
@@ -64,16 +65,16 @@
           <section class="panel status-panel">
             <div class="panel-header">
               <p class="panel-kicker">Current state</p>
-              <h2 id="status-title">Harvest in progress</h2>
+              <h2 id="status-title">Run in progress</h2>
             </div>
             <p id="status-message" class="status-message">
-              Выберите подсвеченную клетку, чтобы переместить харвестер.
+              Выберите подсвеченную клетку, чтобы переместить Collector.
             </p>
           </section>
 
           <section class="panel metrics-panel">
             <div class="metric">
-              <span class="metric-label">Spice</span>
+              <span class="metric-label">Amber</span>
               <strong id="spice-value">0 / 25</strong>
             </div>
             <div class="metric">
@@ -90,29 +91,29 @@
             <div class="legend-item">
               <img src="./assets/harvester.svg" alt="" />
               <div>
-                <span>Harvester</span>
-                <p>Собирает спайс при приземлении.</p>
+                <span>Collector</span>
+                <p>Собирает amber при приземлении.</p>
               </div>
             </div>
             <div class="legend-item">
               <img src="./assets/worm.svg" alt="" />
               <div>
-                <span>Worm</span>
+                <span>Sinkjaw</span>
                 <p>Появляется после каждого хода и блокирует клетку.</p>
               </div>
             </div>
             <div class="legend-item">
               <img src="./assets/spice.svg" alt="" />
               <div>
-                <span>Spice</span>
+                <span>Amber</span>
                 <p>Нужно собрать все 25 залежей.</p>
               </div>
             </div>
             <div class="legend-item">
-              <img src="./assets/ornithopter.svg" alt="" />
+              <img src="./assets/skimmer.svg" alt="" />
               <div>
-                <span>Ornithopter</span>
-                <p>Переносит харвестер на выбранную допустимую клетку.</p>
+                <span>Skimmer</span>
+                <p>Переносит Collector на выбранную допустимую клетку.</p>
               </div>
             </div>
           </section>
@@ -120,13 +121,13 @@
           <section class="panel rules-panel">
             <div class="panel-header compact">
               <p class="panel-kicker">Rules</p>
-              <h2>Mission brief</h2>
+              <h2>Field guide</h2>
             </div>
             <ul>
-              <li>Харвестер ходит буквой Г.</li>
+              <li>Collector ходит буквой Г.</li>
               <li>Подсветка на поле показывает допустимые клетки.</li>
-              <li>Если червь появляется на харвестере, партия проиграна.</li>
-              <li>Победа наступает сразу после сбора последней залежи.</li>
+              <li>Если Sinkjaw появляется на Collector, партия проиграна.</li>
+              <li>Победа наступает сразу после сбора последней залежи amber.</li>
             </ul>
           </section>
 
@@ -154,6 +155,11 @@
           </section>
         </aside>
       </main>
+
+      <footer class="site-footer">
+        <p>© 2026 Ilya Mirin. Released under the MIT License.</p>
+        <a href="./LICENSE" target="_blank" rel="noreferrer">View license</a>
+      </footer>
     </div>
 
     <section
@@ -161,17 +167,17 @@
       class="consent-banner"
       hidden
       aria-live="polite"
-      aria-label="Разрешение на cookies с мозгом червя"
+      aria-label="Разрешение на cookies с памятью Sinkjaw"
     >
-      <p class="consent-kicker">Worm memory</p>
-      <h2>Разрешить cookies с мозгом червя?</h2>
+      <p class="consent-kicker">Sinkjaw memory</p>
+      <h2>Разрешить cookies с памятью Sinkjaw?</h2>
       <p class="consent-copy">
-        Если разрешишь, червь будет локально запоминать твои ходы и со временем
-        учиться охотиться именно на этого игрока.
+        Если разрешишь, Sinkjaw будет локально запоминать твои ходы и со
+        временем учиться охотиться именно на этого игрока.
       </p>
       <div class="consent-actions">
         <button id="worm-brain-accept" class="primary-button consent-accept" type="button">
-          Allow brain
+          Allow memory
         </button>
         <button id="worm-brain-decline" class="consent-button" type="button">
           Keep random

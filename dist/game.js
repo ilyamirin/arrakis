@@ -10,7 +10,7 @@ const KNIGHT_OFFSETS = [
     { x: 2, y: -1 },
     { x: 2, y: 1 },
 ];
-export class ArrakisGame {
+export class AmberDunesGame {
     board = [];
     harvester = { x: CENTER_INDEX, y: CENTER_INDEX };
     worm = null;
@@ -31,7 +31,7 @@ export class ArrakisGame {
         this.collectedSpice = 0;
         this.status = "playing";
         this.lossReason = null;
-        this.message = "Выберите подсвеченную клетку, чтобы начать маршрут.";
+        this.message = "Выберите подсвеченную клетку, чтобы начать маршрут через The Amber Waste.";
         return this.getState();
     }
     getState() {
@@ -65,23 +65,23 @@ export class ArrakisGame {
         if (this.board[target.y][target.x].hasSpice) {
             this.board[target.y][target.x].hasSpice = false;
             this.collectedSpice += 1;
-            this.message = "Спайс собран. Червь уже чувствует вибрацию.";
+            this.message = "Amber собран. Sinkjaw уже чувствует вибрацию.";
         }
         else {
-            this.message = "Пустой песок. Продолжайте маршрут.";
+            this.message = "Пустой участок Waste. Продолжайте маршрут.";
         }
         if (this.collectedSpice >= TOTAL_SPICE) {
             this.status = "won";
             this.lossReason = null;
             this.worm = null;
-            this.message = `Маршрут завершён за ${this.moves} ходов. Весь спайс собран.`;
+            this.message = `Маршрут завершён за ${this.moves} ходов. Весь amber собран.`;
             return this.getState();
         }
         this.spawnWorm();
         if (this.status === "playing" && this.computeValidMoves(this.worm).length === 0) {
             this.status = "lost";
             this.lossReason = "trapped";
-            this.message = "Ходы закончились: харвестер загнан в тупик.";
+            this.message = "Ходы закончились: Collector загнан в тупик.";
         }
         return this.getState();
     }
@@ -140,10 +140,10 @@ export class ArrakisGame {
         if (this.positionsEqual(nextWorm, this.harvester)) {
             this.status = "lost";
             this.lossReason = "worm_attack";
-            this.message = "Червь вынырнул прямо под харвестером. Экспедиция потеряна.";
+            this.message = "Sinkjaw вынырнул прямо под Collector. Экспедиция потеряна.";
             return;
         }
-        this.message = `Червь замечен в секторе ${this.toBoardNotation(nextWorm)}.`;
+        this.message = `Sinkjaw замечен в секторе ${this.toBoardNotation(nextWorm)}.`;
     }
     pickAdaptiveTarget() {
         if (!this.wormSpawnSelector) {

@@ -1,7 +1,7 @@
 import { BOARD_SIZE, type CellState, type GameState, type Position } from "./types.js";
 import type { WormSpawnContext } from "./game.js";
 
-const PROFILE_KEY = "arrakis.worm-bandit-profile";
+const PROFILE_KEY = "amber-dunes-harvest.sinkjaw-bandit-profile";
 const MODEL_VERSION = 2;
 const FEATURE_COUNT = 10;
 const LEARNING_RATE = 0.14;
