@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arrakis Spice Harvest</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="game-container">
+        <h1>Arrakis Spice Harvest</h1>
+        <div class="game-info">
+            <div class="stats">
+                <div class="stat">
+                    <span class="label">Спайс:</span>
+                    <span id="spice-count">0</span>/<span id="total-spice">25</span>
+                </div>
+                <div class="stat">
+                    <span class="label">Ходы:</span>
+                    <span id="moves-count">0</span>
+                </div>
+            </div>
+            <div class="game-status">
+                <span id="game-status">Собирайте спайс, избегайте червей!</span>
+            </div>
+        </div>
+        <canvas id="game-canvas" width="450" height="450"></canvas>
+        <div class="controls">
+            <button id="restart-btn">Новая игра</button>
+            <div class="instructions">
+                <p>Используйте клики мыши для перемещения харвестера</p>
+                <p>Харвестер движется буквой "Г" как шахматный конь</p>
+            </div>
+        </div>
+    </div>
+    <script src="dist/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+body {
+    margin: 0;
+    padding: 20px;
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #8B4513, #D2691E, #CD853F);
+    color: #2F1B14;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.game-container {
+    background: rgba(222, 184, 135, 0.9);
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    border: 3px solid #8B4513;
+}
+
+h1 {
+    margin: 0 0 20px 0;
+    color: #8B4513;
+    font-size: 2.5em;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    font-weight: bold;
+}
+
+.game-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 10px;
+    background: rgba(139, 69, 19, 0.1);
+    border-radius: 8px;
+}
+
+.stats {
+    display: flex;
+    gap: 20px;
+}
+
+.stat {
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+.label {
+    color: #8B4513;
+}
+
+.game-status {
+    font-size: 1.1em;
+    color: #8B4513;
+    font-weight: bold;
+}
+
+#game-canvas {
+    border: 3px solid #8B4513;
+    border-radius: 8px;
+    background: #F4A460;
+    cursor: pointer;
+    display: block;
+    margin: 0 auto;
+}
+
+.controls {
+    margin-top: 20px;
+}
+
+#restart-btn {
+    background: #8B4513;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    font-size: 1.1em;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.3s;
+}
+
+#restart-btn:hover {
+    background: #A0522D;
+}
+
+.instructions {
+    margin-top: 15px;
+    font-size: 0.9em;
+    color: #8B4513;
+}
+
+.instructions p {
+    margin: 5px 0;
+}
