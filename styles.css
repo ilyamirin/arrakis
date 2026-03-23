@@ -199,6 +199,11 @@ select {
   font-size: 1.15rem;
 }
 
+.rules-panel .panel-header.compact,
+.author-panel .panel-header.compact {
+  margin-bottom: 1rem;
+}
+
 .status-panel {
   min-height: 10rem;
 }
