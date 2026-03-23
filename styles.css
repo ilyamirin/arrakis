@@ -92,7 +92,9 @@ select {
 .hero-text,
 .status-message,
 .legend-item p,
-.rules-panel li {
+.rules-panel li,
+.author-copy,
+.author-meta {
   color: var(--muted);
   line-height: 1.6;
 }
@@ -100,6 +102,17 @@ select {
 .hero-text {
   margin: var(--space-3) 0 0;
   max-width: 42rem;
+}
+
+.project-note {
+  display: inline-block;
+  margin: 1rem 0 0;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid rgba(241, 201, 123, 0.22);
+  border-radius: 999px;
+  color: var(--sand-0);
+  background: rgba(255, 244, 220, 0.05);
+  font-size: 0.88rem;
 }
 
 .primary-button {
@@ -254,6 +267,26 @@ select {
 
 .rules-panel li + li {
   margin-top: 0.72rem;
+}
+
+.author-copy {
+  margin: 0 0 1rem;
+}
+
+.author-meta {
+  margin: 0 0 1rem;
+}
+
+.author-link {
+  display: inline-block;
+  color: var(--sand-0);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(241, 201, 123, 0.3);
+  padding-bottom: 0.18rem;
+}
+
+.author-link:hover {
+  border-color: rgba(241, 201, 123, 0.7);
 }
 
 .status-playing {
