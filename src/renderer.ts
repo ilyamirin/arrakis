@@ -69,9 +69,9 @@ export class CanvasRenderer {
     this.drawCells(state, metrics, animation, previewMove);
     this.drawStormFront(state, metrics);
     this.drawGrid(metrics);
-    this.drawPreviewTelegraph(metrics, previewMove, state.status === "playing");
     this.drawPieces(state, metrics, animation);
     this.drawOverlay(state, metrics);
+    this.drawPreviewTelegraph(metrics, previewMove, state.status === "playing");
   }
 
   public rerender(): void {
