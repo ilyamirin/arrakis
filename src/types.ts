@@ -32,6 +32,11 @@ export interface MoveOption {
   isStormLanding: boolean;
 }
 
+export interface PlannedMove {
+  target: Position;
+  driftTarget: Position | null;
+}
+
 export interface CellState {
   hasAmber: boolean;
   hasStorm: boolean;

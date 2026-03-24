@@ -5,8 +5,15 @@ import {
   loadAssets,
   type FlightAnimationFrame,
 } from "./renderer.js";
-import { BOARD_SIZE, type GameState, type MoveOption, type Position } from "./types.js";
+import {
+  BOARD_SIZE,
+  type GameState,
+  type MoveOption,
+  type PlannedMove,
+  type Position,
+} from "./types.js";
 const SKIMMER_FLIGHT_MS = 760;
+const STORM_DRIFT_MS = 1000;
 const PICKUP_PHASE_END = 0.22;
 const DROPOFF_PHASE_START = 0.8;
 
@@ -50,6 +57,10 @@ function interpolatePosition(from: Position, to: Position, progress: number): Po
 
 function clamp01(value: number): number {
   return Math.min(1, Math.max(0, value));
+}
+
+function samePosition(left: Position | null, right: Position | null): boolean {
+  return left?.x === right?.x && left?.y === right?.y;
 }
 
 function easeInOutCubic(value: number): number {
@@ -131,6 +142,65 @@ function buildFlightFrame(source: Position, target: Position, progress: number):
   };
 }
 
+function buildStormApproachFrame(
+  source: Position,
+  target: Position,
+  progress: number,
+): FlightAnimationFrame {
+  const direction = normalizeVector(target.x - source.x, target.y - source.y);
+  const perpendicular = { x: -direction.y, y: direction.x };
+  const heading = Math.atan2(direction.y, direction.x);
+  const approachStart = {
+    x: source.x - direction.x * 2.7,
+    y: source.y - direction.y * 2.7,
+  };
+  const phaseProgress = easeInOutCubic(progress);
+  const basePosition = interpolatePosition(approachStart, target, phaseProgress);
+  const lift = Math.sin(phaseProgress * Math.PI) * 0.34;
+  const carrier = {
+    x: basePosition.x + perpendicular.x * lift,
+    y: basePosition.y + perpendicular.y * lift,
+  };
+
+  return {
+    activeTarget: target,
+    carrier,
+    heading,
+    carriedCollector: {
+      x: carrier.x,
+      y: carrier.y + 0.12,
+    },
+    landedCollector: null,
+  };
+}
+
+function buildStormDriftFrame(
+  source: Position,
+  target: Position,
+  progress: number,
+): FlightAnimationFrame {
+  const direction = normalizeVector(target.x - source.x, target.y - source.y);
+  const heading = Math.atan2(direction.y, direction.x);
+  const phaseProgress = easeInOutCubic(progress);
+  const gust = Math.sin(phaseProgress * Math.PI * 3) * 0.16 * (1 - phaseProgress * 0.35);
+  const sway = { x: -direction.y * gust, y: direction.x * gust };
+  const carrier = {
+    x: lerp(source.x, target.x, phaseProgress) + sway.x,
+    y: lerp(source.y, target.y, phaseProgress) + sway.y,
+  };
+
+  return {
+    activeTarget: target,
+    carrier,
+    heading,
+    carriedCollector: {
+      x: carrier.x,
+      y: carrier.y + 0.12,
+    },
+    landedCollector: null,
+  };
+}
+
 async function main(): Promise<void> {
   const canvas = document.querySelector<HTMLCanvasElement>("#game-canvas");
   const restartButton = document.querySelector<HTMLButtonElement>("#restart-button");
@@ -167,9 +237,12 @@ async function main(): Promise<void> {
   let currentState = game.getState();
   let activeFlight:
     | {
+        phase: "flight" | "storm-approach" | "storm-drift";
         source: Position;
         target: Position;
+        plan: PlannedMove;
         startedAt: number;
+        duration: number;
         animationFrameId: number | null;
       }
     | null = null;
@@ -180,19 +253,42 @@ async function main(): Promise<void> {
     const animation =
       flight === null
         ? null
-        : buildFlightFrame(
-            flight.source,
-            flight.target,
-            clamp01((now - flight.startedAt) / SKIMMER_FLIGHT_MS),
-          );
+        : flight.phase === "storm-approach"
+          ? buildStormApproachFrame(
+              flight.source,
+              flight.target,
+              clamp01((now - flight.startedAt) / flight.duration),
+            )
+          : flight.phase === "storm-drift" && flight.plan.driftTarget
+            ? buildStormDriftFrame(
+                flight.source,
+                flight.plan.driftTarget,
+                clamp01((now - flight.startedAt) / flight.duration),
+              )
+            : buildFlightFrame(
+                flight.source,
+                flight.target,
+                clamp01((now - flight.startedAt) / flight.duration),
+              );
 
     renderer.render(currentState, animation, previewMove);
 
     if (animation && flight) {
-      statusTitleElement.textContent = "Skimmer in transit";
       statusTitleElement.className = "status-playing";
-      statusMessageElement.textContent =
-        `The Skimmer carries the Collector toward sector ${boardLabel(flight.target.x, flight.target.y)}.`;
+
+      if (flight.phase === "storm-approach") {
+        statusTitleElement.textContent = "Storm front";
+        statusMessageElement.textContent =
+          `The Skimmer cuts into the squall at sector ${boardLabel(flight.target.x, flight.target.y)}.`;
+      } else if (flight.phase === "storm-drift" && flight.plan.driftTarget) {
+        statusTitleElement.textContent = "Storm shear";
+        statusMessageElement.textContent =
+          `Wind shear catches the Skimmer and drags it toward sector ${boardLabel(flight.plan.driftTarget.x, flight.plan.driftTarget.y)}.`;
+      } else {
+        statusTitleElement.textContent = "Skimmer in transit";
+        statusMessageElement.textContent =
+          `The Skimmer carries the Collector toward sector ${boardLabel(flight.target.x, flight.target.y)}.`;
+      }
     } else {
       statusTitleElement.textContent = statusTitle(currentState);
       statusTitleElement.className = statusClass(currentState);
@@ -201,9 +297,17 @@ async function main(): Promise<void> {
 
     amberValueElement.textContent = `${currentState.collectedAmber} / ${currentState.totalAmber}`;
     movesValueElement.textContent = String(currentState.moves);
-    positionValueElement.textContent = animation && flight
-      ? `${boardLabel(currentState.collector.x, currentState.collector.y)} -> ${boardLabel(flight.target.x, flight.target.y)}`
-      : boardLabel(currentState.collector.x, currentState.collector.y);
+    if (animation && flight) {
+      if (flight.phase === "storm-drift" && flight.plan.driftTarget) {
+        positionValueElement.textContent =
+          `${boardLabel(flight.target.x, flight.target.y)} -> ${boardLabel(flight.plan.driftTarget.x, flight.plan.driftTarget.y)}`;
+      } else {
+        positionValueElement.textContent =
+          `${boardLabel(currentState.collector.x, currentState.collector.y)} -> ${boardLabel(flight.target.x, flight.target.y)}`;
+      }
+    } else {
+      positionValueElement.textContent = boardLabel(currentState.collector.x, currentState.collector.y);
+    }
   };
 
   const stopFlight = (): void => {
@@ -225,12 +329,23 @@ async function main(): Promise<void> {
     renderView();
   };
 
-  const startFlight = (target: Position): void => {
+  const isMobileTapPreviewMode = (): boolean =>
+    window.matchMedia("(hover: none) and (pointer: coarse)").matches;
+
+  const startFlight = (move: MoveOption): void => {
+    const plan = game.planMove(move.target);
+    if (!plan) {
+      return;
+    }
+
     const source = { ...currentState.collector };
     activeFlight = {
+      phase: move.isStormLanding ? "storm-approach" : "flight",
       source,
-      target: { ...target },
+      target: { ...move.target },
+      plan,
       startedAt: performance.now(),
+      duration: SKIMMER_FLIGHT_MS,
       animationFrameId: null,
     };
     previewMove = null;
@@ -242,14 +357,30 @@ async function main(): Promise<void> {
 
       renderView(now);
 
-      if (now - activeFlight.startedAt < SKIMMER_FLIGHT_MS) {
+      if (now - activeFlight.startedAt < activeFlight.duration) {
         activeFlight.animationFrameId = window.requestAnimationFrame(step);
         return;
       }
 
-      const destination = { ...activeFlight.target };
+      if (activeFlight.phase === "storm-approach" && activeFlight.plan.driftTarget) {
+        activeFlight = {
+          ...activeFlight,
+          phase: "storm-drift",
+          source: { ...activeFlight.target },
+          startedAt: now,
+          duration: STORM_DRIFT_MS,
+          animationFrameId: window.requestAnimationFrame(step),
+        };
+        renderView(now);
+        return;
+      }
+
+      const planToCommit = {
+        target: { ...activeFlight.plan.target },
+        driftTarget: activeFlight.plan.driftTarget ? { ...activeFlight.plan.driftTarget } : null,
+      };
       stopFlight();
-      update(game.moveTo(destination));
+      update(game.moveToWithPlan(planToCommit));
     };
 
     renderView(activeFlight.startedAt);
@@ -280,16 +411,46 @@ async function main(): Promise<void> {
       (move) => move.target.x === target.x && move.target.y === target.y,
     );
 
+    if (isMobileTapPreviewMode() && isValidMove) {
+      const nextPreview =
+        currentState.validMoves.find(
+          (move) => move.target.x === target.x && move.target.y === target.y,
+        ) ?? null;
+
+      if (nextPreview && samePosition(nextPreview.target, previewMove?.target ?? null)) {
+        startFlight(nextPreview);
+        return;
+      }
+
+      previewMove = nextPreview;
+      renderView();
+      return;
+    }
+
+    if (isMobileTapPreviewMode() && previewMove) {
+      previewMove = null;
+      renderView();
+    }
+
     if (!isValidMove) {
       update(game.moveTo(target));
       return;
     }
 
-    startFlight(target);
+    const move =
+      currentState.validMoves.find(
+        (candidate) => candidate.target.x === target.x && candidate.target.y === target.y,
+      ) ?? null;
+
+    if (!move) {
+      return;
+    }
+
+    startFlight(move);
   });
 
   canvas.addEventListener("pointermove", (event) => {
-    if (activeFlight) {
+    if (activeFlight || isMobileTapPreviewMode()) {
       return;
     }
 
@@ -319,7 +480,7 @@ async function main(): Promise<void> {
   });
 
   canvas.addEventListener("pointerleave", () => {
-    if (!previewMove || activeFlight) {
+    if (!previewMove || activeFlight || isMobileTapPreviewMode()) {
       return;
     }
     previewMove = null;

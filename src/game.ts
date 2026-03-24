@@ -6,6 +6,7 @@ import {
   type GameState,
   type LossReason,
   type MoveOption,
+  type PlannedMove,
   type Position,
   type TelegraphSector,
 } from "./types.js";
@@ -70,12 +71,48 @@ export class AmberDunesGame {
   }
 
   public moveTo(target: Position): GameState {
+    return this.moveToWithPlan({ target, driftTarget: null });
+  }
+
+  public planMove(target: Position): PlannedMove | null {
+    if (this.status !== "playing") {
+      return null;
+    }
+
+    const validMove = this.computeValidMoves(this.sinkjaw).find((move) =>
+      this.positionsEqual(move.target, target),
+    );
+
+    if (!validMove) {
+      return null;
+    }
+
+    if (!this.board[target.y][target.x].hasStorm) {
+      return {
+        target: { ...target },
+        driftTarget: null,
+      };
+    }
+
+    const driftTargets = this.computeStormDriftTargets();
+    const driftTarget =
+      driftTargets.length > 0
+        ? driftTargets[Math.floor(Math.random() * driftTargets.length)]
+        : null;
+
+    return {
+      target: { ...target },
+      driftTarget: driftTarget ? { ...driftTarget } : null,
+    };
+  }
+
+  public moveToWithPlan(plan: PlannedMove): GameState {
     if (this.status !== "playing") {
       return this.getState();
     }
 
     const validMove = this.computeValidMoves(this.sinkjaw).find((move) =>
-      this.positionsEqual(move.target, target),
+      this.positionsEqual(move.target, plan.target),
     );
 
     if (!validMove) {
@@ -87,9 +124,19 @@ export class AmberDunesGame {
     this.moves += 1;
     let message = "";
 
-    if (this.board[target.y][target.x].hasStorm) {
+    if (this.board[plan.target.y][plan.target.x].hasStorm) {
       const driftTargets = this.computeStormDriftTargets();
-      if (driftTargets.length > 0) {
+      const plannedDriftTarget = plan.driftTarget;
+      const plannedTarget =
+        plannedDriftTarget &&
+        driftTargets.some((candidate) => this.positionsEqual(candidate, plannedDriftTarget))
+          ? plannedDriftTarget
+          : null;
+
+      if (plannedTarget) {
+        this.collector = { ...plannedTarget };
+        message = `Storm shear flung the Collector clear to sector ${this.toBoardNotation(plannedTarget)}.`;
+      } else if (driftTargets.length > 0) {
         const driftTarget = driftTargets[Math.floor(Math.random() * driftTargets.length)];
         this.collector = { ...driftTarget };
         message = `Storm shear flung the Collector clear to sector ${this.toBoardNotation(driftTarget)}.`;
