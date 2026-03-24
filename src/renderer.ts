@@ -312,13 +312,13 @@ export class CanvasRenderer {
       metrics.originY + (previewMove.target.y + 0.5) * metrics.cellSize;
 
     if (previewMove.telegraphSector === "obscured") {
-      this.drawPreviewCaption(metrics, "TREMOR READ", "STORM BLIND");
+      this.drawPreviewCaption(metrics, "TREMOR READ", "READ LOST");
       return;
     }
 
     if (previewMove.telegraphSector === "encircling") {
       this.drawEncirclingSignal(centerX, centerY, metrics.cellSize);
-      this.drawPreviewCaption(metrics, "TREMOR READ", "ALL AROUND");
+      this.drawPreviewCaption(metrics, "TREMOR READ", "NO SAFE SIDE");
       return;
     }
 
@@ -636,23 +636,23 @@ export class CanvasRenderer {
   private sectorCaption(sector: TelegraphSector): string {
     switch (sector) {
       case "north":
-        return "NORTH REACH";
+        return "THREAT NORTH";
       case "northeast":
-        return "NORTHEAST";
+        return "THREAT NE";
       case "east":
-        return "EAST REACH";
+        return "THREAT EAST";
       case "southeast":
-        return "SOUTHEAST";
+        return "THREAT SE";
       case "south":
-        return "SOUTH REACH";
+        return "THREAT SOUTH";
       case "southwest":
-        return "SOUTHWEST";
+        return "THREAT SW";
       case "west":
-        return "WEST REACH";
+        return "THREAT WEST";
       case "northwest":
-        return "NORTHWEST";
+        return "THREAT NW";
       default:
-        return "TREMOR WIDE";
+        return "NO SAFE SIDE";
     }
   }
 

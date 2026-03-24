@@ -9,8 +9,6 @@ import { BOARD_SIZE, type GameState, type MoveOption, type Position } from "./ty
 const SKIMMER_FLIGHT_MS = 760;
 const PICKUP_PHASE_END = 0.22;
 const DROPOFF_PHASE_START = 0.8;
-const DEFAULT_PILOT_MESSAGE =
-  "Sweep the lit squares for the pilot's read.";
 
 function boardLabel(x: number, y: number): string {
   return `${String.fromCharCode(65 + x)}${BOARD_SIZE - y}`;
@@ -141,7 +139,6 @@ async function main(): Promise<void> {
   const amberValueElement = document.querySelector<HTMLElement>("#amber-value");
   const movesValueElement = document.querySelector<HTMLElement>("#moves-value");
   const positionValueElement = document.querySelector<HTMLElement>("#position-value");
-  const pilotMessageElement = document.querySelector<HTMLElement>("#pilot-message");
 
   if (
     !canvas ||
@@ -150,8 +147,7 @@ async function main(): Promise<void> {
     !statusMessageElement ||
     !amberValueElement ||
     !movesValueElement ||
-    !positionValueElement ||
-    !pilotMessageElement
+    !positionValueElement
   ) {
     throw new Error("The UI shell is incomplete.");
   }
@@ -208,7 +204,6 @@ async function main(): Promise<void> {
     positionValueElement.textContent = animation && flight
       ? `${boardLabel(currentState.collector.x, currentState.collector.y)} -> ${boardLabel(flight.target.x, flight.target.y)}`
       : boardLabel(currentState.collector.x, currentState.collector.y);
-    pilotMessageElement.textContent = previewMove?.pilotLine ?? DEFAULT_PILOT_MESSAGE;
   };
 
   const stopFlight = (): void => {

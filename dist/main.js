@@ -5,7 +5,6 @@ import { BOARD_SIZE } from "./types.js";
 const SKIMMER_FLIGHT_MS = 760;
 const PICKUP_PHASE_END = 0.22;
 const DROPOFF_PHASE_START = 0.8;
-const DEFAULT_PILOT_MESSAGE = "Sweep the lit squares for the pilot's read.";
 function boardLabel(x, y) {
     return `${String.fromCharCode(65 + x)}${BOARD_SIZE - y}`;
 }
@@ -116,15 +115,13 @@ async function main() {
     const amberValueElement = document.querySelector("#amber-value");
     const movesValueElement = document.querySelector("#moves-value");
     const positionValueElement = document.querySelector("#position-value");
-    const pilotMessageElement = document.querySelector("#pilot-message");
     if (!canvas ||
         !restartButton ||
         !statusTitleElement ||
         !statusMessageElement ||
         !amberValueElement ||
         !movesValueElement ||
-        !positionValueElement ||
-        !pilotMessageElement) {
+        !positionValueElement) {
         throw new Error("The UI shell is incomplete.");
     }
     const music = new GameMusicController([
@@ -163,7 +160,6 @@ async function main() {
         positionValueElement.textContent = animation && flight
             ? `${boardLabel(currentState.collector.x, currentState.collector.y)} -> ${boardLabel(flight.target.x, flight.target.y)}`
             : boardLabel(currentState.collector.x, currentState.collector.y);
-        pilotMessageElement.textContent = previewMove?.pilotLine ?? DEFAULT_PILOT_MESSAGE;
     };
     const stopFlight = () => {
         const flight = activeFlight;

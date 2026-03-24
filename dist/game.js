@@ -243,43 +243,29 @@ export class AmberDunesGame {
         if (candidates.length === 0) {
             return "encircling";
         }
-        const counts = new Map([
-            ["north", 0],
-            ["northeast", 0],
-            ["east", 0],
-            ["southeast", 0],
-            ["south", 0],
-            ["southwest", 0],
-            ["west", 0],
-            ["northwest", 0],
-            ["encircling", 0],
-            ["obscured", 0],
-        ]);
-        let centerHits = 0;
+        let vectorX = 0;
+        let vectorY = 0;
+        let nonCenterHits = 0;
         for (const candidate of candidates) {
             const dx = candidate.x - origin.x;
             const dy = candidate.y - origin.y;
             if (dx === 0 && dy === 0) {
-                centerHits += 1;
                 continue;
             }
-            const angle = Math.atan2(-dy, dx);
-            const sector = this.angleToSector(angle);
-            counts.set(sector, (counts.get(sector) ?? 0) + 1);
+            vectorX += dx;
+            vectorY += dy;
+            nonCenterHits += 1;
         }
-        const sorted = [...counts.entries()]
-            .filter(([sector]) => sector !== "encircling" && sector !== "obscured")
-            .sort((left, right) => right[1] - left[1]);
-        const [topSector, topCount] = sorted[0] ?? ["encircling", 0];
-        const secondCount = sorted[1]?.[1] ?? 0;
-        if (typeof topSector !== "string" ||
-            topCount === 0 ||
-            centerHits >= topCount ||
-            topCount < Math.ceil(candidates.length * 0.28) ||
-            secondCount >= topCount - 1) {
+        if (nonCenterHits === 0) {
             return "encircling";
         }
-        return topSector;
+        const averageX = vectorX / nonCenterHits;
+        const averageY = vectorY / nonCenterHits;
+        const drift = Math.hypot(averageX, averageY);
+        if (drift < 0.22) {
+            return "encircling";
+        }
+        return this.angleToSector(Math.atan2(-averageY, averageX));
     }
     angleToSector(angle) {
         const degrees = ((angle * 180) / Math.PI + 360) % 360;

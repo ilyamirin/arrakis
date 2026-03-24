@@ -95,7 +95,6 @@ select {
 
 .hero-text,
 .status-message,
-.pilot-message,
 .legend-item p,
 .rules-panel li,
 .author-copy,
@@ -213,10 +212,6 @@ select {
   min-height: 10rem;
 }
 
-.pilot-panel {
-  min-height: 8.5rem;
-}
-
 .metrics-panel {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -303,10 +298,6 @@ select {
 .legend-item p {
   margin: 0;
   font-size: 0.92rem;
-}
-
-.pilot-message {
-  margin: 0;
 }
 
 .rules-panel ul {
