@@ -1,6 +1,6 @@
 # Amber Dunes Harvest
 
-100% AI-generated retro-futurist desert game. You guide a `Collector` across a `9x9` grid in `The Amber Waste`, gather all `amber`, and survive random `Sinkjaw` strikes.
+Retro-futurist desert game with AI-generated code, art, copy, and interface. You guide a `Collector` across an `8x8` grid in `The Amber Waste`, gather all `amber`, and survive `Sinkjaw` strikes. The soundtrack is original project audio, and the sound effects use CC0 assets from OpenGameArt.
 
 ## Run locally
 
@@ -78,4 +78,4 @@ Under the current default random Sinkjaw rules, the best of the four tested heur
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+MIT for the game code and original project assets. See [LICENSE](LICENSE). Third-party audio provenance and licensing are documented in [THIRD_PARTY_AUDIO.md](THIRD_PARTY_AUDIO.md).
