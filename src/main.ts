@@ -1,4 +1,5 @@
 import { AmberDunesGame } from "./game.js";
+import { GameMusicController } from "./music.js";
 import {
   CanvasRenderer,
   loadAssets,
@@ -154,6 +155,16 @@ async function main(): Promise<void> {
   ) {
     throw new Error("The UI shell is incomplete.");
   }
+
+  const music = new GameMusicController([
+    "./assets/audio/amber-field-directive.mp3",
+    "./assets/audio/sand-between-signals.mp3",
+  ]);
+  const unlockMusic = (): void => {
+    music.unlock();
+  };
+  window.addEventListener("pointerdown", unlockMusic, { once: true });
+  window.addEventListener("keydown", unlockMusic, { once: true });
 
   const renderer = new CanvasRenderer(canvas, await loadAssets());
   const game = new AmberDunesGame();

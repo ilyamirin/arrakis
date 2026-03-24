@@ -1,4 +1,5 @@
 import { AmberDunesGame } from "./game.js";
+import { GameMusicController } from "./music.js";
 import { CanvasRenderer, loadAssets, } from "./renderer.js";
 import { BOARD_SIZE } from "./types.js";
 const SKIMMER_FLIGHT_MS = 760;
@@ -126,6 +127,15 @@ async function main() {
         !pilotMessageElement) {
         throw new Error("The UI shell is incomplete.");
     }
+    const music = new GameMusicController([
+        "./assets/audio/amber-field-directive.mp3",
+        "./assets/audio/sand-between-signals.mp3",
+    ]);
+    const unlockMusic = () => {
+        music.unlock();
+    };
+    window.addEventListener("pointerdown", unlockMusic, { once: true });
+    window.addEventListener("keydown", unlockMusic, { once: true });
     const renderer = new CanvasRenderer(canvas, await loadAssets());
     const game = new AmberDunesGame();
     let currentState = game.getState();
