@@ -205,10 +205,10 @@ export class CanvasRenderer {
         this.ctx.fillStyle = "rgba(249, 241, 223, 0.86)";
         this.ctx.font = `${metrics.cellSize * 0.22}px "IBM Plex Mono", monospace`;
         const bodyText = state.status === "won"
-            ? "Запустите New Run для нового маршрута по The Amber Waste."
+            ? "Press New Run and lay a fresh line across the Amber Waste."
             : isSinkjawAttack
-                ? "Sinkjaw поглотил Collector. Запустите New Run, чтобы начать новую экспедицию."
-                : "Новая партия доступна по кнопке New Run.";
+                ? "Sinkjaw has taken the Collector. Press New Run and send another expedition."
+                : "Press New Run to open the field again.";
         const bodyY = isSinkjawAttack ? overlayY + metrics.cellSize * 3.75 : metrics.originY + metrics.cellSize * 4.7;
         const maxTextWidth = overlayWidth - metrics.cellSize * 0.8;
         const lineHeight = metrics.cellSize * 0.34;

@@ -55,7 +55,7 @@ export class AmberDunesGame {
     this.collectedAmber = 0;
     this.status = "playing";
     this.lossReason = null;
-    this.message = "Выберите подсвеченную клетку, чтобы начать маршрут через The Amber Waste.";
+    this.message = "Choose one of the lit squares to begin your run across the Amber Waste.";
     return this.getState();
   }
 
@@ -88,7 +88,7 @@ export class AmberDunesGame {
     );
 
     if (!validMove) {
-      this.message = "Этот прыжок недоступен. Используйте подсвеченные клетки.";
+      this.message = "That jump is out of line. Take one of the lit squares.";
       return this.getState();
     }
 
@@ -98,16 +98,16 @@ export class AmberDunesGame {
     if (this.board[target.y][target.x].hasAmber) {
       this.board[target.y][target.x].hasAmber = false;
       this.collectedAmber += 1;
-      this.message = "Amber собран. Sinkjaw уже чувствует вибрацию.";
+      this.message = "Amber taken. Sinkjaw will have felt the tremor.";
     } else {
-      this.message = "Пустой участок Waste. Продолжайте маршрут.";
+      this.message = "A barren stretch of Waste. Keep the run moving.";
     }
 
     if (this.collectedAmber >= TOTAL_AMBER) {
       this.status = "won";
       this.lossReason = null;
       this.sinkjaw = null;
-      this.message = `Маршрут завершён за ${this.moves} ходов. Весь amber собран.`;
+      this.message = `Run complete in ${this.moves} moves. The amber field is stripped clean.`;
       return this.getState();
     }
 
@@ -116,7 +116,7 @@ export class AmberDunesGame {
     if (this.status === "playing" && this.computeValidMoves(this.sinkjaw).length === 0) {
       this.status = "lost";
       this.lossReason = "trapped";
-      this.message = "Ходы закончились: Collector загнан в тупик.";
+      this.message = "No jumps remain. The Collector has been boxed in.";
     }
 
     return this.getState();
@@ -190,11 +190,11 @@ export class AmberDunesGame {
     if (this.positionsEqual(nextSinkjaw, this.collector)) {
       this.status = "lost";
       this.lossReason = "sinkjaw_attack";
-      this.message = "Sinkjaw вынырнул прямо под Collector. Экспедиция потеряна.";
+      this.message = "Sinkjaw broke surface beneath the Collector. The expedition is done.";
       return;
     }
 
-    this.message = `Sinkjaw замечен в секторе ${this.toBoardNotation(nextSinkjaw)}.`;
+    this.message = `Sinkjaw sighted in sector ${this.toBoardNotation(nextSinkjaw)}.`;
   }
 
   private pickAdaptiveTarget(): Position | null {

@@ -24,9 +24,9 @@ function statusTitle(state: GameState): string {
     if (state.lossReason === "sinkjaw_attack") {
       return "Collector consumed";
     }
-    return "Route lost";
+    return "Road gone dark";
   }
-  return "Run in progress";
+  return "Run underway";
 }
 
 function statusClass(state: GameState): string {
@@ -219,7 +219,7 @@ async function main(): Promise<void> {
       statusTitleElement.textContent = "Skimmer in transit";
       statusTitleElement.className = "status-playing";
       statusMessageElement.textContent =
-        `Skimmer переносит Collector в сектор ${boardLabel(flight.target.x, flight.target.y)}.`;
+        `The Skimmer carries the Collector toward sector ${boardLabel(flight.target.x, flight.target.y)}.`;
     } else {
       statusTitleElement.textContent = statusTitle(currentState);
       statusTitleElement.className = statusClass(currentState);

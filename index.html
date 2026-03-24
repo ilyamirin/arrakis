@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -43,9 +43,9 @@
           <p class="eyebrow">Retro-Futurist Desert Game</p>
           <h1>Amber Dunes Harvest</h1>
           <p class="hero-text">
-            Собери весь amber на сетке 9x9 в пределах The Amber Waste.
-            Collector ходит как шахматный конь, а Sinkjaw после каждого хода
-            меняет точку появления.
+            Sweep the amber field across a 9x9 grid in The Amber Waste.
+            The Collector leaps like a knight, and Sinkjaw shifts its ground
+            after every move you make.
           </p>
           <p class="project-note">100% AI-generated project: code, art, copy, and interface.</p>
         </div>
@@ -61,7 +61,7 @@
               id="game-canvas"
               width="900"
               height="900"
-              aria-label="Игровое поле Amber Dunes Harvest"
+              aria-label="Amber Dunes Harvest game board"
             ></canvas>
           </div>
         </section>
@@ -70,10 +70,10 @@
           <section class="panel status-panel">
             <div class="panel-header">
               <p class="panel-kicker">Current state</p>
-              <h2 id="status-title">Run in progress</h2>
+              <h2 id="status-title">Run Underway</h2>
             </div>
             <p id="status-message" class="status-message">
-              Выберите подсвеченную клетку, чтобы переместить Collector.
+              Choose one of the lit squares to move the Collector.
             </p>
           </section>
 
@@ -97,28 +97,28 @@
               <img src="./assets/collector.svg" alt="" />
               <div>
                 <span>Collector</span>
-                <p>Собирает amber при приземлении.</p>
+                <p>Takes amber the instant it touches down.</p>
               </div>
             </div>
             <div class="legend-item">
               <img src="./assets/sinkjaw.svg" alt="" />
               <div>
                 <span>Sinkjaw</span>
-                <p>Появляется после каждого хода и блокирует клетку.</p>
+                <p>Breaks surface after every move and closes a square to you.</p>
               </div>
             </div>
             <div class="legend-item">
               <img src="./assets/amber.svg" alt="" />
               <div>
                 <span>Amber</span>
-                <p>Нужно собрать все 25 залежей.</p>
+                <p>Strip the field clean. All 25 deposits must be taken.</p>
               </div>
             </div>
             <div class="legend-item">
               <img src="./assets/skimmer.svg" alt="" />
               <div>
                 <span>Skimmer</span>
-                <p>Переносит Collector на выбранную допустимую клетку.</p>
+                <p>Carries the Collector to the legal square you choose.</p>
               </div>
             </div>
           </section>
@@ -129,10 +129,10 @@
               <h2>Field guide</h2>
             </div>
             <ul>
-              <li>Collector ходит буквой Г.</li>
-              <li>Подсветка на поле показывает допустимые клетки.</li>
-              <li>Если Sinkjaw появляется на Collector, партия проиграна.</li>
-              <li>Победа наступает сразу после сбора последней залежи amber.</li>
+              <li>The Collector moves in the knight's L-shaped stride.</li>
+              <li>The lit marks on the field show every legal landing square.</li>
+              <li>If Sinkjaw surfaces beneath the Collector, the run is lost.</li>
+              <li>The moment the last amber deposit is taken, the field is yours.</li>
             </ul>
           </section>
 
@@ -172,13 +172,13 @@
       class="consent-banner"
       hidden
       aria-live="polite"
-      aria-label="Разрешение на cookies с памятью Sinkjaw"
+      aria-label="Sinkjaw memory consent"
     >
       <p class="consent-kicker">Sinkjaw memory</p>
-      <h2>Разрешить cookies с памятью Sinkjaw?</h2>
+      <h2>Allow Sinkjaw a memory?</h2>
       <p class="consent-copy">
-        Если разрешишь, Sinkjaw будет локально запоминать твои ходы и со
-        временем учиться охотиться именно на этого игрока.
+        If you allow it, Sinkjaw will keep a local record of your moves and
+        learn the shape of your habits over time.
       </p>
       <div class="consent-actions">
         <button id="sinkjaw-memory-accept" class="primary-button consent-accept" type="button">
