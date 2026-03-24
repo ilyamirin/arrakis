@@ -1,31 +1,70 @@
 <svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="collectorBody" x1="34" y1="48" x2="198" y2="212" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#F6E0B3"/>
-      <stop offset="1" stop-color="#AF7A3B"/>
-    </linearGradient>
-    <linearGradient id="collectorCabin" x1="128" y1="92" x2="128" y2="152" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#2D221A"/>
-      <stop offset="1" stop-color="#17110D"/>
-    </linearGradient>
-    <linearGradient id="collectorShadow" x1="48" y1="176" x2="216" y2="176" gradientUnits="userSpaceOnUse">
+    <linearGradient id="collectorShadow" x1="46" y1="196" x2="210" y2="196" gradientUnits="userSpaceOnUse">
       <stop stop-color="#3B2818" stop-opacity="0"/>
-      <stop offset="0.5" stop-color="#3B2818" stop-opacity="0.48"/>
+      <stop offset="0.5" stop-color="#3B2818" stop-opacity="0.5"/>
       <stop offset="1" stop-color="#3B2818" stop-opacity="0"/>
     </linearGradient>
+    <linearGradient id="portSail" x1="28" y1="128" x2="104" y2="128" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7F4A2B"/>
+      <stop offset="0.38" stop-color="#D69F57"/>
+      <stop offset="1" stop-color="#F3DEAE"/>
+    </linearGradient>
+    <linearGradient id="starboardSail" x1="152" y1="128" x2="228" y2="128" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F3DEAE"/>
+      <stop offset="0.62" stop-color="#D69F57"/>
+      <stop offset="1" stop-color="#7F4A2B"/>
+    </linearGradient>
+    <linearGradient id="collectorHull" x1="70" y1="58" x2="186" y2="208" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F6E0B3"/>
+      <stop offset="0.44" stop-color="#D79C55"/>
+      <stop offset="1" stop-color="#7A4729"/>
+    </linearGradient>
+    <linearGradient id="collectorCabin" x1="128" y1="82" x2="128" y2="146" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2D221A"/>
+      <stop offset="1" stop-color="#140F0C"/>
+    </linearGradient>
+    <linearGradient id="collectorIntake" x1="128" y1="34" x2="128" y2="84" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFEDC5"/>
+      <stop offset="1" stop-color="#BE7E3A"/>
+    </linearGradient>
+    <linearGradient id="rearEngine" x1="128" y1="162" x2="128" y2="214" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#9E5A33"/>
+      <stop offset="1" stop-color="#4C291B"/>
+    </linearGradient>
   </defs>
-  <ellipse cx="128" cy="196" rx="84" ry="22" fill="url(#collectorShadow)"/>
-  <path d="M52 123L30 136" stroke="#D8A85A" stroke-width="12" stroke-linecap="round"/>
-  <path d="M62 158L84 82H170L194 158H62Z" fill="url(#collectorBody)" stroke="#F8EED5" stroke-width="10" stroke-linejoin="round"/>
-  <path d="M94 82L110 58H146L162 82H94Z" fill="#D8A85A" stroke="#F8EED5" stroke-width="10" stroke-linejoin="round"/>
-  <path d="M88 162L74 134V106L88 96V162Z" fill="#C68450"/>
-  <path d="M168 162L182 134V106L168 96V162Z" fill="#C68450"/>
-  <rect x="84" y="104" width="88" height="28" rx="12" fill="url(#collectorCabin)"/>
-  <path d="M104 104L120 132" stroke="#F8EED5" stroke-opacity="0.65" stroke-width="6" stroke-linecap="round"/>
-  <path d="M152 104L136 132" stroke="#F8EED5" stroke-opacity="0.65" stroke-width="6" stroke-linecap="round"/>
-  <path d="M76 168H180" stroke="#6E4B29" stroke-width="10" stroke-linecap="round"/>
-  <circle cx="92" cy="174" r="12" fill="#F3D49A"/>
-  <circle cx="164" cy="174" r="12" fill="#F3D49A"/>
-  <path d="M226 118H202" stroke="#D8A85A" stroke-width="12" stroke-linecap="round"/>
-  <path d="M204 140L220 154" stroke="#D8A85A" stroke-width="12" stroke-linecap="round"/>
+
+  <ellipse cx="128" cy="198" rx="82" ry="24" fill="url(#collectorShadow)"/>
+
+  <path d="M42 110L96 84L102 98L64 122L102 146L96 160L42 146L60 128L42 110Z" fill="url(#portSail)" stroke="#F8EED5" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M214 110L160 84L154 98L192 122L154 146L160 160L214 146L196 128L214 110Z" fill="url(#starboardSail)" stroke="#F8EED5" stroke-width="8" stroke-linejoin="round"/>
+
+  <path d="M100 50H156L168 76H88L100 50Z" fill="url(#collectorIntake)" stroke="#F8EED5" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M84 74H172L194 106V160L168 190H88L62 160V106L84 74Z" fill="url(#collectorHull)" stroke="#F8EED5" stroke-width="10" stroke-linejoin="round"/>
+
+  <path d="M78 96L54 110" stroke="#8D552E" stroke-width="8" stroke-linecap="round"/>
+  <path d="M178 96L202 110" stroke="#8D552E" stroke-width="8" stroke-linecap="round"/>
+  <path d="M78 152L54 144" stroke="#8D552E" stroke-width="8" stroke-linecap="round"/>
+  <path d="M178 152L202 144" stroke="#8D552E" stroke-width="8" stroke-linecap="round"/>
+
+  <path d="M98 88H158" stroke="#FFF1D1" stroke-opacity="0.5" stroke-width="6" stroke-linecap="round"/>
+  <rect x="92" y="94" width="72" height="34" rx="14" fill="url(#collectorCabin)"/>
+  <path d="M106 96L122 126" stroke="#F8EED5" stroke-opacity="0.58" stroke-width="5" stroke-linecap="round"/>
+  <path d="M150 96L134 126" stroke="#F8EED5" stroke-opacity="0.58" stroke-width="5" stroke-linecap="round"/>
+
+  <path d="M96 140H160" stroke="#5E3821" stroke-width="8" stroke-linecap="round"/>
+  <path d="M90 154H166" stroke="#5E3821" stroke-width="9" stroke-linecap="round"/>
+  <path d="M98 170H158" stroke="#F0C986" stroke-opacity="0.6" stroke-width="7" stroke-linecap="round"/>
+
+  <path d="M110 162H146L158 206H98L110 162Z" fill="url(#rearEngine)" stroke="#F8EED5" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M116 176H140" stroke="#F7D89E" stroke-width="5" stroke-linecap="round"/>
+  <path d="M112 190H144" stroke="#F7D89E" stroke-opacity="0.72" stroke-width="5" stroke-linecap="round"/>
+
+  <path d="M74 164H100" stroke="#6B4228" stroke-width="10" stroke-linecap="round"/>
+  <path d="M156 164H182" stroke="#6B4228" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="86" cy="168" r="11" fill="#F3D49A"/>
+  <circle cx="170" cy="168" r="11" fill="#F3D49A"/>
+
+  <path d="M120 34H136L140 48H116L120 34Z" fill="#FFE9B8"/>
+  <path d="M120 22L128 34L136 22" stroke="#F3D49A" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
