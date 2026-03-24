@@ -885,7 +885,7 @@ export class CanvasRenderer {
   private getMetrics(): BoardMetrics {
     const width = this.canvas.clientWidth;
     const height = this.canvas.clientHeight;
-    const boardSize = Math.min(width, height) * 0.86;
+    const boardSize = Math.min(width, height) * 0.93;
     const originX = (width - boardSize) / 2;
     const originY = (height - boardSize) / 2;
     const cellSize = boardSize / BOARD_SIZE;
