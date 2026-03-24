@@ -1,4 +1,10 @@
-import { BOARD_SIZE, type GameState, type Position } from "./types.js";
+import {
+  BOARD_SIZE,
+  type GameState,
+  type MoveOption,
+  type Position,
+  type TelegraphSector,
+} from "./types.js";
 
 interface Assets {
   collector: HTMLImageElement;
@@ -32,6 +38,7 @@ export class CanvasRenderer {
   private readonly assets: Assets;
   private lastState: GameState | null = null;
   private lastAnimation: FlightAnimationFrame | null = null;
+  private lastPreviewMove: MoveOption | null = null;
 
   constructor(canvas: HTMLCanvasElement, assets: Assets) {
     const context = canvas.getContext("2d");
@@ -44,9 +51,14 @@ export class CanvasRenderer {
     this.assets = assets;
   }
 
-  public render(state: GameState, animation: FlightAnimationFrame | null = null): void {
+  public render(
+    state: GameState,
+    animation: FlightAnimationFrame | null = null,
+    previewMove: MoveOption | null = null,
+  ): void {
     this.lastState = state;
     this.lastAnimation = animation;
+    this.lastPreviewMove = previewMove;
     this.resizeBackingStore();
 
     const metrics = this.getMetrics();
@@ -54,7 +66,7 @@ export class CanvasRenderer {
 
     ctx.clearRect(0, 0, metrics.width, metrics.height);
     this.drawBackground(metrics);
-    this.drawCells(state, metrics, animation);
+    this.drawCells(state, metrics, animation, previewMove);
     this.drawGrid(metrics);
     this.drawPieces(state, metrics, animation);
     this.drawOverlay(state, metrics);
@@ -62,7 +74,7 @@ export class CanvasRenderer {
 
   public rerender(): void {
     if (this.lastState) {
-      this.render(this.lastState, this.lastAnimation);
+      this.render(this.lastState, this.lastAnimation, this.lastPreviewMove);
     }
   }
 
@@ -133,24 +145,44 @@ export class CanvasRenderer {
     state: GameState,
     metrics: BoardMetrics,
     animation: FlightAnimationFrame | null,
+    previewMove: MoveOption | null,
   ): void {
     for (let y = 0; y < BOARD_SIZE; y += 1) {
       for (let x = 0; x < BOARD_SIZE; x += 1) {
         const px = metrics.originX + x * metrics.cellSize;
         const py = metrics.originY + y * metrics.cellSize;
-        const isValidMove = state.validMoves.some(
-          (move) => move.target.x === x && move.target.y === y,
-        );
+        const moveOption =
+          state.validMoves.find((move) => move.target.x === x && move.target.y === y) ?? null;
+        const isValidMove = moveOption !== null;
         const isActiveTarget =
           animation?.activeTarget.x === x && animation.activeTarget.y === y;
         const isCollector = state.collector.x === x && state.collector.y === y;
         const isSinkjaw = state.sinkjaw?.x === x && state.sinkjaw?.y === y;
         const cell = state.board[y][x];
+        const isTelegraphCandidate = Boolean(
+          previewMove?.telegraphCandidates.some((candidate) => candidate.x === x && candidate.y === y),
+        );
+        const isPreviewTarget = Boolean(
+          previewMove && previewMove.target.x === x && previewMove.target.y === y,
+        );
 
         const baseTone = (x + y) % 2 === 0 ? 0.16 : 0.11;
         this.ctx.fillStyle = `rgba(248, 227, 184, ${baseTone})`;
         this.roundRect(px, py, metrics.cellSize - 2, metrics.cellSize - 2, metrics.radius);
         this.ctx.fill();
+
+        if (cell.hasStorm) {
+          this.ctx.fillStyle = "rgba(141, 170, 177, 0.12)";
+          this.roundRect(
+            px + metrics.cellSize * 0.06,
+            py + metrics.cellSize * 0.06,
+            metrics.cellSize * 0.88,
+            metrics.cellSize * 0.88,
+            metrics.radius * 0.8,
+          );
+          this.ctx.fill();
+          this.drawStormGlyph(px, py, metrics.cellSize);
+        }
 
         if (cell.hasAmber) {
           this.ctx.fillStyle = "rgba(236, 188, 89, 0.26)";
@@ -177,6 +209,7 @@ export class CanvasRenderer {
             metrics.radius * 0.8,
           );
           this.ctx.stroke();
+          this.drawTelegraphMarker(moveOption.telegraphSector, px, py, metrics.cellSize);
         }
 
         if (isActiveTarget && state.status === "playing") {
@@ -198,6 +231,33 @@ export class CanvasRenderer {
             metrics.cellSize * 0.72,
             metrics.cellSize * 0.72,
             metrics.radius * 0.8,
+          );
+          this.ctx.stroke();
+        }
+
+        if (isTelegraphCandidate && state.status === "playing" && previewMove && !previewMove.isStormLanding) {
+          this.ctx.fillStyle = "rgba(217, 108, 66, 0.16)";
+          this.roundRect(
+            px + metrics.cellSize * 0.18,
+            py + metrics.cellSize * 0.18,
+            metrics.cellSize * 0.64,
+            metrics.cellSize * 0.64,
+            metrics.radius * 0.7,
+          );
+          this.ctx.fill();
+        }
+
+        if (isPreviewTarget && state.status === "playing") {
+          this.ctx.strokeStyle = previewMove?.isStormLanding
+            ? "rgba(151, 197, 207, 0.96)"
+            : "rgba(255, 214, 153, 0.96)";
+          this.ctx.lineWidth = Math.max(2, metrics.cellSize * 0.05);
+          this.roundRect(
+            px + metrics.cellSize * 0.06,
+            py + metrics.cellSize * 0.06,
+            metrics.cellSize * 0.88,
+            metrics.cellSize * 0.88,
+            metrics.radius * 0.9,
           );
           this.ctx.stroke();
         }
@@ -249,6 +309,137 @@ export class CanvasRenderer {
           this.ctx.fill();
         }
       }
+    }
+  }
+
+  private drawStormGlyph(cellX: number, cellY: number, cellSize: number): void {
+    const { ctx } = this;
+    ctx.save();
+    ctx.strokeStyle = "rgba(192, 226, 233, 0.54)";
+    ctx.lineWidth = Math.max(1.5, cellSize * 0.028);
+    ctx.lineCap = "round";
+
+    for (let row = 0; row < 3; row += 1) {
+      const startX = cellX + cellSize * 0.18;
+      const startY = cellY + cellSize * (0.34 + row * 0.14);
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      ctx.bezierCurveTo(
+        startX + cellSize * 0.12,
+        startY - cellSize * 0.08,
+        startX + cellSize * 0.26,
+        startY + cellSize * 0.08,
+        startX + cellSize * 0.38,
+        startY,
+      );
+      ctx.bezierCurveTo(
+        startX + cellSize * 0.5,
+        startY - cellSize * 0.08,
+        startX + cellSize * 0.64,
+        startY + cellSize * 0.08,
+        startX + cellSize * 0.74,
+        startY,
+      );
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
+  private drawTelegraphMarker(
+    sector: TelegraphSector,
+    cellX: number,
+    cellY: number,
+    cellSize: number,
+  ): void {
+    const markerX = cellX + cellSize * 0.76;
+    const markerY = cellY + cellSize * 0.24;
+    const radius = cellSize * 0.09;
+
+    this.ctx.save();
+    this.ctx.fillStyle = "rgba(32, 20, 14, 0.72)";
+    this.ctx.strokeStyle = "rgba(247, 228, 186, 0.26)";
+    this.ctx.lineWidth = Math.max(1, cellSize * 0.018);
+    this.ctx.beginPath();
+    this.ctx.arc(markerX, markerY, radius * 1.4, 0, Math.PI * 2);
+    this.ctx.fill();
+    this.ctx.stroke();
+
+    if (sector === "encircling") {
+      this.ctx.strokeStyle = "rgba(247, 228, 186, 0.88)";
+      this.ctx.beginPath();
+      this.ctx.arc(markerX, markerY, radius * 0.8, 0, Math.PI * 2);
+      this.ctx.stroke();
+      this.ctx.restore();
+      return;
+    }
+
+    if (sector === "obscured") {
+      this.ctx.strokeStyle = "rgba(188, 228, 236, 0.92)";
+      this.ctx.lineWidth = Math.max(1.5, cellSize * 0.022);
+      for (let index = -1; index <= 1; index += 1) {
+        const y = markerY + index * radius * 0.45;
+        this.ctx.beginPath();
+        this.ctx.moveTo(markerX - radius * 0.75, y);
+        this.ctx.quadraticCurveTo(markerX, y - radius * 0.55, markerX + radius * 0.75, y);
+        this.ctx.stroke();
+      }
+      this.ctx.restore();
+      return;
+    }
+
+    const vector = this.sectorVector(sector);
+    const shaftLength = radius * 1.2;
+    const tipX = markerX + vector.x * shaftLength;
+    const tipY = markerY + vector.y * shaftLength;
+    const baseX = markerX - vector.x * radius * 0.25;
+    const baseY = markerY - vector.y * radius * 0.25;
+    const perpX = -vector.y;
+    const perpY = vector.x;
+
+    this.ctx.strokeStyle = "rgba(247, 228, 186, 0.96)";
+    this.ctx.lineWidth = Math.max(1.5, cellSize * 0.022);
+    this.ctx.beginPath();
+    this.ctx.moveTo(baseX, baseY);
+    this.ctx.lineTo(tipX, tipY);
+    this.ctx.stroke();
+
+    this.ctx.fillStyle = "rgba(247, 228, 186, 0.96)";
+    this.ctx.beginPath();
+    this.ctx.moveTo(tipX, tipY);
+    this.ctx.lineTo(
+      tipX - vector.x * radius * 0.8 + perpX * radius * 0.45,
+      tipY - vector.y * radius * 0.8 + perpY * radius * 0.45,
+    );
+    this.ctx.lineTo(
+      tipX - vector.x * radius * 0.8 - perpX * radius * 0.45,
+      tipY - vector.y * radius * 0.8 - perpY * radius * 0.45,
+    );
+    this.ctx.closePath();
+    this.ctx.fill();
+    this.ctx.restore();
+  }
+
+  private sectorVector(sector: TelegraphSector): Position {
+    switch (sector) {
+      case "north":
+        return { x: 0, y: -1 };
+      case "northeast":
+        return { x: 0.71, y: -0.71 };
+      case "east":
+        return { x: 1, y: 0 };
+      case "southeast":
+        return { x: 0.71, y: 0.71 };
+      case "south":
+        return { x: 0, y: 1 };
+      case "southwest":
+        return { x: -0.71, y: 0.71 };
+      case "west":
+        return { x: -1, y: 0 };
+      case "northwest":
+        return { x: -0.71, y: -0.71 };
+      default:
+        return { x: 0, y: 0 };
     }
   }
 

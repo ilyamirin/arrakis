@@ -1,10 +1,11 @@
-import { BOARD_SIZE } from "./types.js";
+import { BOARD_SIZE, } from "./types.js";
 export class CanvasRenderer {
     canvas;
     ctx;
     assets;
     lastState = null;
     lastAnimation = null;
+    lastPreviewMove = null;
     constructor(canvas, assets) {
         const context = canvas.getContext("2d");
         if (!context) {
@@ -14,22 +15,23 @@ export class CanvasRenderer {
         this.ctx = context;
         this.assets = assets;
     }
-    render(state, animation = null) {
+    render(state, animation = null, previewMove = null) {
         this.lastState = state;
         this.lastAnimation = animation;
+        this.lastPreviewMove = previewMove;
         this.resizeBackingStore();
         const metrics = this.getMetrics();
         const { ctx } = this;
         ctx.clearRect(0, 0, metrics.width, metrics.height);
         this.drawBackground(metrics);
-        this.drawCells(state, metrics, animation);
+        this.drawCells(state, metrics, animation, previewMove);
         this.drawGrid(metrics);
         this.drawPieces(state, metrics, animation);
         this.drawOverlay(state, metrics);
     }
     rerender() {
         if (this.lastState) {
-            this.render(this.lastState, this.lastAnimation);
+            this.render(this.lastState, this.lastAnimation, this.lastPreviewMove);
         }
     }
     cellFromClientPoint(clientX, clientY) {
@@ -80,20 +82,29 @@ export class CanvasRenderer {
         this.ctx.arc(metrics.width * 0.82, metrics.height * 0.78, metrics.width * 0.2, 0, Math.PI * 2);
         this.ctx.fill();
     }
-    drawCells(state, metrics, animation) {
+    drawCells(state, metrics, animation, previewMove) {
         for (let y = 0; y < BOARD_SIZE; y += 1) {
             for (let x = 0; x < BOARD_SIZE; x += 1) {
                 const px = metrics.originX + x * metrics.cellSize;
                 const py = metrics.originY + y * metrics.cellSize;
-                const isValidMove = state.validMoves.some((move) => move.target.x === x && move.target.y === y);
+                const moveOption = state.validMoves.find((move) => move.target.x === x && move.target.y === y) ?? null;
+                const isValidMove = moveOption !== null;
                 const isActiveTarget = animation?.activeTarget.x === x && animation.activeTarget.y === y;
                 const isCollector = state.collector.x === x && state.collector.y === y;
                 const isSinkjaw = state.sinkjaw?.x === x && state.sinkjaw?.y === y;
                 const cell = state.board[y][x];
+                const isTelegraphCandidate = Boolean(previewMove?.telegraphCandidates.some((candidate) => candidate.x === x && candidate.y === y));
+                const isPreviewTarget = Boolean(previewMove && previewMove.target.x === x && previewMove.target.y === y);
                 const baseTone = (x + y) % 2 === 0 ? 0.16 : 0.11;
                 this.ctx.fillStyle = `rgba(248, 227, 184, ${baseTone})`;
                 this.roundRect(px, py, metrics.cellSize - 2, metrics.cellSize - 2, metrics.radius);
                 this.ctx.fill();
+                if (cell.hasStorm) {
+                    this.ctx.fillStyle = "rgba(141, 170, 177, 0.12)";
+                    this.roundRect(px + metrics.cellSize * 0.06, py + metrics.cellSize * 0.06, metrics.cellSize * 0.88, metrics.cellSize * 0.88, metrics.radius * 0.8);
+                    this.ctx.fill();
+                    this.drawStormGlyph(px, py, metrics.cellSize);
+                }
                 if (cell.hasAmber) {
                     this.ctx.fillStyle = "rgba(236, 188, 89, 0.26)";
                     this.roundRect(px + metrics.cellSize * 0.08, py + metrics.cellSize * 0.08, metrics.cellSize * 0.84, metrics.cellSize * 0.84, metrics.radius * 0.8);
@@ -105,6 +116,7 @@ export class CanvasRenderer {
                     this.ctx.lineWidth = Math.max(2, metrics.cellSize * 0.04);
                     this.roundRect(px + metrics.cellSize * 0.1, py + metrics.cellSize * 0.1, metrics.cellSize * 0.8, metrics.cellSize * 0.8, metrics.radius * 0.8);
                     this.ctx.stroke();
+                    this.drawTelegraphMarker(moveOption.telegraphSector, px, py, metrics.cellSize);
                 }
                 if (isActiveTarget && state.status === "playing") {
                     this.ctx.fillStyle = "rgba(247, 228, 186, 0.16)";
@@ -113,6 +125,19 @@ export class CanvasRenderer {
                     this.ctx.strokeStyle = "rgba(255, 244, 216, 0.96)";
                     this.ctx.lineWidth = Math.max(2, metrics.cellSize * 0.05);
                     this.roundRect(px + metrics.cellSize * 0.14, py + metrics.cellSize * 0.14, metrics.cellSize * 0.72, metrics.cellSize * 0.72, metrics.radius * 0.8);
+                    this.ctx.stroke();
+                }
+                if (isTelegraphCandidate && state.status === "playing" && previewMove && !previewMove.isStormLanding) {
+                    this.ctx.fillStyle = "rgba(217, 108, 66, 0.16)";
+                    this.roundRect(px + metrics.cellSize * 0.18, py + metrics.cellSize * 0.18, metrics.cellSize * 0.64, metrics.cellSize * 0.64, metrics.radius * 0.7);
+                    this.ctx.fill();
+                }
+                if (isPreviewTarget && state.status === "playing") {
+                    this.ctx.strokeStyle = previewMove?.isStormLanding
+                        ? "rgba(151, 197, 207, 0.96)"
+                        : "rgba(255, 214, 153, 0.96)";
+                    this.ctx.lineWidth = Math.max(2, metrics.cellSize * 0.05);
+                    this.roundRect(px + metrics.cellSize * 0.06, py + metrics.cellSize * 0.06, metrics.cellSize * 0.88, metrics.cellSize * 0.88, metrics.radius * 0.9);
                     this.ctx.stroke();
                 }
                 if (isCollector) {
@@ -135,6 +160,101 @@ export class CanvasRenderer {
                     this.ctx.fill();
                 }
             }
+        }
+    }
+    drawStormGlyph(cellX, cellY, cellSize) {
+        const { ctx } = this;
+        ctx.save();
+        ctx.strokeStyle = "rgba(192, 226, 233, 0.54)";
+        ctx.lineWidth = Math.max(1.5, cellSize * 0.028);
+        ctx.lineCap = "round";
+        for (let row = 0; row < 3; row += 1) {
+            const startX = cellX + cellSize * 0.18;
+            const startY = cellY + cellSize * (0.34 + row * 0.14);
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.bezierCurveTo(startX + cellSize * 0.12, startY - cellSize * 0.08, startX + cellSize * 0.26, startY + cellSize * 0.08, startX + cellSize * 0.38, startY);
+            ctx.bezierCurveTo(startX + cellSize * 0.5, startY - cellSize * 0.08, startX + cellSize * 0.64, startY + cellSize * 0.08, startX + cellSize * 0.74, startY);
+            ctx.stroke();
+        }
+        ctx.restore();
+    }
+    drawTelegraphMarker(sector, cellX, cellY, cellSize) {
+        const markerX = cellX + cellSize * 0.76;
+        const markerY = cellY + cellSize * 0.24;
+        const radius = cellSize * 0.09;
+        this.ctx.save();
+        this.ctx.fillStyle = "rgba(32, 20, 14, 0.72)";
+        this.ctx.strokeStyle = "rgba(247, 228, 186, 0.26)";
+        this.ctx.lineWidth = Math.max(1, cellSize * 0.018);
+        this.ctx.beginPath();
+        this.ctx.arc(markerX, markerY, radius * 1.4, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.stroke();
+        if (sector === "encircling") {
+            this.ctx.strokeStyle = "rgba(247, 228, 186, 0.88)";
+            this.ctx.beginPath();
+            this.ctx.arc(markerX, markerY, radius * 0.8, 0, Math.PI * 2);
+            this.ctx.stroke();
+            this.ctx.restore();
+            return;
+        }
+        if (sector === "obscured") {
+            this.ctx.strokeStyle = "rgba(188, 228, 236, 0.92)";
+            this.ctx.lineWidth = Math.max(1.5, cellSize * 0.022);
+            for (let index = -1; index <= 1; index += 1) {
+                const y = markerY + index * radius * 0.45;
+                this.ctx.beginPath();
+                this.ctx.moveTo(markerX - radius * 0.75, y);
+                this.ctx.quadraticCurveTo(markerX, y - radius * 0.55, markerX + radius * 0.75, y);
+                this.ctx.stroke();
+            }
+            this.ctx.restore();
+            return;
+        }
+        const vector = this.sectorVector(sector);
+        const shaftLength = radius * 1.2;
+        const tipX = markerX + vector.x * shaftLength;
+        const tipY = markerY + vector.y * shaftLength;
+        const baseX = markerX - vector.x * radius * 0.25;
+        const baseY = markerY - vector.y * radius * 0.25;
+        const perpX = -vector.y;
+        const perpY = vector.x;
+        this.ctx.strokeStyle = "rgba(247, 228, 186, 0.96)";
+        this.ctx.lineWidth = Math.max(1.5, cellSize * 0.022);
+        this.ctx.beginPath();
+        this.ctx.moveTo(baseX, baseY);
+        this.ctx.lineTo(tipX, tipY);
+        this.ctx.stroke();
+        this.ctx.fillStyle = "rgba(247, 228, 186, 0.96)";
+        this.ctx.beginPath();
+        this.ctx.moveTo(tipX, tipY);
+        this.ctx.lineTo(tipX - vector.x * radius * 0.8 + perpX * radius * 0.45, tipY - vector.y * radius * 0.8 + perpY * radius * 0.45);
+        this.ctx.lineTo(tipX - vector.x * radius * 0.8 - perpX * radius * 0.45, tipY - vector.y * radius * 0.8 - perpY * radius * 0.45);
+        this.ctx.closePath();
+        this.ctx.fill();
+        this.ctx.restore();
+    }
+    sectorVector(sector) {
+        switch (sector) {
+            case "north":
+                return { x: 0, y: -1 };
+            case "northeast":
+                return { x: 0.71, y: -0.71 };
+            case "east":
+                return { x: 1, y: 0 };
+            case "southeast":
+                return { x: 0.71, y: 0.71 };
+            case "south":
+                return { x: 0, y: 1 };
+            case "southwest":
+                return { x: -0.71, y: 0.71 };
+            case "west":
+                return { x: -1, y: 0 };
+            case "northwest":
+                return { x: -0.71, y: -0.71 };
+            default:
+                return { x: 0, y: 0 };
         }
     }
     drawGrid(metrics) {

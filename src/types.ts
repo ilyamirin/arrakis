@@ -4,6 +4,17 @@ export const CENTER_INDEX = Math.floor(BOARD_SIZE / 2);
 
 export type GameStatus = "playing" | "won" | "lost";
 export type LossReason = "sinkjaw_attack" | "trapped" | null;
+export type TelegraphSector =
+  | "north"
+  | "northeast"
+  | "east"
+  | "southeast"
+  | "south"
+  | "southwest"
+  | "west"
+  | "northwest"
+  | "encircling"
+  | "obscured";
 
 export interface Position {
   x: number;
@@ -15,10 +26,15 @@ export interface MoveOption {
   delta: Position;
   label: string;
   notation: string;
+  telegraphSector: TelegraphSector;
+  telegraphCandidates: Position[];
+  pilotLine: string;
+  isStormLanding: boolean;
 }
 
 export interface CellState {
   hasAmber: boolean;
+  hasStorm: boolean;
 }
 
 export interface GameState {

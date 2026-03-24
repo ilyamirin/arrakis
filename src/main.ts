@@ -4,10 +4,12 @@ import {
   loadAssets,
   type FlightAnimationFrame,
 } from "./renderer.js";
-import { BOARD_SIZE, type GameState, type Position } from "./types.js";
+import { BOARD_SIZE, type GameState, type MoveOption, type Position } from "./types.js";
 const SKIMMER_FLIGHT_MS = 760;
 const PICKUP_PHASE_END = 0.22;
 const DROPOFF_PHASE_START = 0.8;
+const DEFAULT_PILOT_MESSAGE =
+  "Sweep the lit squares and the pilot will call the next Sinkjaw break.";
 
 function boardLabel(x: number, y: number): string {
   return `${String.fromCharCode(65 + x)}${BOARD_SIZE - y}`;
@@ -138,6 +140,7 @@ async function main(): Promise<void> {
   const amberValueElement = document.querySelector<HTMLElement>("#amber-value");
   const movesValueElement = document.querySelector<HTMLElement>("#moves-value");
   const positionValueElement = document.querySelector<HTMLElement>("#position-value");
+  const pilotMessageElement = document.querySelector<HTMLElement>("#pilot-message");
 
   if (
     !canvas ||
@@ -146,7 +149,8 @@ async function main(): Promise<void> {
     !statusMessageElement ||
     !amberValueElement ||
     !movesValueElement ||
-    !positionValueElement
+    !positionValueElement ||
+    !pilotMessageElement
   ) {
     throw new Error("The UI shell is incomplete.");
   }
@@ -162,6 +166,7 @@ async function main(): Promise<void> {
         animationFrameId: number | null;
       }
     | null = null;
+  let previewMove: MoveOption | null = null;
 
   const renderView = (now = performance.now()): void => {
     const flight = activeFlight;
@@ -174,7 +179,7 @@ async function main(): Promise<void> {
             clamp01((now - flight.startedAt) / SKIMMER_FLIGHT_MS),
           );
 
-    renderer.render(currentState, animation);
+    renderer.render(currentState, animation, previewMove);
 
     if (animation && flight) {
       statusTitleElement.textContent = "Skimmer in transit";
@@ -192,6 +197,7 @@ async function main(): Promise<void> {
     positionValueElement.textContent = animation && flight
       ? `${boardLabel(currentState.collector.x, currentState.collector.y)} -> ${boardLabel(flight.target.x, flight.target.y)}`
       : boardLabel(currentState.collector.x, currentState.collector.y);
+    pilotMessageElement.textContent = previewMove?.pilotLine ?? DEFAULT_PILOT_MESSAGE;
   };
 
   const stopFlight = (): void => {
@@ -204,6 +210,12 @@ async function main(): Promise<void> {
 
   const update = (state: GameState): void => {
     currentState = state;
+    if (
+      previewMove &&
+      !currentState.validMoves.some((move) => move.target.x === previewMove?.target.x && move.target.y === previewMove?.target.y)
+    ) {
+      previewMove = null;
+    }
     renderView();
   };
 
@@ -215,6 +227,7 @@ async function main(): Promise<void> {
       startedAt: performance.now(),
       animationFrameId: null,
     };
+    previewMove = null;
 
     const step = (now: number): void => {
       if (!activeFlight) {
@@ -262,6 +275,44 @@ async function main(): Promise<void> {
     }
 
     startFlight(target);
+  });
+
+  canvas.addEventListener("pointermove", (event) => {
+    if (activeFlight) {
+      return;
+    }
+
+    const hoveredCell = renderer.cellFromClientPoint(event.clientX, event.clientY);
+    if (!hoveredCell) {
+      if (previewMove) {
+        previewMove = null;
+        renderView();
+      }
+      return;
+    }
+
+    const nextPreview =
+      currentState.validMoves.find(
+        (move) => move.target.x === hoveredCell.x && move.target.y === hoveredCell.y,
+      ) ?? null;
+
+    if (
+      nextPreview?.target.x === previewMove?.target.x &&
+      nextPreview?.target.y === previewMove?.target.y
+    ) {
+      return;
+    }
+
+    previewMove = nextPreview;
+    renderView();
+  });
+
+  canvas.addEventListener("pointerleave", () => {
+    if (!previewMove || activeFlight) {
+      return;
+    }
+    previewMove = null;
+    renderView();
   });
 
   window.addEventListener("resize", () => renderView());

@@ -1,6 +1,7 @@
 import { BOARD_SIZE, CENTER_INDEX, TOTAL_AMBER, } from "./types.js";
 const SINKJAW_SPAWN_RADIUS = 4;
 const SAFE_ONESHOT_TURNS = 3;
+const STORM_CLUSTER_SIZE = 3;
 const KNIGHT_OFFSETS = [
     { x: -2, y: -1 },
     { x: -2, y: 1 },
@@ -59,14 +60,29 @@ export class AmberDunesGame {
         }
         this.collector = { ...validMove.target };
         this.moves += 1;
-        if (this.board[target.y][target.x].hasAmber) {
-            this.board[target.y][target.x].hasAmber = false;
+        let message = "";
+        if (this.board[target.y][target.x].hasStorm) {
+            const driftTargets = this.computeStormDriftTargets();
+            if (driftTargets.length > 0) {
+                const driftTarget = driftTargets[Math.floor(Math.random() * driftTargets.length)];
+                this.collector = { ...driftTarget };
+                message = `Storm shear flung the Collector clear to sector ${this.toBoardNotation(driftTarget)}.`;
+            }
+            else {
+                message = "The storm closed around the Collector, but there was nowhere left to throw it.";
+            }
+        }
+        if (this.board[this.collector.y][this.collector.x].hasAmber) {
+            this.board[this.collector.y][this.collector.x].hasAmber = false;
             this.collectedAmber += 1;
-            this.message = "Amber taken. Sinkjaw will have felt the tremor.";
+            message = message
+                ? `${message} Amber was waiting there.`
+                : "Amber taken. Sinkjaw will have felt the tremor.";
         }
-        else {
-            this.message = "A barren stretch of Waste. Keep the run moving.";
+        else if (!message) {
+            message = "A barren stretch of Waste. Keep the run moving.";
         }
+        this.message = message;
         if (this.collectedAmber >= TOTAL_AMBER) {
             this.status = "won";
             this.lossReason = null;
@@ -83,7 +99,7 @@ export class AmberDunesGame {
         return this.getState();
     }
     createBoard() {
-        const board = Array.from({ length: BOARD_SIZE }, () => Array.from({ length: BOARD_SIZE }, () => ({ hasAmber: false })));
+        const board = Array.from({ length: BOARD_SIZE }, () => Array.from({ length: BOARD_SIZE }, () => ({ hasAmber: false, hasStorm: false })));
         const available = [];
         for (let y = 0; y < BOARD_SIZE; y += 1) {
             for (let x = 0; x < BOARD_SIZE; x += 1) {
@@ -93,8 +109,14 @@ export class AmberDunesGame {
                 available.push({ x, y });
             }
         }
+        const stormCells = this.createStormCluster();
+        const stormKeys = new Set(stormCells.map((cell) => this.positionKey(cell)));
+        for (const cell of stormCells) {
+            board[cell.y][cell.x].hasStorm = true;
+        }
         this.shuffle(available);
-        for (const cell of available.slice(0, TOTAL_AMBER)) {
+        const amberCells = available.filter((cell) => !stormKeys.has(this.positionKey(cell)));
+        for (const cell of amberCells.slice(0, TOTAL_AMBER)) {
             board[cell.y][cell.x].hasAmber = true;
         }
         return board;
@@ -106,33 +128,25 @@ export class AmberDunesGame {
                 y: this.collector.y + delta.y,
             },
             delta,
-            label: this.toBoardNotation({
-                x: this.collector.x + delta.x,
-                y: this.collector.y + delta.y,
-            }),
-            notation: this.toDeltaNotation(delta),
         }))
             .filter((move) => this.isInside(move.target))
             .filter((move) => !blockedCell || !this.positionsEqual(move.target, blockedCell))
+            .map((move) => {
+            const forecast = this.forecastMove(move.target);
+            return {
+                ...move,
+                label: this.toBoardNotation(move.target),
+                notation: this.toDeltaNotation(move.delta),
+                telegraphSector: forecast.sector,
+                telegraphCandidates: forecast.candidates,
+                pilotLine: forecast.pilotLine,
+                isStormLanding: forecast.isStormLanding,
+            };
+        })
             .sort((left, right) => left.target.y - right.target.y || left.target.x - right.target.x);
     }
     spawnSinkjaw() {
-        const candidates = [];
-        for (let y = 0; y < BOARD_SIZE; y += 1) {
-            for (let x = 0; x < BOARD_SIZE; x += 1) {
-                const next = { x, y };
-                if (this.sinkjaw && this.positionsEqual(next, this.sinkjaw)) {
-                    continue;
-                }
-                if (this.distanceToCollector(next) > SINKJAW_SPAWN_RADIUS) {
-                    continue;
-                }
-                if (this.moves <= SAFE_ONESHOT_TURNS && this.positionsEqual(next, this.collector)) {
-                    continue;
-                }
-                candidates.push(next);
-            }
-        }
+        const candidates = this.computeSinkjawCandidates(this.collector, this.moves);
         if (candidates.length === 0) {
             this.sinkjaw = null;
             return;
@@ -157,6 +171,210 @@ export class AmberDunesGame {
         const vertical = delta.y > 0 ? `+${delta.y}` : `${delta.y}`;
         return `${horizontal} / ${vertical}`;
     }
+    forecastMove(target) {
+        const isStormLanding = this.board[target.y][target.x].hasStorm;
+        if (isStormLanding) {
+            const driftTargets = this.computeStormDriftTargets();
+            const uniqueCandidates = new Map();
+            for (const driftTarget of driftTargets) {
+                for (const candidate of this.computeSinkjawCandidates(driftTarget, this.moves + 1)) {
+                    uniqueCandidates.set(this.positionKey(candidate), candidate);
+                }
+            }
+            return {
+                sector: "obscured",
+                candidates: [...uniqueCandidates.values()],
+                pilotLine: "Pilot: storm shear will throw you blind. No clean read on Sinkjaw beyond that squall.",
+                isStormLanding,
+            };
+        }
+        const candidates = this.computeSinkjawCandidates(target, this.moves + 1);
+        const sector = this.summarizeTelegraphSector(target, candidates);
+        return {
+            sector,
+            candidates,
+            pilotLine: this.buildPilotLine(target, sector),
+            isStormLanding,
+        };
+    }
+    computeSinkjawCandidates(collector, moveNumber) {
+        const candidates = [];
+        for (let y = 0; y < BOARD_SIZE; y += 1) {
+            for (let x = 0; x < BOARD_SIZE; x += 1) {
+                const next = { x, y };
+                if (this.sinkjaw && this.positionsEqual(next, this.sinkjaw)) {
+                    continue;
+                }
+                if (this.distanceBetween(next, collector) > SINKJAW_SPAWN_RADIUS) {
+                    continue;
+                }
+                if (moveNumber <= SAFE_ONESHOT_TURNS && this.positionsEqual(next, collector)) {
+                    continue;
+                }
+                candidates.push(next);
+            }
+        }
+        return candidates;
+    }
+    computeStormDriftTargets() {
+        const targets = [];
+        for (let y = 0; y < BOARD_SIZE; y += 1) {
+            for (let x = 0; x < BOARD_SIZE; x += 1) {
+                const candidate = { x, y };
+                if (this.board[y][x].hasStorm) {
+                    continue;
+                }
+                if (this.sinkjaw && this.positionsEqual(candidate, this.sinkjaw)) {
+                    continue;
+                }
+                targets.push(candidate);
+            }
+        }
+        return targets;
+    }
+    summarizeTelegraphSector(origin, candidates) {
+        if (candidates.length === 0) {
+            return "encircling";
+        }
+        const counts = new Map([
+            ["north", 0],
+            ["northeast", 0],
+            ["east", 0],
+            ["southeast", 0],
+            ["south", 0],
+            ["southwest", 0],
+            ["west", 0],
+            ["northwest", 0],
+            ["encircling", 0],
+            ["obscured", 0],
+        ]);
+        let centerHits = 0;
+        for (const candidate of candidates) {
+            const dx = candidate.x - origin.x;
+            const dy = candidate.y - origin.y;
+            if (dx === 0 && dy === 0) {
+                centerHits += 1;
+                continue;
+            }
+            const angle = Math.atan2(-dy, dx);
+            const sector = this.angleToSector(angle);
+            counts.set(sector, (counts.get(sector) ?? 0) + 1);
+        }
+        const sorted = [...counts.entries()]
+            .filter(([sector]) => sector !== "encircling" && sector !== "obscured")
+            .sort((left, right) => right[1] - left[1]);
+        const [topSector, topCount] = sorted[0] ?? ["encircling", 0];
+        const secondCount = sorted[1]?.[1] ?? 0;
+        if (typeof topSector !== "string" ||
+            topCount === 0 ||
+            centerHits >= topCount ||
+            topCount < Math.ceil(candidates.length * 0.28) ||
+            secondCount >= topCount - 1) {
+            return "encircling";
+        }
+        return topSector;
+    }
+    angleToSector(angle) {
+        const degrees = ((angle * 180) / Math.PI + 360) % 360;
+        if (degrees >= 337.5 || degrees < 22.5)
+            return "east";
+        if (degrees < 67.5)
+            return "northeast";
+        if (degrees < 112.5)
+            return "north";
+        if (degrees < 157.5)
+            return "northwest";
+        if (degrees < 202.5)
+            return "west";
+        if (degrees < 247.5)
+            return "southwest";
+        if (degrees < 292.5)
+            return "south";
+        return "southeast";
+    }
+    buildPilotLine(target, sector) {
+        const sectorName = this.toBoardNotation(target);
+        switch (sector) {
+            case "north":
+                return `Pilot: take ${sectorName} and the tremor front will crowd the north reach.`;
+            case "northeast":
+                return `Pilot: take ${sectorName} and I'd watch the northeast reach for a break.`;
+            case "east":
+                return `Pilot: take ${sectorName} and Sinkjaw will likely favor the eastern reach.`;
+            case "southeast":
+                return `Pilot: take ${sectorName} and the southeast looks hot.`;
+            case "south":
+                return `Pilot: take ${sectorName} and the southern reach starts to boil.`;
+            case "southwest":
+                return `Pilot: take ${sectorName} and the southwest quarter bears watching.`;
+            case "west":
+                return `Pilot: take ${sectorName} and I'd keep my eyes on the western reach.`;
+            case "northwest":
+                return `Pilot: take ${sectorName} and the northwest quarter turns dangerous.`;
+            default:
+                return `Pilot: take ${sectorName} and Sinkjaw could break from all around that landing.`;
+        }
+    }
+    createStormCluster() {
+        const start = this.randomNonCenterCell();
+        const cluster = [start];
+        const seen = new Set([this.positionKey(start)]);
+        while (cluster.length < STORM_CLUSTER_SIZE) {
+            const frontier = cluster.flatMap((cell) => this.stormNeighbors(cell));
+            const candidates = frontier.filter((cell) => !seen.has(this.positionKey(cell)));
+            if (candidates.length === 0) {
+                break;
+            }
+            const next = candidates[Math.floor(Math.random() * candidates.length)];
+            seen.add(this.positionKey(next));
+            cluster.push(next);
+        }
+        if (cluster.length === STORM_CLUSTER_SIZE) {
+            return cluster;
+        }
+        const fallback = [];
+        for (let y = 0; y < BOARD_SIZE; y += 1) {
+            for (let x = 0; x < BOARD_SIZE; x += 1) {
+                if (x === CENTER_INDEX && y === CENTER_INDEX) {
+                    continue;
+                }
+                fallback.push({ x, y });
+            }
+        }
+        this.shuffle(fallback);
+        return fallback.slice(0, STORM_CLUSTER_SIZE);
+    }
+    randomNonCenterCell() {
+        while (true) {
+            const candidate = {
+                x: Math.floor(Math.random() * BOARD_SIZE),
+                y: Math.floor(Math.random() * BOARD_SIZE),
+            };
+            if (candidate.x === CENTER_INDEX && candidate.y === CENTER_INDEX) {
+                continue;
+            }
+            return candidate;
+        }
+    }
+    stormNeighbors(position) {
+        const neighbors = [];
+        const offsets = [
+            { x: -1, y: 0 },
+            { x: 1, y: 0 },
+            { x: 0, y: -1 },
+            { x: 0, y: 1 },
+        ];
+        for (const offset of offsets) {
+            const next = { x: position.x + offset.x, y: position.y + offset.y };
+            if (this.isInside(next) && !(next.x === CENTER_INDEX && next.y === CENTER_INDEX)) {
+                neighbors.push(next);
+            }
+        }
+        return neighbors;
+    }
+    positionKey(position) {
+        return `${position.x},${position.y}`;
+    }
     isInside(position) {
         return (position.x >= 0 &&
             position.x < BOARD_SIZE &&
@@ -166,8 +384,8 @@ export class AmberDunesGame {
     positionsEqual(left, right) {
         return left.x === right.x && left.y === right.y;
     }
-    distanceToCollector(position) {
-        return Math.hypot(position.x - this.collector.x, position.y - this.collector.y);
+    distanceBetween(left, right) {
+        return Math.hypot(left.x - right.x, left.y - right.y);
     }
     shuffle(items) {
         for (let index = items.length - 1; index > 0; index -= 1) {

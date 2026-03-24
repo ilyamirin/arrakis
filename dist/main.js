@@ -4,6 +4,7 @@ import { BOARD_SIZE } from "./types.js";
 const SKIMMER_FLIGHT_MS = 760;
 const PICKUP_PHASE_END = 0.22;
 const DROPOFF_PHASE_START = 0.8;
+const DEFAULT_PILOT_MESSAGE = "Sweep the lit squares and the pilot will call the next Sinkjaw break.";
 function boardLabel(x, y) {
     return `${String.fromCharCode(65 + x)}${BOARD_SIZE - y}`;
 }
@@ -114,25 +115,28 @@ async function main() {
     const amberValueElement = document.querySelector("#amber-value");
     const movesValueElement = document.querySelector("#moves-value");
     const positionValueElement = document.querySelector("#position-value");
+    const pilotMessageElement = document.querySelector("#pilot-message");
     if (!canvas ||
         !restartButton ||
         !statusTitleElement ||
         !statusMessageElement ||
         !amberValueElement ||
         !movesValueElement ||
-        !positionValueElement) {
+        !positionValueElement ||
+        !pilotMessageElement) {
         throw new Error("The UI shell is incomplete.");
     }
     const renderer = new CanvasRenderer(canvas, await loadAssets());
     const game = new AmberDunesGame();
     let currentState = game.getState();
     let activeFlight = null;
+    let previewMove = null;
     const renderView = (now = performance.now()) => {
         const flight = activeFlight;
         const animation = flight === null
             ? null
             : buildFlightFrame(flight.source, flight.target, clamp01((now - flight.startedAt) / SKIMMER_FLIGHT_MS));
-        renderer.render(currentState, animation);
+        renderer.render(currentState, animation, previewMove);
         if (animation && flight) {
             statusTitleElement.textContent = "Skimmer in transit";
             statusTitleElement.className = "status-playing";
@@ -149,6 +153,7 @@ async function main() {
         positionValueElement.textContent = animation && flight
             ? `${boardLabel(currentState.collector.x, currentState.collector.y)} -> ${boardLabel(flight.target.x, flight.target.y)}`
             : boardLabel(currentState.collector.x, currentState.collector.y);
+        pilotMessageElement.textContent = previewMove?.pilotLine ?? DEFAULT_PILOT_MESSAGE;
     };
     const stopFlight = () => {
         const flight = activeFlight;
@@ -159,6 +164,10 @@ async function main() {
     };
     const update = (state) => {
         currentState = state;
+        if (previewMove &&
+            !currentState.validMoves.some((move) => move.target.x === previewMove?.target.x && move.target.y === previewMove?.target.y)) {
+            previewMove = null;
+        }
         renderView();
     };
     const startFlight = (target) => {
@@ -169,6 +178,7 @@ async function main() {
             startedAt: performance.now(),
             animationFrameId: null,
         };
+        previewMove = null;
         const step = (now) => {
             if (!activeFlight) {
                 return;
@@ -203,6 +213,33 @@ async function main() {
             return;
         }
         startFlight(target);
+    });
+    canvas.addEventListener("pointermove", (event) => {
+        if (activeFlight) {
+            return;
+        }
+        const hoveredCell = renderer.cellFromClientPoint(event.clientX, event.clientY);
+        if (!hoveredCell) {
+            if (previewMove) {
+                previewMove = null;
+                renderView();
+            }
+            return;
+        }
+        const nextPreview = currentState.validMoves.find((move) => move.target.x === hoveredCell.x && move.target.y === hoveredCell.y) ?? null;
+        if (nextPreview?.target.x === previewMove?.target.x &&
+            nextPreview?.target.y === previewMove?.target.y) {
+            return;
+        }
+        previewMove = nextPreview;
+        renderView();
+    });
+    canvas.addEventListener("pointerleave", () => {
+        if (!previewMove || activeFlight) {
+            return;
+        }
+        previewMove = null;
+        renderView();
     });
     window.addEventListener("resize", () => renderView());
     update(game.getState());
