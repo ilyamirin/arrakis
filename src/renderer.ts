@@ -67,6 +67,7 @@ export class CanvasRenderer {
     ctx.clearRect(0, 0, metrics.width, metrics.height);
     this.drawBackground(metrics);
     this.drawCells(state, metrics, animation, previewMove);
+    this.drawStormFront(state, metrics);
     this.drawGrid(metrics);
     this.drawPreviewTelegraph(metrics, previewMove, state.status === "playing");
     this.drawPieces(state, metrics, animation);
@@ -170,16 +171,15 @@ export class CanvasRenderer {
         this.ctx.fill();
 
         if (cell.hasStorm) {
-          this.ctx.fillStyle = "rgba(141, 170, 177, 0.12)";
+          this.ctx.fillStyle = "rgba(138, 126, 96, 0.08)";
           this.roundRect(
-            px + metrics.cellSize * 0.06,
-            py + metrics.cellSize * 0.06,
-            metrics.cellSize * 0.88,
-            metrics.cellSize * 0.88,
-            metrics.radius * 0.8,
+            px + metrics.cellSize * 0.08,
+            py + metrics.cellSize * 0.08,
+            metrics.cellSize * 0.84,
+            metrics.cellSize * 0.84,
+            metrics.radius * 0.85,
           );
           this.ctx.fill();
-          this.drawStormGlyph(px, py, metrics.cellSize);
         }
 
         if (cell.hasAmber) {
@@ -312,12 +312,13 @@ export class CanvasRenderer {
       metrics.originY + (previewMove.target.y + 0.5) * metrics.cellSize;
 
     if (previewMove.telegraphSector === "obscured") {
-      this.drawStormSignal(centerX, centerY, metrics.cellSize);
+      this.drawPreviewCaption(metrics, "TREMOR READ", "STORM BLIND");
       return;
     }
 
     if (previewMove.telegraphSector === "encircling") {
       this.drawEncirclingSignal(centerX, centerY, metrics.cellSize);
+      this.drawPreviewCaption(metrics, "TREMOR READ", "ALL AROUND");
       return;
     }
 
@@ -327,40 +328,241 @@ export class CanvasRenderer {
       metrics.cellSize,
       this.sectorVector(previewMove.telegraphSector),
     );
+    this.drawPreviewCaption(metrics, "TREMOR READ", this.sectorCaption(previewMove.telegraphSector));
+  }
+
+  private drawPreviewCaption(
+    metrics: BoardMetrics,
+    kicker: string,
+    message: string,
+  ): void {
+    const { ctx } = this;
+    const paddingX = metrics.cellSize * 0.22;
+    const paddingY = metrics.cellSize * 0.16;
+    const boxX = metrics.originX + metrics.cellSize * 0.2;
+    const boxY = metrics.originY + metrics.boardSize - metrics.cellSize * 0.98;
+    const kickerSize = Math.max(10, metrics.cellSize * 0.16);
+    const messageSize = Math.max(14, metrics.cellSize * 0.23);
+
+    ctx.save();
+    ctx.font = `${kickerSize}px "IBM Plex Mono", "SFMono-Regular", ui-monospace, monospace`;
+    const kickerWidth = ctx.measureText(kicker).width;
+    ctx.font = `700 ${messageSize}px "IBM Plex Mono", "SFMono-Regular", ui-monospace, monospace`;
+    const messageWidth = ctx.measureText(message).width;
+    const boxWidth = Math.max(kickerWidth, messageWidth) + paddingX * 2;
+    const boxHeight = paddingY * 2 + kickerSize + messageSize + metrics.cellSize * 0.08;
+
+    ctx.fillStyle = "rgba(23, 16, 12, 0.8)";
+    this.roundRect(boxX, boxY, boxWidth, boxHeight, metrics.radius * 0.9);
+    ctx.fill();
+
+    ctx.strokeStyle = "rgba(255, 214, 153, 0.22)";
+    ctx.lineWidth = 1.5;
+    this.roundRect(boxX, boxY, boxWidth, boxHeight, metrics.radius * 0.9);
+    ctx.stroke();
+
+    ctx.fillStyle = "rgba(247, 228, 186, 0.58)";
+    ctx.font = `${kickerSize}px "IBM Plex Mono", "SFMono-Regular", ui-monospace, monospace`;
+    ctx.textBaseline = "top";
+    ctx.fillText(kicker, boxX + paddingX, boxY + paddingY);
+
+    ctx.fillStyle = "rgba(255, 226, 181, 0.98)";
+    ctx.font = `700 ${messageSize}px "IBM Plex Mono", "SFMono-Regular", ui-monospace, monospace`;
+    ctx.fillText(message, boxX + paddingX, boxY + paddingY + kickerSize + metrics.cellSize * 0.05);
+    ctx.restore();
+  }
+
+  private drawStormFront(state: GameState, metrics: BoardMetrics): void {
+    const stormCells = this.collectStormCells(state);
+    if (stormCells.length === 0) {
+      return;
+    }
+
+    const { ctx } = this;
+    ctx.save();
+
+    for (const cell of stormCells) {
+      const center = this.cellCenter(cell, metrics);
+
+      ctx.fillStyle = "rgba(122, 110, 84, 0.12)";
+      ctx.beginPath();
+      ctx.ellipse(
+        center.x,
+        center.y,
+        metrics.cellSize * 0.56,
+        metrics.cellSize * 0.44,
+        0,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+
+      ctx.fillStyle = "rgba(214, 168, 97, 0.08)";
+      ctx.beginPath();
+      ctx.ellipse(
+        center.x + metrics.cellSize * 0.05,
+        center.y - metrics.cellSize * 0.04,
+        metrics.cellSize * 0.42,
+        metrics.cellSize * 0.3,
+        0,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+    }
+
+    const seenPairs = new Set<string>();
+    for (const cell of stormCells) {
+      for (const neighbor of stormCells) {
+        if (cell.x === neighbor.x && cell.y === neighbor.y) {
+          continue;
+        }
+
+        if (Math.abs(cell.x - neighbor.x) + Math.abs(cell.y - neighbor.y) !== 1) {
+          continue;
+        }
+
+        const pairKey = [cell, neighbor]
+          .map((position) => `${position.x},${position.y}`)
+          .sort()
+          .join("|");
+
+        if (seenPairs.has(pairKey)) {
+          continue;
+        }
+        seenPairs.add(pairKey);
+
+        const start = this.cellCenter(cell, metrics);
+        const end = this.cellCenter(neighbor, metrics);
+
+        ctx.strokeStyle = "rgba(171, 146, 102, 0.18)";
+        ctx.lineWidth = metrics.cellSize * 0.68;
+        ctx.lineCap = "round";
+        ctx.shadowColor = "rgba(187, 145, 82, 0.12)";
+        ctx.shadowBlur = metrics.cellSize * 0.18;
+        ctx.beginPath();
+        ctx.moveTo(start.x, start.y);
+        ctx.lineTo(end.x, end.y);
+        ctx.stroke();
+
+        ctx.strokeStyle = "rgba(233, 204, 150, 0.08)";
+        ctx.lineWidth = metrics.cellSize * 0.38;
+        ctx.beginPath();
+        ctx.moveTo(start.x, start.y);
+        ctx.lineTo(end.x, end.y);
+        ctx.stroke();
+      }
+    }
+
+    for (const cell of stormCells) {
+      const cellX = metrics.originX + cell.x * metrics.cellSize;
+      const cellY = metrics.originY + cell.y * metrics.cellSize;
+      this.drawStormGlyph(cellX, cellY, metrics.cellSize);
+    }
+
+    ctx.restore();
   }
 
   private drawStormGlyph(cellX: number, cellY: number, cellSize: number): void {
     const { ctx } = this;
+    const centerX = cellX + cellSize / 2;
+    const centerY = cellY + cellSize / 2;
+
     ctx.save();
-    ctx.strokeStyle = "rgba(192, 226, 233, 0.54)";
-    ctx.lineWidth = Math.max(1.5, cellSize * 0.028);
+    ctx.fillStyle = "rgba(238, 212, 164, 0.08)";
+    ctx.beginPath();
+    ctx.ellipse(centerX, centerY, cellSize * 0.34, cellSize * 0.24, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = "rgba(226, 204, 158, 0.44)";
+    ctx.lineWidth = Math.max(1.5, cellSize * 0.024);
     ctx.lineCap = "round";
+    ctx.shadowColor = "rgba(221, 171, 104, 0.18)";
+    ctx.shadowBlur = cellSize * 0.1;
+
+    for (let ring = 0; ring < 2; ring += 1) {
+      const radiusX = cellSize * (0.34 - ring * 0.08);
+      const radiusY = cellSize * (0.26 - ring * 0.06);
+      ctx.beginPath();
+      ctx.ellipse(
+        centerX + ring * cellSize * 0.03,
+        centerY - ring * cellSize * 0.02,
+        radiusX,
+        radiusY,
+        -0.35,
+        Math.PI * 0.18,
+        Math.PI * 1.6,
+      );
+      ctx.stroke();
+    }
+
+    ctx.strokeStyle = "rgba(245, 225, 188, 0.24)";
+    ctx.lineWidth = Math.max(1, cellSize * 0.016);
+    ctx.shadowBlur = 0;
 
     for (let row = 0; row < 3; row += 1) {
-      const startX = cellX + cellSize * 0.18;
-      const startY = cellY + cellSize * (0.34 + row * 0.14);
+      const startX = cellX + cellSize * 0.16;
+      const startY = cellY + cellSize * (0.33 + row * 0.13);
       ctx.beginPath();
       ctx.moveTo(startX, startY);
       ctx.bezierCurveTo(
-        startX + cellSize * 0.12,
-        startY - cellSize * 0.08,
-        startX + cellSize * 0.26,
-        startY + cellSize * 0.08,
-        startX + cellSize * 0.38,
+        startX + cellSize * 0.1,
+        startY - cellSize * 0.07,
+        startX + cellSize * 0.22,
+        startY + cellSize * 0.07,
+        startX + cellSize * 0.34,
         startY,
       );
       ctx.bezierCurveTo(
-        startX + cellSize * 0.5,
-        startY - cellSize * 0.08,
-        startX + cellSize * 0.64,
-        startY + cellSize * 0.08,
-        startX + cellSize * 0.74,
+        startX + cellSize * 0.46,
+        startY - cellSize * 0.06,
+        startX + cellSize * 0.58,
+        startY + cellSize * 0.06,
+        startX + cellSize * 0.68,
         startY,
       );
       ctx.stroke();
     }
 
+    ctx.fillStyle = "rgba(246, 231, 203, 0.18)";
+    for (const offset of [
+      { x: -0.2, y: -0.16, size: 0.038 },
+      { x: 0.18, y: -0.04, size: 0.03 },
+      { x: 0.06, y: 0.18, size: 0.026 },
+    ]) {
+      ctx.beginPath();
+      ctx.arc(
+        centerX + cellSize * offset.x,
+        centerY + cellSize * offset.y,
+        cellSize * offset.size,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+    }
+
     ctx.restore();
+  }
+
+  private collectStormCells(state: GameState): Position[] {
+    const cells: Position[] = [];
+
+    for (let y = 0; y < BOARD_SIZE; y += 1) {
+      for (let x = 0; x < BOARD_SIZE; x += 1) {
+        if (state.board[y][x].hasStorm) {
+          cells.push({ x, y });
+        }
+      }
+    }
+
+    return cells;
+  }
+
+  private cellCenter(position: Position, metrics: BoardMetrics): Position {
+    return {
+      x: metrics.originX + (position.x + 0.5) * metrics.cellSize,
+      y: metrics.originY + (position.y + 0.5) * metrics.cellSize,
+    };
   }
 
   private drawDirectionalSignal(
@@ -431,38 +633,27 @@ export class CanvasRenderer {
     ctx.restore();
   }
 
-  private drawStormSignal(centerX: number, centerY: number, cellSize: number): void {
-    const { ctx } = this;
-    ctx.save();
-    ctx.strokeStyle = "rgba(188, 228, 236, 0.94)";
-    ctx.lineWidth = Math.max(3, cellSize * 0.04);
-    ctx.lineCap = "round";
-    ctx.shadowColor = "rgba(170, 219, 228, 0.3)";
-    ctx.shadowBlur = cellSize * 0.16;
-
-    for (let row = -1; row <= 1; row += 1) {
-      const y = centerY + row * cellSize * 0.16;
-      ctx.beginPath();
-      ctx.moveTo(centerX - cellSize * 0.82, y);
-      ctx.bezierCurveTo(
-        centerX - cellSize * 0.42,
-        y - cellSize * 0.22,
-        centerX - cellSize * 0.12,
-        y + cellSize * 0.22,
-        centerX + cellSize * 0.22,
-        y,
-      );
-      ctx.bezierCurveTo(
-        centerX + cellSize * 0.48,
-        y - cellSize * 0.18,
-        centerX + cellSize * 0.68,
-        y + cellSize * 0.18,
-        centerX + cellSize * 0.88,
-        y,
-      );
-      ctx.stroke();
+  private sectorCaption(sector: TelegraphSector): string {
+    switch (sector) {
+      case "north":
+        return "NORTH REACH";
+      case "northeast":
+        return "NORTHEAST";
+      case "east":
+        return "EAST REACH";
+      case "southeast":
+        return "SOUTHEAST";
+      case "south":
+        return "SOUTH REACH";
+      case "southwest":
+        return "SOUTHWEST";
+      case "west":
+        return "WEST REACH";
+      case "northwest":
+        return "NORTHWEST";
+      default:
+        return "TREMOR WIDE";
     }
-    ctx.restore();
   }
 
   private sectorVector(sector: TelegraphSector): Position {
