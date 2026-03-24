@@ -92,3 +92,44 @@ export class GameMusicController {
         });
     }
 }
+export class GameSfxController {
+    effects;
+    isUnlocked = false;
+    constructor(effectUrls) {
+        this.effects = Object.fromEntries(Object.entries(effectUrls).map(([name, config]) => [name, this.createEffect(config.url, config.volume ?? 1)]));
+    }
+    unlock() {
+        this.isUnlocked = true;
+    }
+    play(name, volumeScale = 1) {
+        if (!this.isUnlocked) {
+            return;
+        }
+        const effect = this.effects[name];
+        if (!effect || effect.failed) {
+            return;
+        }
+        const audio = effect.audio.cloneNode(true);
+        audio.volume = Math.max(0, Math.min(1, effect.volume * volumeScale));
+        audio.currentTime = 0;
+        void audio.play().catch(() => { });
+    }
+    createEffect(url, volume) {
+        const audio = new Audio(url);
+        audio.preload = "auto";
+        const handle = {
+            audio,
+            ready: audio.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA,
+            failed: false,
+            volume,
+        };
+        audio.addEventListener("canplay", () => {
+            handle.ready = true;
+        });
+        audio.addEventListener("error", () => {
+            handle.failed = true;
+        });
+        audio.load();
+        return handle;
+    }
+}

@@ -4,6 +4,13 @@ interface TrackHandle {
   failed: boolean;
 }
 
+interface EffectHandle {
+  audio: HTMLAudioElement;
+  ready: boolean;
+  failed: boolean;
+  volume: number;
+}
+
 function shuffle<T>(items: T[]): T[] {
   const copy = [...items];
 
@@ -116,5 +123,58 @@ export class GameMusicController {
         this.activeTrackIndex = null;
       }
     });
+  }
+}
+
+export class GameSfxController {
+  private readonly effects: Record<string, EffectHandle>;
+  private isUnlocked = false;
+
+  constructor(effectUrls: Record<string, { url: string; volume?: number }>) {
+    this.effects = Object.fromEntries(
+      Object.entries(effectUrls).map(([name, config]) => [name, this.createEffect(config.url, config.volume ?? 1)]),
+    );
+  }
+
+  public unlock(): void {
+    this.isUnlocked = true;
+  }
+
+  public play(name: string, volumeScale = 1): void {
+    if (!this.isUnlocked) {
+      return;
+    }
+
+    const effect = this.effects[name];
+    if (!effect || effect.failed) {
+      return;
+    }
+
+    const audio = effect.audio.cloneNode(true) as HTMLAudioElement;
+    audio.volume = Math.max(0, Math.min(1, effect.volume * volumeScale));
+    audio.currentTime = 0;
+    void audio.play().catch(() => {});
+  }
+
+  private createEffect(url: string, volume: number): EffectHandle {
+    const audio = new Audio(url);
+    audio.preload = "auto";
+
+    const handle: EffectHandle = {
+      audio,
+      ready: audio.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA,
+      failed: false,
+      volume,
+    };
+
+    audio.addEventListener("canplay", () => {
+      handle.ready = true;
+    });
+    audio.addEventListener("error", () => {
+      handle.failed = true;
+    });
+    audio.load();
+
+    return handle;
   }
 }

@@ -1,5 +1,5 @@
 import { AmberDunesGame } from "./game.js";
-import { GameMusicController } from "./music.js";
+import { GameMusicController, GameSfxController } from "./music.js";
 import { CanvasRenderer, loadAssets, } from "./renderer.js";
 import { BOARD_SIZE, } from "./types.js";
 const SKIMMER_FLIGHT_MS = 760;
@@ -179,8 +179,18 @@ async function main() {
         "./assets/audio/amber-field-directive.mp3",
         "./assets/audio/sand-between-signals.mp3",
     ]);
+    const sfx = new GameSfxController({
+        moveSelect: { url: "./assets/audio/sfx/move-select.mp3", volume: 0.48 },
+        skimmerTakeoff: { url: "./assets/audio/sfx/skimmer-takeoff.mp3", volume: 0.44 },
+        amberPickup: { url: "./assets/audio/sfx/amber-pickup.mp3", volume: 0.54 },
+        stormEnter: { url: "./assets/audio/sfx/storm-enter.wav", volume: 0.38 },
+        sinkjawSpawn: { url: "./assets/audio/sfx/sinkjaw-spawn.mp3", volume: 0.34 },
+        sinkjawAttack: { url: "./assets/audio/sfx/sinkjaw-attack.wav", volume: 0.52 },
+        victory: { url: "./assets/audio/sfx/victory.mp3", volume: 0.56 },
+    });
     const unlockMusic = () => {
         music.unlock();
+        sfx.unlock();
     };
     window.addEventListener("pointerdown", unlockMusic, { once: true });
     window.addEventListener("keydown", unlockMusic, { once: true });
@@ -245,12 +255,36 @@ async function main() {
         }
         activeFlight = null;
     };
+    const playStateTransitionSfx = (previousState, nextState) => {
+        if (nextState.status === "won" && previousState.status !== "won") {
+            sfx.play("victory");
+            return;
+        }
+        if (nextState.status === "lost" &&
+            nextState.lossReason === "sinkjaw_attack" &&
+            previousState.status === "playing") {
+            sfx.play("sinkjawAttack");
+            return;
+        }
+        if (nextState.collectedAmber > previousState.collectedAmber) {
+            sfx.play("amberPickup");
+        }
+        const sinkjawChanged = nextState.sinkjaw &&
+            (!previousState.sinkjaw ||
+                previousState.sinkjaw.x !== nextState.sinkjaw.x ||
+                previousState.sinkjaw.y !== nextState.sinkjaw.y);
+        if (sinkjawChanged) {
+            sfx.play("sinkjawSpawn");
+        }
+    };
     const update = (state) => {
+        const previousState = currentState;
         currentState = state;
         if (previewMove &&
             !currentState.validMoves.some((move) => move.target.x === previewMove?.target.x && move.target.y === previewMove?.target.y)) {
             previewMove = null;
         }
+        playStateTransitionSfx(previousState, currentState);
         renderView();
     };
     const isMobileTapPreviewMode = () => window.matchMedia("(hover: none) and (pointer: coarse)").matches;
@@ -259,6 +293,8 @@ async function main() {
         if (!plan) {
             return;
         }
+        sfx.play("moveSelect");
+        sfx.play("skimmerTakeoff");
         const source = { ...currentState.collector };
         activeFlight = {
             phase: move.isStormLanding ? "storm-approach" : "flight",
@@ -280,6 +316,7 @@ async function main() {
                 return;
             }
             if (activeFlight.phase === "storm-approach" && activeFlight.plan.driftTarget) {
+                sfx.play("stormEnter");
                 activeFlight = {
                     ...activeFlight,
                     phase: "storm-drift",
