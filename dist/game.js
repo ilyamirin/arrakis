@@ -184,7 +184,7 @@ export class AmberDunesGame {
             return {
                 sector: "obscured",
                 candidates: [...uniqueCandidates.values()],
-                pilotLine: "Pilot: storm shear will throw you blind. No clean read on Sinkjaw beyond that squall.",
+                pilotLine: "Pilot: Storm interference. Read unreliable beyond the squall.",
                 isStormLanding,
             };
         }
@@ -296,23 +296,23 @@ export class AmberDunesGame {
         const sectorName = this.toBoardNotation(target);
         switch (sector) {
             case "north":
-                return `Pilot: take ${sectorName} and the tremor front will crowd the north reach.`;
+                return `Pilot: Put down at ${sectorName}. Sinkjaw favors the north reach.`;
             case "northeast":
-                return `Pilot: take ${sectorName} and I'd watch the northeast reach for a break.`;
+                return `Pilot: Put down at ${sectorName}. Watch the northeast reach.`;
             case "east":
-                return `Pilot: take ${sectorName} and Sinkjaw will likely favor the eastern reach.`;
+                return `Pilot: Put down at ${sectorName}. Sinkjaw favors the east reach.`;
             case "southeast":
-                return `Pilot: take ${sectorName} and the southeast looks hot.`;
+                return `Pilot: Put down at ${sectorName}. The southeast is running hot.`;
             case "south":
-                return `Pilot: take ${sectorName} and the southern reach starts to boil.`;
+                return `Pilot: Put down at ${sectorName}. Sinkjaw favors the south reach.`;
             case "southwest":
-                return `Pilot: take ${sectorName} and the southwest quarter bears watching.`;
+                return `Pilot: Put down at ${sectorName}. Watch the southwest reach.`;
             case "west":
-                return `Pilot: take ${sectorName} and I'd keep my eyes on the western reach.`;
+                return `Pilot: Put down at ${sectorName}. Sinkjaw favors the west reach.`;
             case "northwest":
-                return `Pilot: take ${sectorName} and the northwest quarter turns dangerous.`;
+                return `Pilot: Put down at ${sectorName}. The northwest turns dangerous.`;
             default:
-                return `Pilot: take ${sectorName} and Sinkjaw could break from all around that landing.`;
+                return `Pilot: Put down at ${sectorName}. Sinkjaw can break all around you.`;
         }
     }
     createStormCluster() {

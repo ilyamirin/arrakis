@@ -10,7 +10,7 @@ const SKIMMER_FLIGHT_MS = 760;
 const PICKUP_PHASE_END = 0.22;
 const DROPOFF_PHASE_START = 0.8;
 const DEFAULT_PILOT_MESSAGE =
-  "Sweep the lit squares and the pilot will call the next Sinkjaw break.";
+  "Sweep the lit squares for the pilot's read.";
 
 function boardLabel(x: number, y: number): string {
   return `${String.fromCharCode(65 + x)}${BOARD_SIZE - y}`;
