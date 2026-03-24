@@ -5,9 +5,6 @@ import {
   type FlightAnimationFrame,
 } from "./renderer.js";
 import { BOARD_SIZE, type GameState, type Position } from "./types.js";
-import { LocalSinkjawBrain } from "./sinkjaw-brain.js";
-
-const SINKJAW_MEMORY_CONSENT_KEY = "amber-dunes-harvest.sinkjaw-consent";
 const SKIMMER_FLIGHT_MS = 760;
 const PICKUP_PHASE_END = 0.22;
 const DROPOFF_PHASE_START = 0.8;
@@ -37,29 +34,6 @@ function statusClass(state: GameState): string {
     return "status-lost";
   }
   return "status-playing";
-}
-
-type SinkjawMemoryConsent = "accepted" | "declined" | null;
-
-function readSinkjawMemoryConsent(): SinkjawMemoryConsent {
-  try {
-    const value = window.localStorage.getItem(SINKJAW_MEMORY_CONSENT_KEY);
-    if (value === "accepted" || value === "declined") {
-      return value;
-    }
-  } catch {
-    return null;
-  }
-
-  return null;
-}
-
-function writeSinkjawMemoryConsent(value: Exclude<SinkjawMemoryConsent, null>): void {
-  try {
-    window.localStorage.setItem(SINKJAW_MEMORY_CONSENT_KEY, value);
-  } catch {
-    // Ignore storage failures and keep the game functional.
-  }
 }
 
 function lerp(start: number, end: number, progress: number): number {
@@ -164,9 +138,6 @@ async function main(): Promise<void> {
   const amberValueElement = document.querySelector<HTMLElement>("#amber-value");
   const movesValueElement = document.querySelector<HTMLElement>("#moves-value");
   const positionValueElement = document.querySelector<HTMLElement>("#position-value");
-  const sinkjawMemoryBanner = document.querySelector<HTMLElement>("#sinkjaw-memory-banner");
-  const sinkjawMemoryAccept = document.querySelector<HTMLButtonElement>("#sinkjaw-memory-accept");
-  const sinkjawMemoryDecline = document.querySelector<HTMLButtonElement>("#sinkjaw-memory-decline");
 
   if (
     !canvas ||
@@ -175,17 +146,13 @@ async function main(): Promise<void> {
     !statusMessageElement ||
     !amberValueElement ||
     !movesValueElement ||
-    !positionValueElement ||
-    !sinkjawMemoryBanner ||
-    !sinkjawMemoryAccept ||
-    !sinkjawMemoryDecline
+    !positionValueElement
   ) {
     throw new Error("The UI shell is incomplete.");
   }
 
   const renderer = new CanvasRenderer(canvas, await loadAssets());
   const game = new AmberDunesGame();
-  const sinkjawBrain = new LocalSinkjawBrain(window.localStorage);
   let currentState = game.getState();
   let activeFlight:
     | {
@@ -195,12 +162,6 @@ async function main(): Promise<void> {
         animationFrameId: number | null;
       }
     | null = null;
-
-  const setAdaptiveWorm = (enabled: boolean): void => {
-    game.setSinkjawSpawnSelector(
-      enabled ? (context) => sinkjawBrain.chooseSpawnTarget(context) : null,
-    );
-  };
 
   const renderView = (now = performance.now()): void => {
     const flight = activeFlight;
@@ -276,25 +237,6 @@ async function main(): Promise<void> {
     activeFlight.animationFrameId = window.requestAnimationFrame(step);
   };
 
-  const consent = readSinkjawMemoryConsent();
-  if (consent === "accepted") {
-    setAdaptiveWorm(true);
-  } else if (!consent) {
-    sinkjawMemoryBanner.hidden = false;
-  }
-
-  sinkjawMemoryAccept.addEventListener("click", () => {
-    writeSinkjawMemoryConsent("accepted");
-    setAdaptiveWorm(true);
-    sinkjawMemoryBanner.hidden = true;
-  });
-
-  sinkjawMemoryDecline.addEventListener("click", () => {
-    writeSinkjawMemoryConsent("declined");
-    setAdaptiveWorm(false);
-    sinkjawMemoryBanner.hidden = true;
-  });
-
   restartButton.addEventListener("click", () => {
     stopFlight();
     update(game.reset());
@@ -317,10 +259,6 @@ async function main(): Promise<void> {
     if (!isValidMove) {
       update(game.moveTo(target));
       return;
-    }
-
-    if (readSinkjawMemoryConsent() === "accepted") {
-      sinkjawBrain.learnFromChoice(currentState, target);
     }
 
     startFlight(target);

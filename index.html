@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Amber Dunes Harvest is a 100% AI-generated retro-futurist desert game. Guide a collector across a 9x9 grid in The Amber Waste, secure amber, evade Sinkjaw strikes, and survive the route."
+      content="Amber Dunes Harvest is a 100% AI-generated retro-futurist desert game. Guide a collector across an 8x8 grid in The Amber Waste, secure amber, evade Sinkjaw strikes, and survive the route."
     />
     <meta name="theme-color" content="#130f0b" />
     <meta property="og:type" content="website" />
@@ -13,7 +13,7 @@
     <meta property="og:title" content="Amber Dunes Harvest" />
     <meta
       property="og:description"
-      content="A 100% AI-generated retro-futurist desert game by Ilya Mirin: guide a collector through The Amber Waste, gather amber, and evade Sinkjaw strikes on a 9x9 board."
+      content="A 100% AI-generated retro-futurist desert game by Ilya Mirin: guide a collector through The Amber Waste, gather amber, and evade Sinkjaw strikes on an 8x8 board."
     />
     <meta property="og:site_name" content="Amber Dunes Harvest" />
     <meta property="og:image" content="https://ilyamirin.github.io/arrakis/assets/social-card.jpg" />
@@ -43,9 +43,9 @@
           <p class="eyebrow">Retro-Futurist Desert Game</p>
           <h1>Amber Dunes Harvest</h1>
           <p class="hero-text">
-            Sweep the amber field across a 9x9 grid in The Amber Waste.
-            The Collector leaps like a knight, and Sinkjaw shifts its ground
-            after every move you make.
+            Sweep the amber field across an 8x8 grid in The Amber Waste.
+            The Collector leaps like a knight, and Sinkjaw breaks surface
+            within four tiles after every move you make.
           </p>
           <p class="project-note">100% AI-generated project: code, art, copy, and interface.</p>
         </div>
@@ -80,7 +80,7 @@
           <section class="panel metrics-panel">
             <div class="metric">
               <span class="metric-label">Amber</span>
-              <strong id="amber-value">0 / 25</strong>
+              <strong id="amber-value">0 / 20</strong>
             </div>
             <div class="metric">
               <span class="metric-label">Moves</span>
@@ -88,7 +88,7 @@
             </div>
             <div class="metric">
               <span class="metric-label">Position</span>
-              <strong id="position-value">E5</strong>
+              <strong id="position-value">E4</strong>
             </div>
           </section>
 
@@ -104,14 +104,14 @@
               <img src="./assets/sinkjaw.svg" alt="" />
               <div>
                 <span>Sinkjaw</span>
-                <p>Breaks surface after every move and closes a square to you.</p>
+                <p>Breaks surface within four tiles and closes a square to you.</p>
               </div>
             </div>
             <div class="legend-item">
               <img src="./assets/amber.svg" alt="" />
               <div>
                 <span>Amber</span>
-                <p>Strip the field clean. All 25 deposits must be taken.</p>
+                <p>Strip the field clean. All 20 deposits must be taken.</p>
               </div>
             </div>
             <div class="legend-item">
@@ -131,6 +131,7 @@
             <ul>
               <li>The Collector moves in the knight's L-shaped stride.</li>
               <li>The lit marks on the field show every legal landing square.</li>
+              <li>For the first three moves, Sinkjaw cannot surface under the Collector.</li>
               <li>If Sinkjaw surfaces beneath the Collector, the run is lost.</li>
               <li>The moment the last amber deposit is taken, the field is yours.</li>
             </ul>
@@ -166,29 +167,6 @@
         <a href="./LICENSE" target="_blank" rel="noreferrer">View license</a>
       </footer>
     </div>
-
-    <section
-      id="sinkjaw-memory-banner"
-      class="consent-banner"
-      hidden
-      aria-live="polite"
-      aria-label="Sinkjaw memory consent"
-    >
-      <p class="consent-kicker">Sinkjaw memory</p>
-      <h2>Allow Sinkjaw a memory?</h2>
-      <p class="consent-copy">
-        If you allow it, Sinkjaw will keep a local record of your moves and
-        learn the shape of your habits over time.
-      </p>
-      <div class="consent-actions">
-        <button id="sinkjaw-memory-accept" class="primary-button consent-accept" type="button">
-          Allow memory
-        </button>
-        <button id="sinkjaw-memory-decline" class="consent-button" type="button">
-          Keep random
-        </button>
-      </div>
-    </section>
 
     <script type="module" src="./dist/main.js"></script>
   </body>

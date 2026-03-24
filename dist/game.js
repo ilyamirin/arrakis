@@ -1,5 +1,6 @@
 import { BOARD_SIZE, CENTER_INDEX, TOTAL_AMBER, } from "./types.js";
-const ADAPTIVE_SPAWN_RATE = 0.72;
+const SINKJAW_SPAWN_RADIUS = 4;
+const SAFE_ONESHOT_TURNS = 3;
 const KNIGHT_OFFSETS = [
     { x: -2, y: -1 },
     { x: -2, y: 1 },
@@ -19,7 +20,6 @@ export class AmberDunesGame {
     status = "playing";
     lossReason = null;
     message = "";
-    sinkjawSpawnSelector = null;
     constructor() {
         this.reset();
     }
@@ -47,9 +47,6 @@ export class AmberDunesGame {
             message: this.message,
             lossReason: this.lossReason,
         };
-    }
-    setSinkjawSpawnSelector(selector) {
-        this.sinkjawSpawnSelector = selector;
     }
     moveTo(target) {
         if (this.status !== "playing") {
@@ -127,6 +124,12 @@ export class AmberDunesGame {
                 if (this.sinkjaw && this.positionsEqual(next, this.sinkjaw)) {
                     continue;
                 }
+                if (this.distanceToCollector(next) > SINKJAW_SPAWN_RADIUS) {
+                    continue;
+                }
+                if (this.moves <= SAFE_ONESHOT_TURNS && this.positionsEqual(next, this.collector)) {
+                    continue;
+                }
                 candidates.push(next);
             }
         }
@@ -134,8 +137,7 @@ export class AmberDunesGame {
             this.sinkjaw = null;
             return;
         }
-        const preferredTarget = this.pickAdaptiveTarget();
-        const nextSinkjaw = preferredTarget ?? candidates[Math.floor(Math.random() * candidates.length)];
+        const nextSinkjaw = candidates[Math.floor(Math.random() * candidates.length)];
         this.sinkjaw = nextSinkjaw;
         if (this.positionsEqual(nextSinkjaw, this.collector)) {
             this.status = "lost";
@@ -144,47 +146,6 @@ export class AmberDunesGame {
             return;
         }
         this.message = `Sinkjaw sighted in sector ${this.toBoardNotation(nextSinkjaw)}.`;
-    }
-    pickAdaptiveTarget() {
-        if (!this.sinkjawSpawnSelector) {
-            return null;
-        }
-        if (Math.random() > ADAPTIVE_SPAWN_RATE) {
-            return null;
-        }
-        const nextMoves = this.computeValidMoves(null).filter((move) => !this.sinkjaw || !this.positionsEqual(move.target, this.sinkjaw));
-        const spawnCandidates = [];
-        for (let y = 0; y < BOARD_SIZE; y += 1) {
-            for (let x = 0; x < BOARD_SIZE; x += 1) {
-                const candidate = { x, y };
-                if (this.sinkjaw && this.positionsEqual(candidate, this.sinkjaw)) {
-                    continue;
-                }
-                if (this.positionsEqual(candidate, this.collector)) {
-                    continue;
-                }
-                spawnCandidates.push(candidate);
-            }
-        }
-        if (spawnCandidates.length === 0) {
-            return null;
-        }
-        const preferred = this.sinkjawSpawnSelector({
-            board: this.board,
-            collector: this.collector,
-            previousSinkjaw: this.sinkjaw ? { ...this.sinkjaw } : null,
-            nextMoves,
-            spawnCandidates,
-        });
-        if (!preferred) {
-            return null;
-        }
-        if (this.sinkjaw && this.positionsEqual(preferred, this.sinkjaw)) {
-            return null;
-        }
-        return spawnCandidates.some((candidate) => this.positionsEqual(candidate, preferred))
-            ? { ...preferred }
-            : null;
     }
     toBoardNotation(position) {
         const file = String.fromCharCode(65 + position.x);
@@ -204,6 +165,9 @@ export class AmberDunesGame {
     }
     positionsEqual(left, right) {
         return left.x === right.x && left.y === right.y;
+    }
+    distanceToCollector(position) {
+        return Math.hypot(position.x - this.collector.x, position.y - this.collector.y);
     }
     shuffle(items) {
         for (let index = items.length - 1; index > 0; index -= 1) {

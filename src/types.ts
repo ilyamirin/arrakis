@@ -1,5 +1,5 @@
-export const BOARD_SIZE = 9;
-export const TOTAL_AMBER = 25;
+export const BOARD_SIZE = 8;
+export const TOTAL_AMBER = 20;
 export const CENTER_INDEX = Math.floor(BOARD_SIZE / 2);
 
 export type GameStatus = "playing" | "won" | "lost";
