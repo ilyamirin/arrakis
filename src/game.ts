@@ -27,6 +27,7 @@ const KNIGHT_OFFSETS: Position[] = [
 
 export class AmberDunesGame {
   private board: CellState[][] = [];
+  private stormCells: Position[] = [];
   private collector: Position = { x: CENTER_INDEX, y: CENTER_INDEX };
   private sinkjaw: Position | null = null;
   private moves = 0;
@@ -40,7 +41,9 @@ export class AmberDunesGame {
   }
 
   public reset(): GameState {
-    this.board = this.createBoard();
+    const { board, stormCells } = this.createBoard();
+    this.board = board;
+    this.stormCells = stormCells;
     this.collector = { x: CENTER_INDEX, y: CENTER_INDEX };
     this.sinkjaw = null;
     this.moves = 0;
@@ -115,6 +118,7 @@ export class AmberDunesGame {
       return this.getState();
     }
 
+    this.moveStormCluster();
     this.spawnSinkjaw();
 
     if (this.status === "playing" && this.computeValidMoves(this.sinkjaw).length === 0) {
@@ -126,7 +130,7 @@ export class AmberDunesGame {
     return this.getState();
   }
 
-  private createBoard(): CellState[][] {
+  private createBoard(): { board: CellState[][]; stormCells: Position[] } {
     const board = Array.from({ length: BOARD_SIZE }, () =>
       Array.from({ length: BOARD_SIZE }, () => ({ hasAmber: false, hasStorm: false })),
     );
@@ -157,7 +161,10 @@ export class AmberDunesGame {
       board[cell.y][cell.x].hasAmber = true;
     }
 
-    return board;
+    return {
+      board,
+      stormCells: stormCells.map((cell) => ({ ...cell })),
+    };
   }
 
   private computeValidMoves(blockedCell: Position | null): MoveOption[] {
@@ -421,6 +428,54 @@ export class AmberDunesGame {
     }
     this.shuffle(fallback);
     return fallback.slice(0, STORM_CLUSTER_SIZE);
+  }
+
+  private moveStormCluster(): void {
+    if (this.stormCells.length === 0) {
+      return;
+    }
+
+    const directions: Position[] = [
+      { x: 0, y: -1 },
+      { x: 1, y: 0 },
+      { x: 0, y: 1 },
+      { x: -1, y: 0 },
+    ];
+
+    const validDirections = directions.filter((direction) =>
+      this.stormCells.every((cell) => {
+        const shifted = {
+          x: cell.x + direction.x,
+          y: cell.y + direction.y,
+        };
+
+        return this.isInside(shifted) && !this.positionsEqual(shifted, this.collector);
+      }),
+    );
+
+    if (validDirections.length === 0) {
+      return;
+    }
+
+    const direction = validDirections[Math.floor(Math.random() * validDirections.length)];
+    const nextStormCells = this.stormCells.map((cell) => ({
+      x: cell.x + direction.x,
+      y: cell.y + direction.y,
+    }));
+
+    this.setStormCells(nextStormCells);
+  }
+
+  private setStormCells(stormCells: Position[]): void {
+    for (const cell of this.stormCells) {
+      this.board[cell.y][cell.x].hasStorm = false;
+    }
+
+    this.stormCells = stormCells.map((cell) => ({ ...cell }));
+
+    for (const cell of this.stormCells) {
+      this.board[cell.y][cell.x].hasStorm = true;
+    }
   }
 
   private randomNonCenterCell(): Position {

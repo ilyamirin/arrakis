@@ -14,6 +14,7 @@ const KNIGHT_OFFSETS = [
 ];
 export class AmberDunesGame {
     board = [];
+    stormCells = [];
     collector = { x: CENTER_INDEX, y: CENTER_INDEX };
     sinkjaw = null;
     moves = 0;
@@ -25,7 +26,9 @@ export class AmberDunesGame {
         this.reset();
     }
     reset() {
-        this.board = this.createBoard();
+        const { board, stormCells } = this.createBoard();
+        this.board = board;
+        this.stormCells = stormCells;
         this.collector = { x: CENTER_INDEX, y: CENTER_INDEX };
         this.sinkjaw = null;
         this.moves = 0;
@@ -90,6 +93,7 @@ export class AmberDunesGame {
             this.message = `Run complete in ${this.moves} moves. The amber field is stripped clean.`;
             return this.getState();
         }
+        this.moveStormCluster();
         this.spawnSinkjaw();
         if (this.status === "playing" && this.computeValidMoves(this.sinkjaw).length === 0) {
             this.status = "lost";
@@ -119,7 +123,10 @@ export class AmberDunesGame {
         for (const cell of amberCells.slice(0, TOTAL_AMBER)) {
             board[cell.y][cell.x].hasAmber = true;
         }
-        return board;
+        return {
+            board,
+            stormCells: stormCells.map((cell) => ({ ...cell })),
+        };
     }
     computeValidMoves(blockedCell) {
         return KNIGHT_OFFSETS.map((delta) => ({
@@ -343,6 +350,42 @@ export class AmberDunesGame {
         }
         this.shuffle(fallback);
         return fallback.slice(0, STORM_CLUSTER_SIZE);
+    }
+    moveStormCluster() {
+        if (this.stormCells.length === 0) {
+            return;
+        }
+        const directions = [
+            { x: 0, y: -1 },
+            { x: 1, y: 0 },
+            { x: 0, y: 1 },
+            { x: -1, y: 0 },
+        ];
+        const validDirections = directions.filter((direction) => this.stormCells.every((cell) => {
+            const shifted = {
+                x: cell.x + direction.x,
+                y: cell.y + direction.y,
+            };
+            return this.isInside(shifted) && !this.positionsEqual(shifted, this.collector);
+        }));
+        if (validDirections.length === 0) {
+            return;
+        }
+        const direction = validDirections[Math.floor(Math.random() * validDirections.length)];
+        const nextStormCells = this.stormCells.map((cell) => ({
+            x: cell.x + direction.x,
+            y: cell.y + direction.y,
+        }));
+        this.setStormCells(nextStormCells);
+    }
+    setStormCells(stormCells) {
+        for (const cell of this.stormCells) {
+            this.board[cell.y][cell.x].hasStorm = false;
+        }
+        this.stormCells = stormCells.map((cell) => ({ ...cell }));
+        for (const cell of this.stormCells) {
+            this.board[cell.y][cell.x].hasStorm = true;
+        }
     }
     randomNonCenterCell() {
         while (true) {
