@@ -213,6 +213,10 @@ async function main() {
         if (activeFlight) {
             return;
         }
+        if (currentState.status !== "playing") {
+            update(game.reset());
+            return;
+        }
         const target = renderer.cellFromClientPoint(event.clientX, event.clientY);
         if (!target) {
             return;

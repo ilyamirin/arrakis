@@ -271,6 +271,11 @@ async function main(): Promise<void> {
       return;
     }
 
+    if (currentState.status !== "playing") {
+      update(game.reset());
+      return;
+    }
+
     const target = renderer.cellFromClientPoint(event.clientX, event.clientY);
     if (!target) {
       return;
