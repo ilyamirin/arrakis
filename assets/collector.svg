@@ -36,18 +36,18 @@
 
   <ellipse cx="128" cy="198" rx="82" ry="24" fill="url(#collectorShadow)"/>
 
-  <path d="M42 110L96 84L102 98L64 122L102 146L96 160L42 146L60 128L42 110Z" fill="url(#portSail)" stroke="#F8EED5" stroke-width="8" stroke-linejoin="round"/>
-  <path d="M214 110L160 84L154 98L192 122L154 146L160 160L214 146L196 128L214 110Z" fill="url(#starboardSail)" stroke="#F8EED5" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M42 110L96 84L102 98L64 122L102 146L96 160L42 146L60 128L42 110Z" fill="url(#portSail)" stroke="#D7B07C" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M214 110L160 84L154 98L192 122L154 146L160 160L214 146L196 128L214 110Z" fill="url(#starboardSail)" stroke="#D7B07C" stroke-width="8" stroke-linejoin="round"/>
 
-  <path d="M100 50H156L168 76H88L100 50Z" fill="url(#collectorIntake)" stroke="#F8EED5" stroke-width="8" stroke-linejoin="round"/>
-  <path d="M84 74H172L194 106V160L168 190H88L62 160V106L84 74Z" fill="url(#collectorHull)" stroke="#F8EED5" stroke-width="10" stroke-linejoin="round"/>
+  <path d="M100 50H156L168 76H88L100 50Z" fill="url(#collectorIntake)" stroke="#D7B07C" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M84 74H172L194 106V160L168 190H88L62 160V106L84 74Z" fill="url(#collectorHull)" stroke="#D7B07C" stroke-width="10" stroke-linejoin="round"/>
 
   <path d="M78 96L54 110" stroke="#8D552E" stroke-width="8" stroke-linecap="round"/>
   <path d="M178 96L202 110" stroke="#8D552E" stroke-width="8" stroke-linecap="round"/>
   <path d="M78 152L54 144" stroke="#8D552E" stroke-width="8" stroke-linecap="round"/>
   <path d="M178 152L202 144" stroke="#8D552E" stroke-width="8" stroke-linecap="round"/>
 
-  <path d="M98 88H158" stroke="#FFF1D1" stroke-opacity="0.5" stroke-width="6" stroke-linecap="round"/>
+  <path d="M98 88H158" stroke="#E3BD87" stroke-opacity="0.22" stroke-width="6" stroke-linecap="round"/>
   <rect x="92" y="94" width="72" height="34" rx="14" fill="url(#collectorCabin)"/>
   <path d="M106 96L122 126" stroke="#F8EED5" stroke-opacity="0.58" stroke-width="5" stroke-linecap="round"/>
   <path d="M150 96L134 126" stroke="#F8EED5" stroke-opacity="0.58" stroke-width="5" stroke-linecap="round"/>
@@ -56,7 +56,7 @@
   <path d="M90 154H166" stroke="#5E3821" stroke-width="9" stroke-linecap="round"/>
   <path d="M98 170H158" stroke="#F0C986" stroke-opacity="0.6" stroke-width="7" stroke-linecap="round"/>
 
-  <path d="M110 162H146L158 206H98L110 162Z" fill="url(#rearEngine)" stroke="#F8EED5" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M110 162H146L158 206H98L110 162Z" fill="url(#rearEngine)" stroke="#D7B07C" stroke-width="8" stroke-linejoin="round"/>
   <path d="M116 176H140" stroke="#F7D89E" stroke-width="5" stroke-linecap="round"/>
   <path d="M112 190H144" stroke="#F7D89E" stroke-opacity="0.72" stroke-width="5" stroke-linecap="round"/>
 
