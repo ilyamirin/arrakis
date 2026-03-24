@@ -1,4 +1,4 @@
-import { BOARD_SIZE, CENTER_INDEX, TOTAL_SPICE, } from "./types.js";
+import { BOARD_SIZE, CENTER_INDEX, TOTAL_AMBER, } from "./types.js";
 const ADAPTIVE_SPAWN_RATE = 0.72;
 const KNIGHT_OFFSETS = [
     { x: -2, y: -1 },
@@ -12,23 +12,23 @@ const KNIGHT_OFFSETS = [
 ];
 export class AmberDunesGame {
     board = [];
-    harvester = { x: CENTER_INDEX, y: CENTER_INDEX };
-    worm = null;
+    collector = { x: CENTER_INDEX, y: CENTER_INDEX };
+    sinkjaw = null;
     moves = 0;
-    collectedSpice = 0;
+    collectedAmber = 0;
     status = "playing";
     lossReason = null;
     message = "";
-    wormSpawnSelector = null;
+    sinkjawSpawnSelector = null;
     constructor() {
         this.reset();
     }
     reset() {
         this.board = this.createBoard();
-        this.harvester = { x: CENTER_INDEX, y: CENTER_INDEX };
-        this.worm = null;
+        this.collector = { x: CENTER_INDEX, y: CENTER_INDEX };
+        this.sinkjaw = null;
         this.moves = 0;
-        this.collectedSpice = 0;
+        this.collectedAmber = 0;
         this.status = "playing";
         this.lossReason = null;
         this.message = "Выберите подсвеченную клетку, чтобы начать маршрут через The Amber Waste.";
@@ -37,48 +37,48 @@ export class AmberDunesGame {
     getState() {
         return {
             board: this.board.map((row) => row.map((cell) => ({ ...cell }))),
-            harvester: { ...this.harvester },
-            worm: this.worm ? { ...this.worm } : null,
-            validMoves: this.computeValidMoves(this.worm),
-            totalSpice: TOTAL_SPICE,
-            collectedSpice: this.collectedSpice,
+            collector: { ...this.collector },
+            sinkjaw: this.sinkjaw ? { ...this.sinkjaw } : null,
+            validMoves: this.computeValidMoves(this.sinkjaw),
+            totalAmber: TOTAL_AMBER,
+            collectedAmber: this.collectedAmber,
             moves: this.moves,
             status: this.status,
             message: this.message,
             lossReason: this.lossReason,
         };
     }
-    setWormSpawnSelector(selector) {
-        this.wormSpawnSelector = selector;
+    setSinkjawSpawnSelector(selector) {
+        this.sinkjawSpawnSelector = selector;
     }
     moveTo(target) {
         if (this.status !== "playing") {
             return this.getState();
         }
-        const validMove = this.computeValidMoves(this.worm).find((move) => this.positionsEqual(move.target, target));
+        const validMove = this.computeValidMoves(this.sinkjaw).find((move) => this.positionsEqual(move.target, target));
         if (!validMove) {
             this.message = "Этот прыжок недоступен. Используйте подсвеченные клетки.";
             return this.getState();
         }
-        this.harvester = { ...validMove.target };
+        this.collector = { ...validMove.target };
         this.moves += 1;
-        if (this.board[target.y][target.x].hasSpice) {
-            this.board[target.y][target.x].hasSpice = false;
-            this.collectedSpice += 1;
+        if (this.board[target.y][target.x].hasAmber) {
+            this.board[target.y][target.x].hasAmber = false;
+            this.collectedAmber += 1;
             this.message = "Amber собран. Sinkjaw уже чувствует вибрацию.";
         }
         else {
             this.message = "Пустой участок Waste. Продолжайте маршрут.";
         }
-        if (this.collectedSpice >= TOTAL_SPICE) {
+        if (this.collectedAmber >= TOTAL_AMBER) {
             this.status = "won";
             this.lossReason = null;
-            this.worm = null;
+            this.sinkjaw = null;
             this.message = `Маршрут завершён за ${this.moves} ходов. Весь amber собран.`;
             return this.getState();
         }
-        this.spawnWorm();
-        if (this.status === "playing" && this.computeValidMoves(this.worm).length === 0) {
+        this.spawnSinkjaw();
+        if (this.status === "playing" && this.computeValidMoves(this.sinkjaw).length === 0) {
             this.status = "lost";
             this.lossReason = "trapped";
             this.message = "Ходы закончились: Collector загнан в тупик.";
@@ -86,7 +86,7 @@ export class AmberDunesGame {
         return this.getState();
     }
     createBoard() {
-        const board = Array.from({ length: BOARD_SIZE }, () => Array.from({ length: BOARD_SIZE }, () => ({ hasSpice: false })));
+        const board = Array.from({ length: BOARD_SIZE }, () => Array.from({ length: BOARD_SIZE }, () => ({ hasAmber: false })));
         const available = [];
         for (let y = 0; y < BOARD_SIZE; y += 1) {
             for (let x = 0; x < BOARD_SIZE; x += 1) {
@@ -97,21 +97,21 @@ export class AmberDunesGame {
             }
         }
         this.shuffle(available);
-        for (const cell of available.slice(0, TOTAL_SPICE)) {
-            board[cell.y][cell.x].hasSpice = true;
+        for (const cell of available.slice(0, TOTAL_AMBER)) {
+            board[cell.y][cell.x].hasAmber = true;
         }
         return board;
     }
     computeValidMoves(blockedCell) {
         return KNIGHT_OFFSETS.map((delta) => ({
             target: {
-                x: this.harvester.x + delta.x,
-                y: this.harvester.y + delta.y,
+                x: this.collector.x + delta.x,
+                y: this.collector.y + delta.y,
             },
             delta,
             label: this.toBoardNotation({
-                x: this.harvester.x + delta.x,
-                y: this.harvester.y + delta.y,
+                x: this.collector.x + delta.x,
+                y: this.collector.y + delta.y,
             }),
             notation: this.toDeltaNotation(delta),
         }))
@@ -119,48 +119,48 @@ export class AmberDunesGame {
             .filter((move) => !blockedCell || !this.positionsEqual(move.target, blockedCell))
             .sort((left, right) => left.target.y - right.target.y || left.target.x - right.target.x);
     }
-    spawnWorm() {
+    spawnSinkjaw() {
         const candidates = [];
         for (let y = 0; y < BOARD_SIZE; y += 1) {
             for (let x = 0; x < BOARD_SIZE; x += 1) {
                 const next = { x, y };
-                if (this.worm && this.positionsEqual(next, this.worm)) {
+                if (this.sinkjaw && this.positionsEqual(next, this.sinkjaw)) {
                     continue;
                 }
                 candidates.push(next);
             }
         }
         if (candidates.length === 0) {
-            this.worm = null;
+            this.sinkjaw = null;
             return;
         }
         const preferredTarget = this.pickAdaptiveTarget();
-        const nextWorm = preferredTarget ?? candidates[Math.floor(Math.random() * candidates.length)];
-        this.worm = nextWorm;
-        if (this.positionsEqual(nextWorm, this.harvester)) {
+        const nextSinkjaw = preferredTarget ?? candidates[Math.floor(Math.random() * candidates.length)];
+        this.sinkjaw = nextSinkjaw;
+        if (this.positionsEqual(nextSinkjaw, this.collector)) {
             this.status = "lost";
-            this.lossReason = "worm_attack";
+            this.lossReason = "sinkjaw_attack";
             this.message = "Sinkjaw вынырнул прямо под Collector. Экспедиция потеряна.";
             return;
         }
-        this.message = `Sinkjaw замечен в секторе ${this.toBoardNotation(nextWorm)}.`;
+        this.message = `Sinkjaw замечен в секторе ${this.toBoardNotation(nextSinkjaw)}.`;
     }
     pickAdaptiveTarget() {
-        if (!this.wormSpawnSelector) {
+        if (!this.sinkjawSpawnSelector) {
             return null;
         }
         if (Math.random() > ADAPTIVE_SPAWN_RATE) {
             return null;
         }
-        const nextMoves = this.computeValidMoves(null).filter((move) => !this.worm || !this.positionsEqual(move.target, this.worm));
+        const nextMoves = this.computeValidMoves(null).filter((move) => !this.sinkjaw || !this.positionsEqual(move.target, this.sinkjaw));
         const spawnCandidates = [];
         for (let y = 0; y < BOARD_SIZE; y += 1) {
             for (let x = 0; x < BOARD_SIZE; x += 1) {
                 const candidate = { x, y };
-                if (this.worm && this.positionsEqual(candidate, this.worm)) {
+                if (this.sinkjaw && this.positionsEqual(candidate, this.sinkjaw)) {
                     continue;
                 }
-                if (this.positionsEqual(candidate, this.harvester)) {
+                if (this.positionsEqual(candidate, this.collector)) {
                     continue;
                 }
                 spawnCandidates.push(candidate);
@@ -169,17 +169,17 @@ export class AmberDunesGame {
         if (spawnCandidates.length === 0) {
             return null;
         }
-        const preferred = this.wormSpawnSelector({
+        const preferred = this.sinkjawSpawnSelector({
             board: this.board,
-            harvester: this.harvester,
-            previousWorm: this.worm ? { ...this.worm } : null,
+            collector: this.collector,
+            previousSinkjaw: this.sinkjaw ? { ...this.sinkjaw } : null,
             nextMoves,
             spawnCandidates,
         });
         if (!preferred) {
             return null;
         }
-        if (this.worm && this.positionsEqual(preferred, this.worm)) {
+        if (this.sinkjaw && this.positionsEqual(preferred, this.sinkjaw)) {
             return null;
         }
         return spawnCandidates.some((candidate) => this.positionsEqual(candidate, preferred))

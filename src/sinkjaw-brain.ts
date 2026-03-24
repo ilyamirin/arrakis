@@ -1,5 +1,5 @@
 import { BOARD_SIZE, type CellState, type GameState, type Position } from "./types.js";
-import type { WormSpawnContext } from "./game.js";
+import type { SinkjawSpawnContext } from "./game.js";
 
 const PROFILE_KEY = "amber-dunes-harvest.sinkjaw-bandit-profile";
 const MODEL_VERSION = 2;
@@ -53,7 +53,7 @@ function randomWeight(): number {
   return (Math.random() * 2 - 1) * 0.08;
 }
 
-export class LocalWormBrain {
+export class LocalSinkjawBrain {
   private readonly storage: StorageLike;
   private profile: BanditProfile;
 
@@ -62,7 +62,7 @@ export class LocalWormBrain {
     this.profile = this.readProfile();
   }
 
-  public chooseSpawnTarget(context: WormSpawnContext): Position | null {
+  public chooseSpawnTarget(context: SinkjawSpawnContext): Position | null {
     if (context.spawnCandidates.length === 0) {
       return null;
     }
@@ -161,53 +161,53 @@ export class LocalWormBrain {
     }
   }
 
-  private featuresForCandidate(context: WormSpawnContext, candidate: Position): number[] {
+  private featuresForCandidate(context: SinkjawSpawnContext, candidate: Position): number[] {
     const boardSpan = BOARD_SIZE - 1;
     const maxDistance = Math.hypot(boardSpan, boardSpan);
     const center = (BOARD_SIZE - 1) / 2;
-    const nearestSpiceDistance = this.findNearestSpiceDistance(context.board, candidate) / maxDistance;
+    const nearestAmberDistance = this.findNearestAmberDistance(context.board, candidate) / maxDistance;
     const reachable = context.nextMoves.some(
       (move) => move.target.x === candidate.x && move.target.y === candidate.y,
     );
-    const hasSpice = context.board[candidate.y][candidate.x].hasSpice;
+    const hasAmber = context.board[candidate.y][candidate.x].hasAmber;
     const cellVisits = this.preferenceForCell(candidate);
     const zoneVisits = this.preferenceForZone(candidate);
-    const distanceToHarvester = distance(candidate, context.harvester) / maxDistance;
+    const distanceToCollector = distance(candidate, context.collector) / maxDistance;
     const distanceToCenter = distance(candidate, { x: center, y: center }) / maxDistance;
-    const distanceToPreviousWorm = context.previousWorm
-      ? distance(candidate, context.previousWorm) / maxDistance
+    const distanceToPreviousSinkjaw = context.previousSinkjaw
+      ? distance(candidate, context.previousSinkjaw) / maxDistance
       : 1;
 
     return [
       1,
-      hasSpice ? 1 : 0,
+      hasAmber ? 1 : 0,
       reachable ? 1 : 0,
-      reachable && hasSpice ? 1 : 0,
-      1 - distanceToHarvester,
-      1 - nearestSpiceDistance,
+      reachable && hasAmber ? 1 : 0,
+      1 - distanceToCollector,
+      1 - nearestAmberDistance,
       cellVisits,
       zoneVisits,
       1 - distanceToCenter,
-      1 - distanceToPreviousWorm,
+      1 - distanceToPreviousSinkjaw,
     ];
   }
 
-  private rewardForCandidate(context: WormSpawnContext, candidate: Position): number {
+  private rewardForCandidate(context: SinkjawSpawnContext, candidate: Position): number {
     const cellVisits = this.preferenceForCell(candidate);
     const zoneVisits = this.preferenceForZone(candidate);
     const reachable = context.nextMoves.some(
       (move) => move.target.x === candidate.x && move.target.y === candidate.y,
     );
-    const hasSpice = context.board[candidate.y][candidate.x].hasSpice;
+    const hasAmber = context.board[candidate.y][candidate.x].hasAmber;
 
     let reward = 0.04;
 
     if (reachable) {
       reward += 0.34;
     }
-    if (reachable && hasSpice) {
+    if (reachable && hasAmber) {
       reward += 0.34;
-    } else if (hasSpice) {
+    } else if (hasAmber) {
       reward += 0.08;
     }
 
@@ -234,12 +234,12 @@ export class LocalWormBrain {
     return sigmoid(sum);
   }
 
-  private findNearestSpiceDistance(board: CellState[][], origin: Position): number {
+  private findNearestAmberDistance(board: CellState[][], origin: Position): number {
     let best = Infinity;
 
     for (let y = 0; y < BOARD_SIZE; y += 1) {
       for (let x = 0; x < BOARD_SIZE; x += 1) {
-        if (!board[y][x].hasSpice) {
+        if (!board[y][x].hasAmber) {
           continue;
         }
         best = Math.min(best, distance(origin, { x, y }));

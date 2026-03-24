@@ -1,8 +1,8 @@
 import { AmberDunesGame } from "./game.js";
 import { CanvasRenderer, loadAssets, } from "./renderer.js";
 import { BOARD_SIZE } from "./types.js";
-import { LocalWormBrain } from "./worm-brain.js";
-const WORM_BRAIN_CONSENT_KEY = "amber-dunes-harvest.sinkjaw-consent";
+import { LocalSinkjawBrain } from "./sinkjaw-brain.js";
+const SINKJAW_MEMORY_CONSENT_KEY = "amber-dunes-harvest.sinkjaw-consent";
 const SKIMMER_FLIGHT_MS = 760;
 const PICKUP_PHASE_END = 0.22;
 const DROPOFF_PHASE_START = 0.8;
@@ -14,7 +14,7 @@ function statusTitle(state) {
         return "Amber secured";
     }
     if (state.status === "lost") {
-        if (state.lossReason === "worm_attack") {
+        if (state.lossReason === "sinkjaw_attack") {
             return "Collector consumed";
         }
         return "Route lost";
@@ -30,9 +30,9 @@ function statusClass(state) {
     }
     return "status-playing";
 }
-function readWormBrainConsent() {
+function readSinkjawMemoryConsent() {
     try {
-        const value = window.localStorage.getItem(WORM_BRAIN_CONSENT_KEY);
+        const value = window.localStorage.getItem(SINKJAW_MEMORY_CONSENT_KEY);
         if (value === "accepted" || value === "declined") {
             return value;
         }
@@ -42,9 +42,9 @@ function readWormBrainConsent() {
     }
     return null;
 }
-function writeWormBrainConsent(value) {
+function writeSinkjawMemoryConsent(value) {
     try {
-        window.localStorage.setItem(WORM_BRAIN_CONSENT_KEY, value);
+        window.localStorage.setItem(SINKJAW_MEMORY_CONSENT_KEY, value);
     }
     catch {
         // Ignore storage failures and keep the game functional.
@@ -96,8 +96,8 @@ function buildFlightFrame(source, target, progress) {
             activeTarget: target,
             carrier: interpolatePosition(approachStart, source, phaseProgress),
             heading,
-            carriedHarvester: null,
-            landedHarvester: null,
+            carriedCollector: null,
+            landedCollector: null,
         };
     }
     if (progress < DROPOFF_PHASE_START) {
@@ -112,11 +112,11 @@ function buildFlightFrame(source, target, progress) {
             activeTarget: target,
             carrier,
             heading,
-            carriedHarvester: {
+            carriedCollector: {
                 x: carrier.x,
                 y: carrier.y + 0.12,
             },
-            landedHarvester: null,
+            landedCollector: null,
         };
     }
     const phaseProgress = easeInCubic((progress - DROPOFF_PHASE_START) / (1 - DROPOFF_PHASE_START));
@@ -124,8 +124,8 @@ function buildFlightFrame(source, target, progress) {
         activeTarget: target,
         carrier: interpolatePosition(target, departureEnd, phaseProgress),
         heading,
-        carriedHarvester: null,
-        landedHarvester: target,
+        carriedCollector: null,
+        landedCollector: target,
     };
 }
 async function main() {
@@ -133,31 +133,31 @@ async function main() {
     const restartButton = document.querySelector("#restart-button");
     const statusTitleElement = document.querySelector("#status-title");
     const statusMessageElement = document.querySelector("#status-message");
-    const spiceValueElement = document.querySelector("#spice-value");
+    const amberValueElement = document.querySelector("#amber-value");
     const movesValueElement = document.querySelector("#moves-value");
     const positionValueElement = document.querySelector("#position-value");
-    const wormBrainBanner = document.querySelector("#worm-brain-banner");
-    const wormBrainAccept = document.querySelector("#worm-brain-accept");
-    const wormBrainDecline = document.querySelector("#worm-brain-decline");
+    const sinkjawMemoryBanner = document.querySelector("#sinkjaw-memory-banner");
+    const sinkjawMemoryAccept = document.querySelector("#sinkjaw-memory-accept");
+    const sinkjawMemoryDecline = document.querySelector("#sinkjaw-memory-decline");
     if (!canvas ||
         !restartButton ||
         !statusTitleElement ||
         !statusMessageElement ||
-        !spiceValueElement ||
+        !amberValueElement ||
         !movesValueElement ||
         !positionValueElement ||
-        !wormBrainBanner ||
-        !wormBrainAccept ||
-        !wormBrainDecline) {
+        !sinkjawMemoryBanner ||
+        !sinkjawMemoryAccept ||
+        !sinkjawMemoryDecline) {
         throw new Error("The UI shell is incomplete.");
     }
     const renderer = new CanvasRenderer(canvas, await loadAssets());
     const game = new AmberDunesGame();
-    const wormBrain = new LocalWormBrain(window.localStorage);
+    const sinkjawBrain = new LocalSinkjawBrain(window.localStorage);
     let currentState = game.getState();
     let activeFlight = null;
     const setAdaptiveWorm = (enabled) => {
-        game.setWormSpawnSelector(enabled ? (context) => wormBrain.chooseSpawnTarget(context) : null);
+        game.setSinkjawSpawnSelector(enabled ? (context) => sinkjawBrain.chooseSpawnTarget(context) : null);
     };
     const renderView = (now = performance.now()) => {
         const flight = activeFlight;
@@ -176,11 +176,11 @@ async function main() {
             statusTitleElement.className = statusClass(currentState);
             statusMessageElement.textContent = currentState.message;
         }
-        spiceValueElement.textContent = `${currentState.collectedSpice} / ${currentState.totalSpice}`;
+        amberValueElement.textContent = `${currentState.collectedAmber} / ${currentState.totalAmber}`;
         movesValueElement.textContent = String(currentState.moves);
         positionValueElement.textContent = animation && flight
-            ? `${boardLabel(currentState.harvester.x, currentState.harvester.y)} -> ${boardLabel(flight.target.x, flight.target.y)}`
-            : boardLabel(currentState.harvester.x, currentState.harvester.y);
+            ? `${boardLabel(currentState.collector.x, currentState.collector.y)} -> ${boardLabel(flight.target.x, flight.target.y)}`
+            : boardLabel(currentState.collector.x, currentState.collector.y);
     };
     const stopFlight = () => {
         const flight = activeFlight;
@@ -194,7 +194,7 @@ async function main() {
         renderView();
     };
     const startFlight = (target) => {
-        const source = { ...currentState.harvester };
+        const source = { ...currentState.collector };
         activeFlight = {
             source,
             target: { ...target },
@@ -217,22 +217,22 @@ async function main() {
         renderView(activeFlight.startedAt);
         activeFlight.animationFrameId = window.requestAnimationFrame(step);
     };
-    const consent = readWormBrainConsent();
+    const consent = readSinkjawMemoryConsent();
     if (consent === "accepted") {
         setAdaptiveWorm(true);
     }
     else if (!consent) {
-        wormBrainBanner.hidden = false;
+        sinkjawMemoryBanner.hidden = false;
     }
-    wormBrainAccept.addEventListener("click", () => {
-        writeWormBrainConsent("accepted");
+    sinkjawMemoryAccept.addEventListener("click", () => {
+        writeSinkjawMemoryConsent("accepted");
         setAdaptiveWorm(true);
-        wormBrainBanner.hidden = true;
+        sinkjawMemoryBanner.hidden = true;
     });
-    wormBrainDecline.addEventListener("click", () => {
-        writeWormBrainConsent("declined");
+    sinkjawMemoryDecline.addEventListener("click", () => {
+        writeSinkjawMemoryConsent("declined");
         setAdaptiveWorm(false);
-        wormBrainBanner.hidden = true;
+        sinkjawMemoryBanner.hidden = true;
     });
     restartButton.addEventListener("click", () => {
         stopFlight();
@@ -251,8 +251,8 @@ async function main() {
             update(game.moveTo(target));
             return;
         }
-        if (readWormBrainConsent() === "accepted") {
-            wormBrain.learnFromChoice(currentState, target);
+        if (readSinkjawMemoryConsent() === "accepted") {
+            sinkjawBrain.learnFromChoice(currentState, target);
         }
         startFlight(target);
     });

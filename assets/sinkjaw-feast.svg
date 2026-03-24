@@ -1,6 +1,6 @@
 <svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <radialGradient id="feastWorm" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(128 118) rotate(90) scale(88)">
+    <radialGradient id="feastSinkjaw" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(128 118) rotate(90) scale(88)">
       <stop stop-color="#E0A75E"/>
       <stop offset="0.58" stop-color="#B85F39"/>
       <stop offset="1" stop-color="#522519"/>
@@ -11,7 +11,7 @@
     </radialGradient>
   </defs>
   <circle cx="128" cy="126" r="112" fill="url(#feastGlow)"/>
-  <circle cx="128" cy="118" r="84" fill="url(#feastWorm)"/>
+  <circle cx="128" cy="118" r="84" fill="url(#feastSinkjaw)"/>
   <circle cx="128" cy="118" r="50" fill="#180F0B"/>
   <path d="M128 54L142 86" stroke="#F7E4BA" stroke-width="8" stroke-linecap="round"/>
   <path d="M176 79L152 102" stroke="#F7E4BA" stroke-width="8" stroke-linecap="round"/>

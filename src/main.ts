@@ -5,9 +5,9 @@ import {
   type FlightAnimationFrame,
 } from "./renderer.js";
 import { BOARD_SIZE, type GameState, type Position } from "./types.js";
-import { LocalWormBrain } from "./worm-brain.js";
+import { LocalSinkjawBrain } from "./sinkjaw-brain.js";
 
-const WORM_BRAIN_CONSENT_KEY = "amber-dunes-harvest.sinkjaw-consent";
+const SINKJAW_MEMORY_CONSENT_KEY = "amber-dunes-harvest.sinkjaw-consent";
 const SKIMMER_FLIGHT_MS = 760;
 const PICKUP_PHASE_END = 0.22;
 const DROPOFF_PHASE_START = 0.8;
@@ -21,7 +21,7 @@ function statusTitle(state: GameState): string {
     return "Amber secured";
   }
   if (state.status === "lost") {
-    if (state.lossReason === "worm_attack") {
+    if (state.lossReason === "sinkjaw_attack") {
       return "Collector consumed";
     }
     return "Route lost";
@@ -39,11 +39,11 @@ function statusClass(state: GameState): string {
   return "status-playing";
 }
 
-type WormBrainConsent = "accepted" | "declined" | null;
+type SinkjawMemoryConsent = "accepted" | "declined" | null;
 
-function readWormBrainConsent(): WormBrainConsent {
+function readSinkjawMemoryConsent(): SinkjawMemoryConsent {
   try {
-    const value = window.localStorage.getItem(WORM_BRAIN_CONSENT_KEY);
+    const value = window.localStorage.getItem(SINKJAW_MEMORY_CONSENT_KEY);
     if (value === "accepted" || value === "declined") {
       return value;
     }
@@ -54,9 +54,9 @@ function readWormBrainConsent(): WormBrainConsent {
   return null;
 }
 
-function writeWormBrainConsent(value: Exclude<WormBrainConsent, null>): void {
+function writeSinkjawMemoryConsent(value: Exclude<SinkjawMemoryConsent, null>): void {
   try {
-    window.localStorage.setItem(WORM_BRAIN_CONSENT_KEY, value);
+    window.localStorage.setItem(SINKJAW_MEMORY_CONSENT_KEY, value);
   } catch {
     // Ignore storage failures and keep the game functional.
   }
@@ -116,8 +116,8 @@ function buildFlightFrame(source: Position, target: Position, progress: number):
       activeTarget: target,
       carrier: interpolatePosition(approachStart, source, phaseProgress),
       heading,
-      carriedHarvester: null,
-      landedHarvester: null,
+      carriedCollector: null,
+      landedCollector: null,
     };
   }
 
@@ -136,11 +136,11 @@ function buildFlightFrame(source: Position, target: Position, progress: number):
       activeTarget: target,
       carrier,
       heading,
-      carriedHarvester: {
+      carriedCollector: {
         x: carrier.x,
         y: carrier.y + 0.12,
       },
-      landedHarvester: null,
+      landedCollector: null,
     };
   }
 
@@ -151,8 +151,8 @@ function buildFlightFrame(source: Position, target: Position, progress: number):
     activeTarget: target,
     carrier: interpolatePosition(target, departureEnd, phaseProgress),
     heading,
-    carriedHarvester: null,
-    landedHarvester: target,
+    carriedCollector: null,
+    landedCollector: target,
   };
 }
 
@@ -161,31 +161,31 @@ async function main(): Promise<void> {
   const restartButton = document.querySelector<HTMLButtonElement>("#restart-button");
   const statusTitleElement = document.querySelector<HTMLElement>("#status-title");
   const statusMessageElement = document.querySelector<HTMLElement>("#status-message");
-  const spiceValueElement = document.querySelector<HTMLElement>("#spice-value");
+  const amberValueElement = document.querySelector<HTMLElement>("#amber-value");
   const movesValueElement = document.querySelector<HTMLElement>("#moves-value");
   const positionValueElement = document.querySelector<HTMLElement>("#position-value");
-  const wormBrainBanner = document.querySelector<HTMLElement>("#worm-brain-banner");
-  const wormBrainAccept = document.querySelector<HTMLButtonElement>("#worm-brain-accept");
-  const wormBrainDecline = document.querySelector<HTMLButtonElement>("#worm-brain-decline");
+  const sinkjawMemoryBanner = document.querySelector<HTMLElement>("#sinkjaw-memory-banner");
+  const sinkjawMemoryAccept = document.querySelector<HTMLButtonElement>("#sinkjaw-memory-accept");
+  const sinkjawMemoryDecline = document.querySelector<HTMLButtonElement>("#sinkjaw-memory-decline");
 
   if (
     !canvas ||
     !restartButton ||
     !statusTitleElement ||
     !statusMessageElement ||
-    !spiceValueElement ||
+    !amberValueElement ||
     !movesValueElement ||
     !positionValueElement ||
-    !wormBrainBanner ||
-    !wormBrainAccept ||
-    !wormBrainDecline
+    !sinkjawMemoryBanner ||
+    !sinkjawMemoryAccept ||
+    !sinkjawMemoryDecline
   ) {
     throw new Error("The UI shell is incomplete.");
   }
 
   const renderer = new CanvasRenderer(canvas, await loadAssets());
   const game = new AmberDunesGame();
-  const wormBrain = new LocalWormBrain(window.localStorage);
+  const sinkjawBrain = new LocalSinkjawBrain(window.localStorage);
   let currentState = game.getState();
   let activeFlight:
     | {
@@ -197,8 +197,8 @@ async function main(): Promise<void> {
     | null = null;
 
   const setAdaptiveWorm = (enabled: boolean): void => {
-    game.setWormSpawnSelector(
-      enabled ? (context) => wormBrain.chooseSpawnTarget(context) : null,
+    game.setSinkjawSpawnSelector(
+      enabled ? (context) => sinkjawBrain.chooseSpawnTarget(context) : null,
     );
   };
 
@@ -226,11 +226,11 @@ async function main(): Promise<void> {
       statusMessageElement.textContent = currentState.message;
     }
 
-    spiceValueElement.textContent = `${currentState.collectedSpice} / ${currentState.totalSpice}`;
+    amberValueElement.textContent = `${currentState.collectedAmber} / ${currentState.totalAmber}`;
     movesValueElement.textContent = String(currentState.moves);
     positionValueElement.textContent = animation && flight
-      ? `${boardLabel(currentState.harvester.x, currentState.harvester.y)} -> ${boardLabel(flight.target.x, flight.target.y)}`
-      : boardLabel(currentState.harvester.x, currentState.harvester.y);
+      ? `${boardLabel(currentState.collector.x, currentState.collector.y)} -> ${boardLabel(flight.target.x, flight.target.y)}`
+      : boardLabel(currentState.collector.x, currentState.collector.y);
   };
 
   const stopFlight = (): void => {
@@ -247,7 +247,7 @@ async function main(): Promise<void> {
   };
 
   const startFlight = (target: Position): void => {
-    const source = { ...currentState.harvester };
+    const source = { ...currentState.collector };
     activeFlight = {
       source,
       target: { ...target },
@@ -276,23 +276,23 @@ async function main(): Promise<void> {
     activeFlight.animationFrameId = window.requestAnimationFrame(step);
   };
 
-  const consent = readWormBrainConsent();
+  const consent = readSinkjawMemoryConsent();
   if (consent === "accepted") {
     setAdaptiveWorm(true);
   } else if (!consent) {
-    wormBrainBanner.hidden = false;
+    sinkjawMemoryBanner.hidden = false;
   }
 
-  wormBrainAccept.addEventListener("click", () => {
-    writeWormBrainConsent("accepted");
+  sinkjawMemoryAccept.addEventListener("click", () => {
+    writeSinkjawMemoryConsent("accepted");
     setAdaptiveWorm(true);
-    wormBrainBanner.hidden = true;
+    sinkjawMemoryBanner.hidden = true;
   });
 
-  wormBrainDecline.addEventListener("click", () => {
-    writeWormBrainConsent("declined");
+  sinkjawMemoryDecline.addEventListener("click", () => {
+    writeSinkjawMemoryConsent("declined");
     setAdaptiveWorm(false);
-    wormBrainBanner.hidden = true;
+    sinkjawMemoryBanner.hidden = true;
   });
 
   restartButton.addEventListener("click", () => {
@@ -319,8 +319,8 @@ async function main(): Promise<void> {
       return;
     }
 
-    if (readWormBrainConsent() === "accepted") {
-      wormBrain.learnFromChoice(currentState, target);
+    if (readSinkjawMemoryConsent() === "accepted") {
+      sinkjawBrain.learnFromChoice(currentState, target);
     }
 
     startFlight(target);

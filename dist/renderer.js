@@ -87,18 +87,18 @@ export class CanvasRenderer {
                 const py = metrics.originY + y * metrics.cellSize;
                 const isValidMove = state.validMoves.some((move) => move.target.x === x && move.target.y === y);
                 const isActiveTarget = animation?.activeTarget.x === x && animation.activeTarget.y === y;
-                const isHarvester = state.harvester.x === x && state.harvester.y === y;
-                const isWorm = state.worm?.x === x && state.worm?.y === y;
+                const isCollector = state.collector.x === x && state.collector.y === y;
+                const isSinkjaw = state.sinkjaw?.x === x && state.sinkjaw?.y === y;
                 const cell = state.board[y][x];
                 const baseTone = (x + y) % 2 === 0 ? 0.16 : 0.11;
                 this.ctx.fillStyle = `rgba(248, 227, 184, ${baseTone})`;
                 this.roundRect(px, py, metrics.cellSize - 2, metrics.cellSize - 2, metrics.radius);
                 this.ctx.fill();
-                if (cell.hasSpice) {
+                if (cell.hasAmber) {
                     this.ctx.fillStyle = "rgba(236, 188, 89, 0.26)";
                     this.roundRect(px + metrics.cellSize * 0.08, py + metrics.cellSize * 0.08, metrics.cellSize * 0.84, metrics.cellSize * 0.84, metrics.radius * 0.8);
                     this.ctx.fill();
-                    this.drawIcon(this.assets.spice, px, py, metrics.cellSize, 0.52);
+                    this.drawIcon(this.assets.amber, px, py, metrics.cellSize, 0.52);
                 }
                 if (isValidMove && state.status === "playing") {
                     this.ctx.strokeStyle = "rgba(247, 228, 186, 0.86)";
@@ -115,13 +115,13 @@ export class CanvasRenderer {
                     this.roundRect(px + metrics.cellSize * 0.14, py + metrics.cellSize * 0.14, metrics.cellSize * 0.72, metrics.cellSize * 0.72, metrics.radius * 0.8);
                     this.ctx.stroke();
                 }
-                if (isHarvester) {
+                if (isCollector) {
                     this.ctx.fillStyle = "rgba(247, 228, 186, 0.08)";
                     this.roundRect(px + metrics.cellSize * 0.05, py + metrics.cellSize * 0.05, metrics.cellSize * 0.9, metrics.cellSize * 0.9, metrics.radius);
                     this.ctx.fill();
                 }
-                if (isWorm) {
-                    if (cell.hasSpice) {
+                if (isSinkjaw) {
+                    if (cell.hasAmber) {
                         this.ctx.fillStyle = "rgba(241, 193, 107, 0.30)";
                         this.roundRect(px + metrics.cellSize * 0.12, py + metrics.cellSize * 0.12, metrics.cellSize * 0.76, metrics.cellSize * 0.76, metrics.radius * 0.9);
                         this.ctx.fill();
@@ -153,23 +153,23 @@ export class CanvasRenderer {
         }
     }
     drawPieces(state, metrics, animation) {
-        const wormConsumedHarvester = state.status === "lost" && state.lossReason === "worm_attack";
-        const isAnimatingHarvester = Boolean(animation?.carriedHarvester || animation?.landedHarvester);
-        if (state.worm && !wormConsumedHarvester) {
-            const px = metrics.originX + state.worm.x * metrics.cellSize;
-            const py = metrics.originY + state.worm.y * metrics.cellSize;
-            this.drawIcon(this.assets.worm, px, py, metrics.cellSize, 0.8);
+        const sinkjawConsumedCollector = state.status === "lost" && state.lossReason === "sinkjaw_attack";
+        const isAnimatingCollector = Boolean(animation?.carriedCollector || animation?.landedCollector);
+        if (state.sinkjaw && !sinkjawConsumedCollector) {
+            const px = metrics.originX + state.sinkjaw.x * metrics.cellSize;
+            const py = metrics.originY + state.sinkjaw.y * metrics.cellSize;
+            this.drawIcon(this.assets.sinkjaw, px, py, metrics.cellSize, 0.8);
         }
-        if (!wormConsumedHarvester && !isAnimatingHarvester) {
-            const harvesterX = metrics.originX + state.harvester.x * metrics.cellSize;
-            const harvesterY = metrics.originY + state.harvester.y * metrics.cellSize;
-            this.drawIcon(this.assets.harvester, harvesterX, harvesterY, metrics.cellSize, 0.8);
+        if (!sinkjawConsumedCollector && !isAnimatingCollector) {
+            const collectorX = metrics.originX + state.collector.x * metrics.cellSize;
+            const collectorY = metrics.originY + state.collector.y * metrics.cellSize;
+            this.drawIcon(this.assets.collector, collectorX, collectorY, metrics.cellSize, 0.8);
         }
-        if (animation?.landedHarvester && !wormConsumedHarvester) {
-            this.drawFloatingIcon(this.assets.harvester, animation.landedHarvester, metrics, 0.8, 0, 0);
+        if (animation?.landedCollector && !sinkjawConsumedCollector) {
+            this.drawFloatingIcon(this.assets.collector, animation.landedCollector, metrics, 0.8, 0, 0);
         }
-        if (animation?.carriedHarvester && !wormConsumedHarvester) {
-            this.drawFloatingIcon(this.assets.harvester, animation.carriedHarvester, metrics, 0.62, animation.heading, metrics.cellSize * 0.1);
+        if (animation?.carriedCollector && !sinkjawConsumedCollector) {
+            this.drawFloatingIcon(this.assets.collector, animation.carriedCollector, metrics, 0.62, animation.heading, metrics.cellSize * 0.1);
         }
         if (animation) {
             this.drawFloatingIcon(this.assets.skimmer, animation.carrier, metrics, 1.12, animation.heading, 0);
@@ -179,9 +179,9 @@ export class CanvasRenderer {
         if (state.status === "playing") {
             return;
         }
-        const isWormAttack = state.status === "lost" && state.lossReason === "worm_attack";
-        const overlayHeight = isWormAttack ? metrics.cellSize * 4.9 : metrics.cellSize * 2.45;
-        const overlayY = isWormAttack
+        const isSinkjawAttack = state.status === "lost" && state.lossReason === "sinkjaw_attack";
+        const overlayHeight = isSinkjawAttack ? metrics.cellSize * 4.9 : metrics.cellSize * 2.45;
+        const overlayY = isSinkjawAttack
             ? metrics.originY + metrics.cellSize * 1.9
             : metrics.originY + metrics.cellSize * 3.05;
         const overlayX = metrics.originX + metrics.cellSize * 1.0;
@@ -189,27 +189,27 @@ export class CanvasRenderer {
         this.ctx.fillStyle = "rgba(16, 11, 8, 0.72)";
         this.roundRect(overlayX, overlayY, overlayWidth, overlayHeight, metrics.radius * 1.5);
         this.ctx.fill();
-        if (isWormAttack) {
+        if (isSinkjawAttack) {
             const artSize = metrics.cellSize * 2.45;
-            this.ctx.drawImage(this.assets.wormFeast, metrics.width / 2 - artSize / 2, overlayY + metrics.cellSize * 0.18, artSize, artSize);
+            this.ctx.drawImage(this.assets.sinkjawFeast, metrics.width / 2 - artSize / 2, overlayY + metrics.cellSize * 0.18, artSize, artSize);
         }
         this.ctx.fillStyle = state.status === "won" ? "#8fb96a" : "#d96c42";
-        this.ctx.font = `700 ${isWormAttack ? metrics.cellSize * 0.5 : metrics.cellSize * 0.42}px "IBM Plex Mono", monospace`;
+        this.ctx.font = `700 ${isSinkjawAttack ? metrics.cellSize * 0.5 : metrics.cellSize * 0.42}px "IBM Plex Mono", monospace`;
         this.ctx.textAlign = "center";
         this.ctx.textBaseline = "middle";
         this.ctx.fillText(state.status === "won"
             ? "AMBER SECURED"
-            : isWormAttack
+            : isSinkjawAttack
                 ? "COLLECTOR CONSUMED"
-                : "SINKJAW STRIKE", metrics.width / 2, isWormAttack ? overlayY + metrics.cellSize * 3.15 : metrics.originY + metrics.cellSize * 4.0);
+                : "SINKJAW STRIKE", metrics.width / 2, isSinkjawAttack ? overlayY + metrics.cellSize * 3.15 : metrics.originY + metrics.cellSize * 4.0);
         this.ctx.fillStyle = "rgba(249, 241, 223, 0.86)";
         this.ctx.font = `${metrics.cellSize * 0.22}px "IBM Plex Mono", monospace`;
         const bodyText = state.status === "won"
             ? "Запустите New Run для нового маршрута по The Amber Waste."
-            : isWormAttack
+            : isSinkjawAttack
                 ? "Sinkjaw поглотил Collector. Запустите New Run, чтобы начать новую экспедицию."
                 : "Новая партия доступна по кнопке New Run.";
-        const bodyY = isWormAttack ? overlayY + metrics.cellSize * 3.75 : metrics.originY + metrics.cellSize * 4.7;
+        const bodyY = isSinkjawAttack ? overlayY + metrics.cellSize * 3.75 : metrics.originY + metrics.cellSize * 4.7;
         const maxTextWidth = overlayWidth - metrics.cellSize * 0.8;
         const lineHeight = metrics.cellSize * 0.34;
         this.drawWrappedCenteredText(bodyText, metrics.width / 2, bodyY, maxTextWidth, lineHeight);
@@ -277,14 +277,14 @@ export class CanvasRenderer {
     }
 }
 export async function loadAssets() {
-    const [harvester, worm, spice, wormFeast, skimmer] = await Promise.all([
-        loadImage("./assets/harvester.svg"),
-        loadImage("./assets/worm.svg"),
-        loadImage("./assets/spice.svg"),
-        loadImage("./assets/worm-feast.svg"),
+    const [collector, sinkjaw, amber, sinkjawFeast, skimmer] = await Promise.all([
+        loadImage("./assets/collector.svg"),
+        loadImage("./assets/sinkjaw.svg"),
+        loadImage("./assets/amber.svg"),
+        loadImage("./assets/sinkjaw-feast.svg"),
         loadImage("./assets/skimmer.svg"),
     ]);
-    return { harvester, worm, spice, wormFeast, skimmer };
+    return { collector, sinkjaw, amber, sinkjawFeast, skimmer };
 }
 function loadImage(src) {
     return new Promise((resolve, reject) => {

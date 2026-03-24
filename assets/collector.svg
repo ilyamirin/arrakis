@@ -1,26 +1,26 @@
 <svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="harvesterBody" x1="34" y1="48" x2="198" y2="212" gradientUnits="userSpaceOnUse">
+    <linearGradient id="collectorBody" x1="34" y1="48" x2="198" y2="212" gradientUnits="userSpaceOnUse">
       <stop stop-color="#F6E0B3"/>
       <stop offset="1" stop-color="#AF7A3B"/>
     </linearGradient>
-    <linearGradient id="harvesterCabin" x1="128" y1="92" x2="128" y2="152" gradientUnits="userSpaceOnUse">
+    <linearGradient id="collectorCabin" x1="128" y1="92" x2="128" y2="152" gradientUnits="userSpaceOnUse">
       <stop stop-color="#2D221A"/>
       <stop offset="1" stop-color="#17110D"/>
     </linearGradient>
-    <linearGradient id="harvesterShadow" x1="48" y1="176" x2="216" y2="176" gradientUnits="userSpaceOnUse">
+    <linearGradient id="collectorShadow" x1="48" y1="176" x2="216" y2="176" gradientUnits="userSpaceOnUse">
       <stop stop-color="#3B2818" stop-opacity="0"/>
       <stop offset="0.5" stop-color="#3B2818" stop-opacity="0.48"/>
       <stop offset="1" stop-color="#3B2818" stop-opacity="0"/>
     </linearGradient>
   </defs>
-  <ellipse cx="128" cy="196" rx="84" ry="22" fill="url(#harvesterShadow)"/>
+  <ellipse cx="128" cy="196" rx="84" ry="22" fill="url(#collectorShadow)"/>
   <path d="M52 123L30 136" stroke="#D8A85A" stroke-width="12" stroke-linecap="round"/>
-  <path d="M62 158L84 82H170L194 158H62Z" fill="url(#harvesterBody)" stroke="#F8EED5" stroke-width="10" stroke-linejoin="round"/>
+  <path d="M62 158L84 82H170L194 158H62Z" fill="url(#collectorBody)" stroke="#F8EED5" stroke-width="10" stroke-linejoin="round"/>
   <path d="M94 82L110 58H146L162 82H94Z" fill="#D8A85A" stroke="#F8EED5" stroke-width="10" stroke-linejoin="round"/>
   <path d="M88 162L74 134V106L88 96V162Z" fill="#C68450"/>
   <path d="M168 162L182 134V106L168 96V162Z" fill="#C68450"/>
-  <rect x="84" y="104" width="88" height="28" rx="12" fill="url(#harvesterCabin)"/>
+  <rect x="84" y="104" width="88" height="28" rx="12" fill="url(#collectorCabin)"/>
   <path d="M104 104L120 132" stroke="#F8EED5" stroke-opacity="0.65" stroke-width="6" stroke-linecap="round"/>
   <path d="M152 104L136 132" stroke="#F8EED5" stroke-opacity="0.65" stroke-width="6" stroke-linecap="round"/>
   <path d="M76 168H180" stroke="#6E4B29" stroke-width="10" stroke-linecap="round"/>

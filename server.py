@@ -8,7 +8,7 @@ def main() -> None:
     port = int(os.environ.get("APP_PORT", "8000"))
     address = (host, port)
 
-    print(f"Serving Arrakis Spice Harvest on http://{host}:{port}")
+    print(f"Serving Amber Dunes Harvest on http://{host}:{port}")
 
     lan_addresses = sorted(
         {

@@ -1,9 +1,9 @@
 export const BOARD_SIZE = 9;
-export const TOTAL_SPICE = 25;
+export const TOTAL_AMBER = 25;
 export const CENTER_INDEX = Math.floor(BOARD_SIZE / 2);
 
 export type GameStatus = "playing" | "won" | "lost";
-export type LossReason = "worm_attack" | "trapped" | null;
+export type LossReason = "sinkjaw_attack" | "trapped" | null;
 
 export interface Position {
   x: number;
@@ -18,16 +18,16 @@ export interface MoveOption {
 }
 
 export interface CellState {
-  hasSpice: boolean;
+  hasAmber: boolean;
 }
 
 export interface GameState {
   board: CellState[][];
-  harvester: Position;
-  worm: Position | null;
+  collector: Position;
+  sinkjaw: Position | null;
   validMoves: MoveOption[];
-  totalSpice: number;
-  collectedSpice: number;
+  totalAmber: number;
+  collectedAmber: number;
   moves: number;
   status: GameStatus;
   message: string;

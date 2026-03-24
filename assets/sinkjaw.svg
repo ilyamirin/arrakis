@@ -1,17 +1,17 @@
 <svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <radialGradient id="wormBody" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(128 128) rotate(90) scale(104)">
+    <radialGradient id="sinkjawBody" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(128 128) rotate(90) scale(104)">
       <stop stop-color="#E8B56C"/>
       <stop offset="0.58" stop-color="#C26F45"/>
       <stop offset="1" stop-color="#5B2C1F"/>
     </radialGradient>
-    <radialGradient id="wormGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(128 128) rotate(90) scale(112)">
+    <radialGradient id="sinkjawGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(128 128) rotate(90) scale(112)">
       <stop stop-color="#E9B767" stop-opacity="0.16"/>
       <stop offset="1" stop-color="#E9B767" stop-opacity="0"/>
     </radialGradient>
   </defs>
-  <circle cx="128" cy="128" r="112" fill="url(#wormGlow)"/>
-  <circle cx="128" cy="128" r="86" fill="url(#wormBody)"/>
+  <circle cx="128" cy="128" r="112" fill="url(#sinkjawGlow)"/>
+  <circle cx="128" cy="128" r="86" fill="url(#sinkjawBody)"/>
   <circle cx="128" cy="128" r="52" fill="#26150F"/>
   <path d="M128 62L142 92" stroke="#F6E0B3" stroke-width="8" stroke-linecap="round"/>
   <path d="M171 84L154 108" stroke="#F6E0B3" stroke-width="8" stroke-linecap="round"/>
