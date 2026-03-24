@@ -709,7 +709,8 @@ export class CanvasRenderer {
     if (state.sinkjaw && !sinkjawConsumedCollector) {
       const px = metrics.originX + state.sinkjaw.x * metrics.cellSize;
       const py = metrics.originY + state.sinkjaw.y * metrics.cellSize;
-      this.drawIcon(this.assets.sinkjaw, px, py, metrics.cellSize, 0.8);
+      this.drawSinkjawPresence(state.sinkjaw, metrics);
+      this.drawIcon(this.assets.sinkjaw, px, py, metrics.cellSize, 1.18);
     }
 
     if (!sinkjawConsumedCollector && !isAnimatingCollector) {
@@ -844,6 +845,41 @@ export class CanvasRenderer {
     this.ctx.rotate(rotation);
     this.ctx.drawImage(image, -size / 2, -size / 2, size, size);
     this.ctx.restore();
+  }
+
+  private drawSinkjawPresence(position: Position, metrics: BoardMetrics): void {
+    const { ctx } = this;
+    const center = this.cellCenter(position, metrics);
+
+    ctx.save();
+    ctx.fillStyle = "rgba(74, 34, 23, 0.24)";
+    ctx.beginPath();
+    ctx.ellipse(
+      center.x,
+      center.y,
+      metrics.cellSize * 0.72,
+      metrics.cellSize * 0.62,
+      0,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+
+    ctx.strokeStyle = "rgba(231, 169, 98, 0.32)";
+    ctx.lineWidth = Math.max(2, metrics.cellSize * 0.06);
+    ctx.shadowColor = "rgba(221, 130, 71, 0.22)";
+    ctx.shadowBlur = metrics.cellSize * 0.16;
+    ctx.beginPath();
+    ctx.arc(center.x, center.y, metrics.cellSize * 0.48, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.strokeStyle = "rgba(244, 226, 188, 0.24)";
+    ctx.lineWidth = Math.max(1.5, metrics.cellSize * 0.03);
+    ctx.shadowBlur = 0;
+    ctx.beginPath();
+    ctx.arc(center.x, center.y, metrics.cellSize * 0.6, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
   }
 
   private getMetrics(): BoardMetrics {

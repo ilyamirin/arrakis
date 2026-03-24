@@ -1,26 +1,48 @@
 <svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <radialGradient id="sinkjawBody" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(128 128) rotate(90) scale(104)">
-      <stop stop-color="#E8B56C"/>
-      <stop offset="0.58" stop-color="#C26F45"/>
+    <radialGradient id="sinkjawGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(128 128) rotate(90) scale(124)">
+      <stop stop-color="#F5C06B" stop-opacity="0.26"/>
+      <stop offset="0.7" stop-color="#C26F45" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#C26F45" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="sinkjawBreach" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(128 128) rotate(90) scale(112)">
+      <stop stop-color="#F0BE72"/>
+      <stop offset="0.52" stop-color="#C47348"/>
       <stop offset="1" stop-color="#5B2C1F"/>
     </radialGradient>
-    <radialGradient id="sinkjawGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(128 128) rotate(90) scale(112)">
-      <stop stop-color="#E9B767" stop-opacity="0.16"/>
-      <stop offset="1" stop-color="#E9B767" stop-opacity="0"/>
+    <radialGradient id="sinkjawMaw" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(128 128) rotate(90) scale(64)">
+      <stop stop-color="#1A100D"/>
+      <stop offset="0.72" stop-color="#26150F"/>
+      <stop offset="1" stop-color="#090605"/>
+    </radialGradient>
+    <radialGradient id="sinkjawCore" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(128 128) rotate(90) scale(30)">
+      <stop stop-color="#F39A56"/>
+      <stop offset="1" stop-color="#A24428"/>
     </radialGradient>
   </defs>
-  <circle cx="128" cy="128" r="112" fill="url(#sinkjawGlow)"/>
-  <circle cx="128" cy="128" r="86" fill="url(#sinkjawBody)"/>
-  <circle cx="128" cy="128" r="52" fill="#26150F"/>
-  <path d="M128 62L142 92" stroke="#F6E0B3" stroke-width="8" stroke-linecap="round"/>
-  <path d="M171 84L154 108" stroke="#F6E0B3" stroke-width="8" stroke-linecap="round"/>
-  <path d="M192 128H160" stroke="#F6E0B3" stroke-width="8" stroke-linecap="round"/>
-  <path d="M171 172L154 148" stroke="#F6E0B3" stroke-width="8" stroke-linecap="round"/>
-  <path d="M128 194L142 164" stroke="#F6E0B3" stroke-width="8" stroke-linecap="round"/>
-  <path d="M85 172L102 148" stroke="#F6E0B3" stroke-width="8" stroke-linecap="round"/>
-  <path d="M64 128H96" stroke="#F6E0B3" stroke-width="8" stroke-linecap="round"/>
-  <path d="M85 84L102 108" stroke="#F6E0B3" stroke-width="8" stroke-linecap="round"/>
-  <circle cx="128" cy="128" r="32" fill="#3A1C14"/>
-  <circle cx="128" cy="128" r="18" fill="#D96C42"/>
+
+  <circle cx="128" cy="128" r="122" fill="url(#sinkjawGlow)"/>
+  <path d="M128 12L151 44L191 25L191 69L231 69L209 108L244 128L209 148L231 187L191 187L191 231L151 212L128 244L105 212L65 231L65 187L25 187L47 148L12 128L47 108L25 69L65 69L65 25L105 44L128 12Z" fill="#7C432B" fill-opacity="0.28"/>
+  <circle cx="128" cy="128" r="96" fill="url(#sinkjawBreach)"/>
+  <circle cx="128" cy="128" r="74" fill="#7E422B" fill-opacity="0.42"/>
+  <circle cx="128" cy="128" r="58" fill="url(#sinkjawMaw)"/>
+
+  <path d="M128 42L143 88" stroke="#F7E4BC" stroke-width="12" stroke-linecap="round"/>
+  <path d="M181 63L157 104" stroke="#F7E4BC" stroke-width="12" stroke-linecap="round"/>
+  <path d="M214 108L166 122" stroke="#F7E4BC" stroke-width="12" stroke-linecap="round"/>
+  <path d="M214 148L166 134" stroke="#F7E4BC" stroke-width="12" stroke-linecap="round"/>
+  <path d="M181 193L157 152" stroke="#F7E4BC" stroke-width="12" stroke-linecap="round"/>
+  <path d="M128 214L143 168" stroke="#F7E4BC" stroke-width="12" stroke-linecap="round"/>
+  <path d="M75 193L99 152" stroke="#F7E4BC" stroke-width="12" stroke-linecap="round"/>
+  <path d="M42 148L90 134" stroke="#F7E4BC" stroke-width="12" stroke-linecap="round"/>
+  <path d="M42 108L90 122" stroke="#F7E4BC" stroke-width="12" stroke-linecap="round"/>
+  <path d="M75 63L99 104" stroke="#F7E4BC" stroke-width="12" stroke-linecap="round"/>
+
+  <circle cx="128" cy="128" r="35" fill="#2C1811"/>
+  <circle cx="128" cy="128" r="20" fill="url(#sinkjawCore)"/>
+
+  <path d="M128 28L140 56" stroke="#FFD89A" stroke-opacity="0.64" stroke-width="6" stroke-linecap="round"/>
+  <path d="M208 128H178" stroke="#FFD89A" stroke-opacity="0.56" stroke-width="6" stroke-linecap="round"/>
+  <path d="M128 228L140 200" stroke="#FFD89A" stroke-opacity="0.48" stroke-width="6" stroke-linecap="round"/>
+  <path d="M48 128H78" stroke="#FFD89A" stroke-opacity="0.56" stroke-width="6" stroke-linecap="round"/>
 </svg>
