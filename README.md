@@ -1,6 +1,6 @@
 # Amber Dunes Harvest
 
-Retro-futurist desert game with AI-generated code, art, copy, and interface. You guide a `Collector` across an `8x8` grid in `The Amber Waste`, gather all `amber`, and survive `Sinkjaw` strikes. The soundtrack is original project audio, and the sound effects use CC0 assets from OpenGameArt.
+Retro-futurist desert game with AI-generated code, art, music, copy, and interface. You guide a `Collector` across an `8x8` grid in `The Amber Waste`, gather all `amber`, and survive `Sinkjaw` strikes. Sound effects use CC0 assets from OpenGameArt.
 
 ## Run locally
 

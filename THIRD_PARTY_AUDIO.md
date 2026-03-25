@@ -1,10 +1,9 @@
 # Third-Party Audio
 
 This project uses CC0 sound effects from [OpenGameArt.org](https://opengameart.org/).
-The game code, interface copy, and visual assets remain AI-generated. The
-background music tracks are original project audio and are not part of the
-third-party list below. The files listed here are third-party source material
-or local transcodes derived from those source files.
+The game code, interface copy, visual assets, and music tracks are
+AI-generated. The files listed here are only the third-party sound effects and
+their local derivatives.
 
 | Local file | In-game use | Original title | Author | License | Source page | Original download URL | Notes |
 |---|---|---|---|---|---|---|---|
