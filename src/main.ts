@@ -16,6 +16,13 @@ const SKIMMER_FLIGHT_MS = 760;
 const STORM_DRIFT_MS = 1000;
 const PICKUP_PHASE_END = 0.22;
 const DROPOFF_PHASE_START = 0.8;
+const SECRET_VICTORY_SEQUENCE = [
+  "KeyA",
+  "KeyM",
+  "KeyB",
+  "KeyE",
+  "KeyR",
+];
 
 function boardLabel(x: number, y: number): string {
   return `${String.fromCharCode(65 + x)}${BOARD_SIZE - y}`;
@@ -245,6 +252,7 @@ async function main(): Promise<void> {
   const renderer = new CanvasRenderer(canvas, await loadAssets());
   const game = new AmberDunesGame();
   let currentState = game.getState();
+  let secretProgress = 0;
   let activeFlight:
     | {
         phase: "flight" | "storm-approach" | "storm-drift";
@@ -534,6 +542,24 @@ async function main(): Promise<void> {
   });
 
   window.addEventListener("resize", () => renderView());
+
+  window.addEventListener("keydown", (event) => {
+    if (event.repeat || activeFlight || currentState.status !== "playing") {
+      return;
+    }
+
+    const expectedCode = SECRET_VICTORY_SEQUENCE[secretProgress];
+    if (event.code === expectedCode) {
+      secretProgress += 1;
+      if (secretProgress === SECRET_VICTORY_SEQUENCE.length) {
+        secretProgress = 0;
+        update(game.forceVictory());
+      }
+      return;
+    }
+
+    secretProgress = event.code === SECRET_VICTORY_SEQUENCE[0] ? 1 : 0;
+  });
 
   update(game.getState());
 }

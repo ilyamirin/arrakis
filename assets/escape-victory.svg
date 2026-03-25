@@ -1,0 +1,64 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="victoryGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(138 112) rotate(90) scale(116)">
+      <stop stop-color="#F2C872" stop-opacity="0.22"/>
+      <stop offset="0.58" stop-color="#D48749" stop-opacity="0.10"/>
+      <stop offset="1" stop-color="#D48749" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="escapeWing" x1="88" y1="92" x2="206" y2="124" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E9D49F"/>
+      <stop offset="0.52" stop-color="#F7E7BE"/>
+      <stop offset="1" stop-color="#B5844B"/>
+    </linearGradient>
+    <linearGradient id="escapeBody" x1="164" y1="52" x2="164" y2="188" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F5C36A"/>
+      <stop offset="0.56" stop-color="#C97943"/>
+      <stop offset="1" stop-color="#5E2D1B"/>
+    </linearGradient>
+    <radialGradient id="sinkjawMiss" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(90 166) rotate(90) scale(82)">
+      <stop stop-color="#D88B54"/>
+      <stop offset="0.62" stop-color="#A95535"/>
+      <stop offset="1" stop-color="#4A2117"/>
+    </radialGradient>
+  </defs>
+
+  <circle cx="128" cy="124" r="112" fill="url(#victoryGlow)"/>
+
+  <g opacity="0.92">
+    <ellipse cx="86" cy="172" rx="62" ry="46" fill="url(#sinkjawMiss)"/>
+    <ellipse cx="86" cy="172" rx="34" ry="24" fill="#170F0B"/>
+    <path d="M86 124L96 146" stroke="#F7E4BA" stroke-width="6" stroke-linecap="round"/>
+    <path d="M120 142L102 154" stroke="#F7E4BA" stroke-width="6" stroke-linecap="round"/>
+    <path d="M134 172H110" stroke="#F7E4BA" stroke-width="6" stroke-linecap="round"/>
+    <path d="M120 202L102 190" stroke="#F7E4BA" stroke-width="6" stroke-linecap="round"/>
+    <path d="M86 220L96 198" stroke="#F7E4BA" stroke-width="6" stroke-linecap="round"/>
+    <path d="M52 202L70 190" stroke="#F7E4BA" stroke-width="6" stroke-linecap="round"/>
+    <path d="M38 172H62" stroke="#F7E4BA" stroke-width="6" stroke-linecap="round"/>
+    <path d="M52 142L70 154" stroke="#F7E4BA" stroke-width="6" stroke-linecap="round"/>
+  </g>
+
+  <g transform="rotate(-18 166 106)">
+    <path d="M70 98L138 74L144 88L106 104L144 120L138 134L70 110L98 104L70 98Z" fill="url(#escapeWing)"/>
+    <path d="M238 98L170 74L164 88L202 104L164 120L170 134L238 110L210 104L238 98Z" fill="url(#escapeWing)"/>
+    <path d="M150 42H178L196 84V160L164 188L132 160V84L150 42Z" fill="url(#escapeBody)"/>
+    <path d="M150 42H178L184 70H144L150 42Z" fill="#FFE6AF" fill-opacity="0.82"/>
+    <path d="M142 88H186" stroke="#542413" stroke-width="9" stroke-linecap="round"/>
+    <path d="M142 112H186" stroke="#542413" stroke-width="7" stroke-linecap="round" opacity="0.82"/>
+    <path d="M146 138H182" stroke="#542413" stroke-width="6" stroke-linecap="round" opacity="0.72"/>
+    <path d="M164 24L172 42H156L164 24Z" fill="#F6D692"/>
+    <circle cx="164" cy="114" r="14" fill="#26150F"/>
+  </g>
+
+  <g transform="translate(154 140) rotate(-18)">
+    <path d="M-18 10L-8 -16H8L16 -2L10 20L-12 22L-18 10Z" fill="#F1D8A6" stroke="#F7E4BA" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M-24 24L-28 42" stroke="#D9A154" stroke-width="6" stroke-linecap="round"/>
+    <path d="M24 18L32 38" stroke="#D9A154" stroke-width="6" stroke-linecap="round"/>
+    <path d="M-10 -20L-2 -36H16L22 -24L14 -4H-8L-10 -20Z" fill="#D8A85A" stroke="#F7E4BA" stroke-width="5" stroke-linejoin="round"/>
+  </g>
+
+  <path d="M118 152C132 140 146 138 164 138" stroke="#F4D48D" stroke-width="8" stroke-linecap="round" opacity="0.78"/>
+  <path d="M104 166C126 154 148 152 178 152" stroke="#F4D48D" stroke-width="6" stroke-linecap="round" opacity="0.46"/>
+
+  <path d="M196 42C214 54 224 70 226 90" stroke="#F7E4BA" stroke-width="6" stroke-linecap="round" opacity="0.62"/>
+  <path d="M210 30C226 42 236 60 238 76" stroke="#F7E4BA" stroke-width="5" stroke-linecap="round" opacity="0.36"/>
+</svg>

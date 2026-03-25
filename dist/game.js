@@ -55,6 +55,22 @@ export class AmberDunesGame {
     moveTo(target) {
         return this.moveToWithPlan({ target, driftTarget: null });
     }
+    forceVictory() {
+        if (this.status !== "playing") {
+            return this.getState();
+        }
+        for (const row of this.board) {
+            for (const cell of row) {
+                cell.hasAmber = false;
+            }
+        }
+        this.collectedAmber = TOTAL_AMBER;
+        this.status = "won";
+        this.lossReason = null;
+        this.sinkjaw = null;
+        this.message = "A hidden signal cut across the Waste. The Collector is clear and the amber line is yours.";
+        return this.getState();
+    }
     planMove(target) {
         if (this.status !== "playing") {
             return null;

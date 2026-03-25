@@ -465,9 +465,15 @@ export class CanvasRenderer {
         if (state.status === "playing") {
             return;
         }
+        const isVictory = state.status === "won";
         const isSinkjawAttack = state.status === "lost" && state.lossReason === "sinkjaw_attack";
-        const overlayHeight = isSinkjawAttack ? metrics.cellSize * 4.9 : metrics.cellSize * 2.45;
-        const overlayY = isSinkjawAttack
+        const hasSceneArt = isVictory || isSinkjawAttack;
+        const overlayHeight = isVictory
+            ? metrics.cellSize * 5.2
+            : hasSceneArt
+                ? metrics.cellSize * 4.9
+                : metrics.cellSize * 2.45;
+        const overlayY = hasSceneArt
             ? metrics.originY + metrics.cellSize * 1.9
             : metrics.originY + metrics.cellSize * 3.05;
         const overlayX = metrics.originX + metrics.cellSize * 1.0;
@@ -475,28 +481,36 @@ export class CanvasRenderer {
         this.ctx.fillStyle = "rgba(16, 11, 8, 0.72)";
         this.roundRect(overlayX, overlayY, overlayWidth, overlayHeight, metrics.radius * 1.5);
         this.ctx.fill();
-        if (isSinkjawAttack) {
-            const artSize = metrics.cellSize * 2.45;
-            this.ctx.drawImage(this.assets.sinkjawFeast, metrics.width / 2 - artSize / 2, overlayY + metrics.cellSize * 0.18, artSize, artSize);
+        if (isSinkjawAttack || isVictory) {
+            const artSize = isVictory ? metrics.cellSize * 2.18 : metrics.cellSize * 2.45;
+            this.ctx.drawImage(isVictory ? this.assets.escapeVictory : this.assets.sinkjawFeast, metrics.width / 2 - artSize / 2, overlayY + (isVictory ? metrics.cellSize * 0.08 : metrics.cellSize * 0.18), artSize, artSize);
         }
         this.ctx.fillStyle = state.status === "won" ? "#8fb96a" : "#d96c42";
-        this.ctx.font = `700 ${isSinkjawAttack ? metrics.cellSize * 0.5 : metrics.cellSize * 0.42}px "IBM Plex Mono", monospace`;
+        this.ctx.font = `700 ${isSinkjawAttack ? metrics.cellSize * 0.5 : isVictory ? metrics.cellSize * 0.4 : metrics.cellSize * 0.42}px "IBM Plex Mono", monospace`;
         this.ctx.textAlign = "center";
         this.ctx.textBaseline = "middle";
-        this.ctx.fillText(state.status === "won"
+        this.ctx.fillText(isVictory
             ? "AMBER SECURED"
             : isSinkjawAttack
                 ? "COLLECTOR CONSUMED"
-                : "SINKJAW STRIKE", metrics.width / 2, isSinkjawAttack ? overlayY + metrics.cellSize * 3.15 : metrics.originY + metrics.cellSize * 4.0);
+                : "SINKJAW STRIKE", metrics.width / 2, isVictory
+            ? overlayY + metrics.cellSize * 3.28
+            : hasSceneArt
+                ? overlayY + metrics.cellSize * 3.15
+                : metrics.originY + metrics.cellSize * 4.0);
         this.ctx.fillStyle = "rgba(249, 241, 223, 0.86)";
         this.ctx.font = `${metrics.cellSize * 0.22}px "IBM Plex Mono", monospace`;
-        const bodyText = state.status === "won"
-            ? "Press New Run and lay a fresh line across the Amber Waste."
+        const bodyText = isVictory
+            ? "The Skimmer has lifted the Collector clear. Press New Run and cut another line across the Amber Waste."
             : isSinkjawAttack
                 ? "Sinkjaw has taken the Collector. Press New Run and send another expedition."
                 : "Press New Run to open the field again.";
-        const bodyY = isSinkjawAttack ? overlayY + metrics.cellSize * 3.75 : metrics.originY + metrics.cellSize * 4.7;
-        const maxTextWidth = overlayWidth - metrics.cellSize * 0.8;
+        const bodyY = isVictory
+            ? overlayY + metrics.cellSize * 4.08
+            : hasSceneArt
+                ? overlayY + metrics.cellSize * 3.75
+                : metrics.originY + metrics.cellSize * 4.7;
+        const maxTextWidth = overlayWidth - metrics.cellSize * (isVictory ? 1.08 : 0.8);
         const lineHeight = metrics.cellSize * 0.34;
         this.drawWrappedCenteredText(bodyText, metrics.width / 2, bodyY, maxTextWidth, lineHeight);
     }
@@ -586,14 +600,15 @@ export class CanvasRenderer {
     }
 }
 export async function loadAssets() {
-    const [collector, sinkjaw, amber, sinkjawFeast, skimmer] = await Promise.all([
+    const [collector, sinkjaw, amber, sinkjawFeast, escapeVictory, skimmer] = await Promise.all([
         loadImage("./assets/collector.svg"),
         loadImage("./assets/sinkjaw.svg"),
         loadImage("./assets/amber.svg"),
         loadImage("./assets/sinkjaw-feast.svg"),
+        loadImage("./assets/escape-victory.svg"),
         loadImage("./assets/skimmer.svg"),
     ]);
-    return { collector, sinkjaw, amber, sinkjawFeast, skimmer };
+    return { collector, sinkjaw, amber, sinkjawFeast, escapeVictory, skimmer };
 }
 function loadImage(src) {
     return new Promise((resolve, reject) => {
