@@ -27,7 +27,7 @@ declare global {
   }
 }
 
-function shouldUseRelativeSdkPath(): boolean {
+function shouldLoadSdk(): boolean {
   const sdkMode = new URLSearchParams(window.location.search).get("yandex-sdk");
   if (sdkMode === "relative") {
     return true;
@@ -36,17 +36,8 @@ function shouldUseRelativeSdkPath(): boolean {
   return window.location.hostname.includes("yandex");
 }
 
-function shouldLoadSdk(): boolean {
-  const sdkMode = new URLSearchParams(window.location.search).get("yandex-sdk");
-  if (sdkMode === "relative" || sdkMode === "absolute") {
-    return true;
-  }
-
-  return window.location.hostname.includes("yandex");
-}
-
 function sdkUrl(): string {
-  return shouldUseRelativeSdkPath() ? "/sdk.js" : "https://sdk.games.s3.yandex.net/sdk.js";
+  return "/sdk.js";
 }
 
 async function ensureSdkScript(): Promise<void> {
