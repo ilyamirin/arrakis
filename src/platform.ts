@@ -1,0 +1,132 @@
+import { normalizeLocale, type Locale } from "./i18n.js";
+
+interface YandexGamesSdk {
+  environment?: {
+    i18n?: {
+      lang?: string;
+    };
+  };
+  features?: {
+    LoadingAPI?: {
+      ready: () => void;
+    };
+    GameplayAPI?: {
+      start: () => void;
+      stop: () => void;
+    };
+  };
+  on?: (event: "game_api_pause" | "game_api_resume", handler: () => void) => void;
+  off?: (event: "game_api_pause" | "game_api_resume", handler: () => void) => void;
+}
+
+declare global {
+  interface Window {
+    YaGames?: {
+      init: () => Promise<YandexGamesSdk>;
+    };
+  }
+}
+
+function shouldUseRelativeSdkPath(): boolean {
+  const sdkMode = new URLSearchParams(window.location.search).get("yandex-sdk");
+  if (sdkMode === "relative") {
+    return true;
+  }
+
+  return window.location.hostname.includes("yandex");
+}
+
+function shouldLoadSdk(): boolean {
+  const sdkMode = new URLSearchParams(window.location.search).get("yandex-sdk");
+  if (sdkMode === "relative" || sdkMode === "absolute") {
+    return true;
+  }
+
+  return window.location.hostname.includes("yandex");
+}
+
+function sdkUrl(): string {
+  return shouldUseRelativeSdkPath() ? "/sdk.js" : "https://sdk.games.s3.yandex.net/sdk.js";
+}
+
+async function ensureSdkScript(): Promise<void> {
+  if (window.YaGames) {
+    return;
+  }
+
+  await new Promise<void>((resolve, reject) => {
+    const existingScript = document.querySelector<HTMLScriptElement>('script[data-ya-games-sdk="true"]');
+    if (existingScript) {
+      existingScript.addEventListener("load", () => resolve(), { once: true });
+      existingScript.addEventListener("error", () => reject(new Error("SDK script failed to load.")), {
+        once: true,
+      });
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = sdkUrl();
+    script.async = true;
+    script.dataset.yaGamesSdk = "true";
+    script.addEventListener("load", () => resolve(), { once: true });
+    script.addEventListener("error", () => reject(new Error("SDK script failed to load.")), {
+      once: true,
+    });
+    document.head.append(script);
+  });
+}
+
+export class PlatformBridge {
+  public readonly locale: Locale;
+  private readonly ysdk: YandexGamesSdk | null;
+  private gameplayActive = false;
+
+  private constructor(ysdk: YandexGamesSdk | null, locale: Locale) {
+    this.ysdk = ysdk;
+    this.locale = locale;
+  }
+
+  public static async init(): Promise<PlatformBridge> {
+    let ysdk: YandexGamesSdk | null = null;
+
+    if (shouldLoadSdk()) {
+      try {
+        await ensureSdkScript();
+        ysdk = (await window.YaGames?.init()) ?? null;
+      } catch (error) {
+        console.warn("Yandex Games SDK is unavailable. Falling back to browser mode.", error);
+      }
+    }
+
+    const locale = normalizeLocale(ysdk?.environment?.i18n?.lang ?? navigator.language);
+    return new PlatformBridge(ysdk, locale);
+  }
+
+  public markReady(): void {
+    this.ysdk?.features?.LoadingAPI?.ready();
+  }
+
+  public setGameplayActive(isActive: boolean): void {
+    if (this.gameplayActive === isActive) {
+      return;
+    }
+
+    this.gameplayActive = isActive;
+    if (isActive) {
+      this.ysdk?.features?.GameplayAPI?.start();
+      return;
+    }
+
+    this.ysdk?.features?.GameplayAPI?.stop();
+  }
+
+  public bindPauseResume(onPause: () => void, onResume: () => void): () => void {
+    this.ysdk?.on?.("game_api_pause", onPause);
+    this.ysdk?.on?.("game_api_resume", onResume);
+
+    return () => {
+      this.ysdk?.off?.("game_api_pause", onPause);
+      this.ysdk?.off?.("game_api_resume", onResume);
+    };
+  }
+}

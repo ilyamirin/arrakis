@@ -54,3 +54,15 @@ export interface GameState {
   message: string;
   lossReason: LossReason;
 }
+
+export interface SavedRunState {
+  version: 1;
+  board: CellState[][];
+  collector: Position;
+  sinkjaw: Position | null;
+  moves: number;
+  collectedAmber: number;
+  status: GameStatus;
+  message: string;
+  lossReason: LossReason;
+}

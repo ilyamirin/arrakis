@@ -41,6 +41,36 @@ export class GameMusicController {
     this.tryPlayNext();
   }
 
+  public pause(): void {
+    if (this.activeTrackIndex === null) {
+      return;
+    }
+
+    this.tracks[this.activeTrackIndex]?.audio.pause();
+  }
+
+  public resume(): void {
+    if (!this.isUnlocked || this.isStopped) {
+      return;
+    }
+
+    if (this.activeTrackIndex === null) {
+      this.tryPlayNext();
+      return;
+    }
+
+    const activeTrack = this.tracks[this.activeTrackIndex];
+    if (!activeTrack) {
+      this.tryPlayNext();
+      return;
+    }
+
+    void activeTrack.audio.play().catch(() => {
+      this.activeTrackIndex = null;
+      this.tryPlayNext();
+    });
+  }
+
   private createTrack(url: string, index: number): TrackHandle {
     const audio = new Audio(url);
     audio.preload = "auto";

@@ -5,6 +5,13 @@ import {
   type Position,
   type TelegraphSector,
 } from "./types.js";
+import {
+  type Locale,
+  overlayBodyCopy,
+  overlayTitleCopy,
+  telegraphCaptionCopy,
+  telegraphKickerCopy,
+} from "./i18n.js";
 
 interface Assets {
   collector: HTMLImageElement;
@@ -37,6 +44,7 @@ export class CanvasRenderer {
   private readonly canvas: HTMLCanvasElement;
   private readonly ctx: CanvasRenderingContext2D;
   private readonly assets: Assets;
+  private locale: Locale = "en";
   private lastState: GameState | null = null;
   private lastAnimation: FlightAnimationFrame | null = null;
   private lastPreviewMove: MoveOption | null = null;
@@ -50,6 +58,10 @@ export class CanvasRenderer {
     this.canvas = canvas;
     this.ctx = context;
     this.assets = assets;
+  }
+
+  public setLocale(locale: Locale): void {
+    this.locale = locale;
   }
 
   public render(
@@ -313,13 +325,21 @@ export class CanvasRenderer {
       metrics.originY + (previewMove.target.y + 0.5) * metrics.cellSize;
 
     if (previewMove.telegraphSector === "obscured") {
-      this.drawPreviewCaption(metrics, "TREMOR READ", "READ LOST");
+      this.drawPreviewCaption(
+        metrics,
+        telegraphKickerCopy(this.locale),
+        telegraphCaptionCopy(this.locale, "obscured"),
+      );
       return;
     }
 
     if (previewMove.telegraphSector === "encircling") {
       this.drawEncirclingSignal(centerX, centerY, metrics.cellSize);
-      this.drawPreviewCaption(metrics, "TREMOR READ", "NO SAFE SIDE");
+      this.drawPreviewCaption(
+        metrics,
+        telegraphKickerCopy(this.locale),
+        telegraphCaptionCopy(this.locale, "encircling"),
+      );
       return;
     }
 
@@ -329,7 +349,11 @@ export class CanvasRenderer {
       metrics.cellSize,
       this.sectorVector(previewMove.telegraphSector),
     );
-    this.drawPreviewCaption(metrics, "TREMOR READ", this.sectorCaption(previewMove.telegraphSector));
+    this.drawPreviewCaption(
+      metrics,
+      telegraphKickerCopy(this.locale),
+      this.sectorCaption(previewMove.telegraphSector),
+    );
   }
 
   private drawPreviewCaption(
@@ -635,26 +659,7 @@ export class CanvasRenderer {
   }
 
   private sectorCaption(sector: TelegraphSector): string {
-    switch (sector) {
-      case "north":
-        return "THREAT NORTH";
-      case "northeast":
-        return "THREAT NE";
-      case "east":
-        return "THREAT EAST";
-      case "southeast":
-        return "THREAT SE";
-      case "south":
-        return "THREAT SOUTH";
-      case "southwest":
-        return "THREAT SW";
-      case "west":
-        return "THREAT WEST";
-      case "northwest":
-        return "THREAT NW";
-      default:
-        return "NO SAFE SIDE";
-    }
+    return telegraphCaptionCopy(this.locale, sector);
   }
 
   private sectorVector(sector: TelegraphSector): Position {
@@ -799,11 +804,7 @@ export class CanvasRenderer {
     this.ctx.textAlign = "center";
     this.ctx.textBaseline = "middle";
     this.ctx.fillText(
-      isVictory
-        ? "AMBER SECURED"
-        : isSinkjawAttack
-          ? "COLLECTOR CONSUMED"
-          : "SINKJAW STRIKE",
+      overlayTitleCopy(this.locale, state.status, state.lossReason),
       metrics.width / 2,
       isVictory
         ? overlayY + metrics.cellSize * 3.28
@@ -815,12 +816,7 @@ export class CanvasRenderer {
     this.ctx.fillStyle = "rgba(249, 241, 223, 0.86)";
     this.ctx.font = `${metrics.cellSize * 0.22}px "IBM Plex Mono", monospace`;
 
-    const bodyText =
-      isVictory
-        ? "The Skimmer has lifted the Collector clear. Press New Run and cut another line across the Amber Waste."
-        : isSinkjawAttack
-          ? "Sinkjaw has taken the Collector. Press New Run and send another expedition."
-          : "Press New Run to open the field again.";
+    const bodyText = overlayBodyCopy(this.locale, state.status, state.lossReason);
     const bodyY = isVictory
       ? overlayY + metrics.cellSize * 4.08
       : hasSceneArt
