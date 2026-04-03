@@ -312,10 +312,15 @@ async function main() {
   const params = new URLSearchParams(window.location.search);
   const sceneName = params.get("scene") ?? "opening_run";
   const isClean = params.get("layout") === "clean";
+  const isPortrait = params.get("orientation") === "portrait";
   const scenes = buildScenes();
   const scene = scenes[sceneName] ?? scenes.opening_run;
   const canvas = document.getElementById("scene-canvas");
   const renderer = new CanvasRenderer(canvas, await loadAssets());
+
+  if (isPortrait) {
+    document.body.classList.add("portrait");
+  }
 
   if (isClean) {
     document.body.classList.add("clean");

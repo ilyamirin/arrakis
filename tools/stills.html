@@ -25,8 +25,8 @@
       html,
       body {
         margin: 0;
-        width: 2560px;
-        height: 1440px;
+        width: 100vw;
+        height: 100vh;
         overflow: hidden;
         background:
           radial-gradient(circle at 18% 18%, rgba(233, 188, 113, 0.16), transparent 26%),
@@ -52,6 +52,16 @@
           linear-gradient(135deg, var(--bg-0), var(--bg-1) 44%, var(--bg-2) 120%);
       }
 
+      body.portrait {
+        grid-template-columns: 1fr;
+        gap: 28px;
+        padding: 42px;
+      }
+
+      body.clean.portrait {
+        padding: 0;
+      }
+
       .sidebar,
       .board-shell {
         position: relative;
@@ -67,6 +77,10 @@
         display: flex;
         flex-direction: column;
         justify-content: space-between;
+      }
+
+      body.portrait .sidebar {
+        min-height: 420px;
       }
 
       body.clean .sidebar,
@@ -191,6 +205,22 @@
         background:
           linear-gradient(180deg, rgba(30, 20, 14, 0.22), rgba(16, 11, 8, 0.34)),
           radial-gradient(circle at 50% 20%, rgba(244, 208, 146, 0.06), transparent 38%);
+      }
+
+      body.clean.portrait .board-shell {
+        padding: 34px;
+      }
+
+      body.portrait .board-shell {
+        min-height: 0;
+      }
+
+      body.portrait .canvas-wrap {
+        min-height: 0;
+      }
+
+      body.clean.portrait .canvas-wrap {
+        border-radius: 40px;
       }
 
       canvas {
