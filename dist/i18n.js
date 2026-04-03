@@ -86,105 +86,225 @@ const RU_COPY = {
     footerText: "© 2026 Ilya Mirin. Проект выпущен под лицензией MIT.",
     footerLicense: "Открыть лицензию",
 };
+const TR_COPY = {
+    htmlLang: "tr",
+    title: "Amber Dunes Harvest",
+    metaDescription: "Amber Dunes Harvest, yapay zekâyla üretilmiş kod, görseller, müzik, metinler ve arayüzle hazırlanmış retro-fütüristik bir çöl oyunudur. Collector'ı 8x8 tahtada Amber Waste boyunca yönlendirin, amber toplayın ve Sinkjaw saldırılarından kaçının.",
+    ogDescription: "Ilya Mirin imzalı retro-fütüristik çöl oyunu. Yapay zekâyla üretilmiş kod, görseller, müzik, metinler ve arayüzle Amber Waste'te amber toplayın ve 8x8 tahtada Sinkjaw saldırılarından kurtulun.",
+    twitterDescription: "Yapay zekâyla üretilmiş kod, görseller, müzik, metinler ve arayüze sahip retro-fütüristik bir çöl oyunu: amber topla, at gibi ilerle, Sinkjaw'dan kaç.",
+    eyebrow: "Retro-Fütüristik Çöl Oyunu",
+    heroText: "Amber Waste üzerindeki 8x8 sahayı temizleyin. Collector satrançtaki at gibi ilerler; her hamlenizin ardından Sinkjaw en fazla dört kare ötede yüzeye çıkar.",
+    projectNote: "Kod, görseller, müzik, metinler ve arayüz yapay zekâyla üretildi. Ses efektleri ise OpenGameArt'tan alınan CC0 içeriklerdir.",
+    restart: "Yeni Sefer",
+    canvasLabel: "Amber Dunes Harvest oyun alanı",
+    stateKicker: "Durum",
+    initialStatusTitle: "Sefer sürüyor",
+    initialStatusMessage: "Vurgulanan karelerden birini seçin.",
+    amberLabel: "Amber",
+    movesLabel: "Hamle",
+    positionLabel: "Konum",
+    legendCollectorTitle: "Collector",
+    legendCollectorText: "Konar konmaz amber'ı toplar.",
+    legendSinkjawTitle: "Sinkjaw",
+    legendSinkjawText: "Dört kare içinde yüzeye çıkar ve bir kareyi kapatır.",
+    legendAmberTitle: "Amber",
+    legendAmberText: "Kazanmak için 20 yatağın hepsini toplamalısınız.",
+    legendSkimmerTitle: "Skimmer",
+    legendSkimmerText: "Collector'ı seçtiğiniz geçerli kareye taşır.",
+    legendStormTitle: "Fırtına cephesi",
+    legendStormText: "Her tur bir kare kayar. İçine inerseniz Collector'ı açık bir kareye savurur.",
+    rulesKicker: "Kurallar",
+    rulesTitle: "Kısaca",
+    rulesItems: [
+        "Collector, satrançtaki at gibi L şeklinde ilerler.",
+        "Aydınlık işaretler geçerli iniş karelerini gösterir.",
+        "Pilot, Sinkjaw baskısını doğrudan saha üzerinde gösterir.",
+        "Fırtına her tur bir kare kayar ve Collector'ı rastgele boş bir kareye savurur.",
+        "İlk üç hamlede Sinkjaw doğrudan Collector'ın altında beliremez.",
+        "Sinkjaw Collector'ın altında yüzeye çıkarsa sefer biter.",
+        "Son amber yatağı alındığında saha sizindir.",
+    ],
+    authorKicker: "Yazar",
+    authorCopy: "Staff LLM engineer. Pratik AI sistemleri kurar, geliştirici iş akışlarını iyileştirir ve araçları kullanılır hâlde yayına alır.",
+    authorMeta: "Oynanış kodu, müzik, arayüz metinleri ve görsel varlıklar yapay zekâyla üretildi. Ses efektleri OpenGameArt'tan alınan CC0 varlıklardır.",
+    footerText: "© 2026 Ilya Mirin. Proje MIT lisansı ile yayımlanmıştır.",
+    footerLicense: "Lisansı aç",
+};
 export function normalizeLocale(rawLocale) {
-    return rawLocale?.toLowerCase().startsWith("ru") ? "ru" : "en";
+    const normalized = rawLocale?.toLowerCase() ?? "";
+    if (normalized.startsWith("ru")) {
+        return "ru";
+    }
+    if (normalized.startsWith("tr")) {
+        return "tr";
+    }
+    return "en";
 }
 export function getStaticCopy(locale) {
-    return locale === "ru" ? RU_COPY : EN_COPY;
+    switch (locale) {
+        case "ru":
+            return RU_COPY;
+        case "tr":
+            return TR_COPY;
+        default:
+            return EN_COPY;
+    }
 }
 export function statusTitleCopy(locale, status, lossReason) {
     if (status === "won") {
-        return locale === "ru" ? "Поле зачищено" : "Amber secured";
+        if (locale === "ru")
+            return "Поле зачищено";
+        if (locale === "tr")
+            return "Saha temiz";
+        return "Amber secured";
     }
     if (status === "lost") {
         if (lossReason === "sinkjaw_attack") {
-            return locale === "ru" ? "Collector потерян" : "Collector consumed";
+            if (locale === "ru")
+                return "Collector потерян";
+            if (locale === "tr")
+                return "Collector kaybedildi";
+            return "Collector consumed";
         }
-        return locale === "ru" ? "Выхода нет" : "Road gone dark";
+        if (locale === "ru")
+            return "Выхода нет";
+        if (locale === "tr")
+            return "Yol kapandı";
+        return "Road gone dark";
     }
-    return locale === "ru" ? "Экспедиция идёт" : "Run underway";
+    if (locale === "ru")
+        return "Экспедиция идёт";
+    if (locale === "tr")
+        return "Sefer sürüyor";
+    return "Run underway";
 }
 export function flightTitleCopy(locale, phase) {
     if (phase === "storm-approach") {
-        return locale === "ru" ? "Фронт бури" : "Storm front";
+        if (locale === "ru")
+            return "Фронт бури";
+        if (locale === "tr")
+            return "Fırtına cephesi";
+        return "Storm front";
     }
     if (phase === "storm-drift") {
-        return locale === "ru" ? "Снос ветром" : "Storm shear";
+        if (locale === "ru")
+            return "Снос ветром";
+        if (locale === "tr")
+            return "Rüzgâr sürüklemesi";
+        return "Storm shear";
     }
-    return locale === "ru" ? "Skimmer в пути" : "Skimmer in transit";
+    if (locale === "ru")
+        return "Skimmer в пути";
+    if (locale === "tr")
+        return "Skimmer yolda";
+    return "Skimmer in transit";
 }
 export function flightMessageCopy(locale, phase, sector) {
     if (phase === "storm-approach") {
-        return locale === "ru"
-            ? `Skimmer входит в бурю у сектора ${sector}.`
-            : `The Skimmer cuts into the squall at sector ${sector}.`;
+        if (locale === "ru")
+            return `Skimmer входит в бурю у сектора ${sector}.`;
+        if (locale === "tr")
+            return `Skimmer, ${sector} sektöründeki fırtınaya giriyor.`;
+        return `The Skimmer cuts into the squall at sector ${sector}.`;
     }
     if (phase === "storm-drift") {
-        return locale === "ru"
-            ? `Шквал тащит Skimmer к сектору ${sector}.`
-            : `Wind shear catches the Skimmer and drags it toward sector ${sector}.`;
+        if (locale === "ru")
+            return `Шквал тащит Skimmer к сектору ${sector}.`;
+        if (locale === "tr")
+            return `Fırtına Skimmer'ı ${sector} sektörüne sürüklüyor.`;
+        return `Wind shear catches the Skimmer and drags it toward sector ${sector}.`;
     }
-    return locale === "ru"
-        ? `Skimmer идёт к сектору ${sector}.`
-        : `The Skimmer carries the Collector toward sector ${sector}.`;
+    if (locale === "ru")
+        return `Skimmer идёт к сектору ${sector}.`;
+    if (locale === "tr")
+        return `Skimmer ${sector} sektörüne ilerliyor.`;
+    return `The Skimmer carries the Collector toward sector ${sector}.`;
 }
 export function gameMessageCopy(locale, key, params = {}) {
     switch (key) {
         case "initial":
-            return locale === "ru"
-                ? "Выберите одну из подсвеченных клеток и начните экспедицию."
-                : "Choose one of the lit squares to begin your run across the Amber Waste.";
+            if (locale === "ru")
+                return "Выберите одну из подсвеченных клеток и начните экспедицию.";
+            if (locale === "tr")
+                return "Vurgulanan karelerden birini seçip sefere başlayın.";
+            return "Choose one of the lit squares to begin your run across the Amber Waste.";
         case "cheat_victory":
-            return locale === "ru"
-                ? "Скрытый сигнал прорезал пустошь. Collector выведен, линия ваша."
-                : "A hidden signal cut across the Waste. The Collector is clear and the amber line is yours.";
+            if (locale === "ru")
+                return "Скрытый сигнал прорезал пустошь. Collector выведен, линия ваша.";
+            if (locale === "tr")
+                return "Gizli bir sinyal çölü yardı. Collector kurtuldu; amber hattı artık sizin.";
+            return "A hidden signal cut across the Waste. The Collector is clear and the amber line is yours.";
         case "invalid_move":
-            return locale === "ru"
-                ? "Так ходить нельзя. Выберите одну из подсвеченных клеток."
-                : "That jump is out of line. Take one of the lit squares.";
+            if (locale === "ru")
+                return "Так ходить нельзя. Выберите одну из подсвеченных клеток.";
+            if (locale === "tr")
+                return "Bu hamle geçersiz. Vurgulanan karelerden birini seçin.";
+            return "That jump is out of line. Take one of the lit squares.";
         case "storm_trapped":
-            return locale === "ru"
-                ? "Буря сомкнулась, но выбросить Collector уже было некуда."
-                : "The storm closed around the Collector, but there was nowhere left to throw it.";
+            if (locale === "ru")
+                return "Буря сомкнулась, но выбросить Collector уже было некуда.";
+            if (locale === "tr")
+                return "Fırtına kapandı ama Collector'ı savuracak boş kare kalmadı.";
+            return "The storm closed around the Collector, but there was nowhere left to throw it.";
         case "amber_taken":
-            return locale === "ru"
-                ? "Amber взят. Sinkjaw наверняка почувствовал дрожь."
-                : "Amber taken. Sinkjaw will have felt the tremor.";
+            if (locale === "ru")
+                return "Amber взят. Sinkjaw наверняка почувствовал дрожь.";
+            if (locale === "tr")
+                return "Amber alındı. Sinkjaw sarsıntıyı hissetmiş olmalı.";
+            return "Amber taken. Sinkjaw will have felt the tremor.";
         case "amber_waiting":
-            return locale === "ru" ? " Там уже лежал amber." : " Amber was waiting there.";
+            if (locale === "ru")
+                return " Там уже лежал amber.";
+            if (locale === "tr")
+                return " Orada zaten amber vardı.";
+            return " Amber was waiting there.";
         case "empty_cell":
-            return locale === "ru"
-                ? "Пустая клетка. Держите темп."
-                : "A barren stretch of Waste. Keep the run moving.";
+            if (locale === "ru")
+                return "Пустая клетка. Держите темп.";
+            if (locale === "tr")
+                return "Boş kare. Tempoyu koruyun.";
+            return "A barren stretch of Waste. Keep the run moving.";
         case "run_complete":
-            return locale === "ru"
-                ? `Экспедиция завершена за ${params.moves ?? 0} ходов. Поле очищено.`
-                : `Run complete in ${params.moves ?? 0} moves. The amber field is stripped clean.`;
+            if (locale === "ru")
+                return `Экспедиция завершена за ${params.moves ?? 0} ходов. Поле очищено.`;
+            if (locale === "tr")
+                return `Sefer ${params.moves ?? 0} hamlede tamamlandı. Saha temiz.`;
+            return `Run complete in ${params.moves ?? 0} moves. The amber field is stripped clean.`;
         case "no_moves":
-            return locale === "ru"
-                ? "Ходов больше нет. Collector зажат."
-                : "No jumps remain. The Collector has been boxed in.";
+            if (locale === "ru")
+                return "Ходов больше нет. Collector зажат.";
+            if (locale === "tr")
+                return "Hamle kalmadı. Collector sıkıştı.";
+            return "No jumps remain. The Collector has been boxed in.";
         case "sinkjaw_attack":
-            return locale === "ru"
-                ? "Sinkjaw всплыл прямо под Collector. Экспедиция окончена."
-                : "Sinkjaw broke surface beneath the Collector. The expedition is done.";
+            if (locale === "ru")
+                return "Sinkjaw всплыл прямо под Collector. Экспедиция окончена.";
+            if (locale === "tr")
+                return "Sinkjaw tam Collector'ın altında yüzeye çıktı. Sefer bitti.";
+            return "Sinkjaw broke surface beneath the Collector. The expedition is done.";
     }
 }
 export function stormDriftMessageCopy(locale, sector) {
-    return locale === "ru"
-        ? `Шквал выбросил Collector в сектор ${sector}.`
-        : `Storm shear flung the Collector clear to sector ${sector}.`;
+    if (locale === "ru")
+        return `Шквал выбросил Collector в сектор ${sector}.`;
+    if (locale === "tr")
+        return `Fırtına Collector'ı ${sector} sektörüne savurdu.`;
+    return `Storm shear flung the Collector clear to sector ${sector}.`;
 }
 export function sinkjawSightedCopy(locale, sector) {
-    return locale === "ru"
-        ? `Sinkjaw замечен в секторе ${sector}.`
-        : `Sinkjaw sighted in sector ${sector}.`;
+    if (locale === "ru")
+        return `Sinkjaw замечен в секторе ${sector}.`;
+    if (locale === "tr")
+        return `Sinkjaw ${sector} sektöründe görüldü.`;
+    return `Sinkjaw sighted in sector ${sector}.`;
 }
 export function pilotLineCopy(locale, sector, sectorName) {
     if (sector === "obscured") {
-        return locale === "ru"
-            ? "Пилот: буря глушит сигнал. Прогноз сорван."
-            : "Pilot: Storm interference. Read unreliable beyond the squall.";
+        if (locale === "ru")
+            return "Пилот: буря глушит сигнал. Прогноз сорван.";
+        if (locale === "tr")
+            return "Pilot: Fırtına sinyali bozuyor. Okuma yok.";
+        return "Pilot: Storm interference. Read unreliable beyond the squall.";
     }
     if (locale === "ru") {
         switch (sector) {
@@ -206,6 +326,28 @@ export function pilotLineCopy(locale, sector, sectorName) {
                 return `Пилот: садимся в ${sectorName}. Северо-запад становится опасным.`;
             default:
                 return `Пилот: садимся в ${sectorName}. Безопасной стороны нет.`;
+        }
+    }
+    if (locale === "tr") {
+        switch (sector) {
+            case "north":
+                return `Pilot: ${sectorName} karesine in. Tehlike kuzeyde.`;
+            case "northeast":
+                return `Pilot: ${sectorName} karesine in. Tehlike kuzeydoğuda.`;
+            case "east":
+                return `Pilot: ${sectorName} karesine in. Tehlike doğuda.`;
+            case "southeast":
+                return `Pilot: ${sectorName} karesine in. Tehlike güneydoğuda.`;
+            case "south":
+                return `Pilot: ${sectorName} karesine in. Tehlike güneyde.`;
+            case "southwest":
+                return `Pilot: ${sectorName} karesine in. Tehlike güneybatıda.`;
+            case "west":
+                return `Pilot: ${sectorName} karesine in. Tehlike batıda.`;
+            case "northwest":
+                return `Pilot: ${sectorName} karesine in. Tehlike kuzeybatıda.`;
+            default:
+                return `Pilot: ${sectorName} karesine in. Güvenli yön yok.`;
         }
     }
     switch (sector) {
@@ -230,7 +372,11 @@ export function pilotLineCopy(locale, sector, sectorName) {
     }
 }
 export function telegraphKickerCopy(locale) {
-    return locale === "ru" ? "ЧТЕНИЕ ДРОЖИ" : "TREMOR READ";
+    if (locale === "ru")
+        return "ЧТЕНИЕ ДРОЖИ";
+    if (locale === "tr")
+        return "SARSINTI OKUMASI";
+    return "TREMOR READ";
 }
 export function telegraphCaptionCopy(locale, sector) {
     if (locale === "ru") {
@@ -255,6 +401,30 @@ export function telegraphCaptionCopy(locale, sector) {
                 return "ПРОГНОЗ СОРВАН";
             default:
                 return "КРУГОМ ОПАСНО";
+        }
+    }
+    if (locale === "tr") {
+        switch (sector) {
+            case "north":
+                return "TEHLİKE KUZEYDE";
+            case "northeast":
+                return "TEHLİKE KD";
+            case "east":
+                return "TEHLİKE DOĞUDA";
+            case "southeast":
+                return "TEHLİKE GD";
+            case "south":
+                return "TEHLİKE GÜNEYDE";
+            case "southwest":
+                return "TEHLİKE GB";
+            case "west":
+                return "TEHLİKE BATIDA";
+            case "northwest":
+                return "TEHLİKE KB";
+            case "obscured":
+                return "OKUMA YOK";
+            default:
+                return "HER YAN TEHLİKELİ";
         }
     }
     switch (sector) {
@@ -282,25 +452,49 @@ export function telegraphCaptionCopy(locale, sector) {
 }
 export function overlayTitleCopy(locale, status, lossReason) {
     if (status === "won") {
-        return locale === "ru" ? "ПОЛЕ ЗАЧИЩЕНО" : "AMBER SECURED";
+        if (locale === "ru")
+            return "ПОЛЕ ЗАЧИЩЕНО";
+        if (locale === "tr")
+            return "SAHA TEMİZ";
+        return "AMBER SECURED";
     }
     if (lossReason === "sinkjaw_attack") {
-        return locale === "ru" ? "COLLECTOR ПОТЕРЯН" : "COLLECTOR CONSUMED";
+        if (locale === "ru")
+            return "COLLECTOR ПОТЕРЯН";
+        if (locale === "tr")
+            return "COLLECTOR KAYIP";
+        return "COLLECTOR CONSUMED";
     }
-    return locale === "ru" ? "УДАР SINKJAW" : "SINKJAW STRIKE";
+    if (locale === "ru")
+        return "УДАР SINKJAW";
+    if (locale === "tr")
+        return "SINKJAW SALDIRISI";
+    return "SINKJAW STRIKE";
 }
 export function overlayBodyCopy(locale, status, lossReason) {
     if (status === "won") {
-        return locale === "ru"
-            ? "Skimmer успел вытащить Collector. Нажмите «Новая экспедиция» и выходите в поле снова."
-            : "The Skimmer has lifted the Collector clear. Press New Run and cut another line across the Amber Waste.";
+        if (locale === "ru") {
+            return "Skimmer успел вытащить Collector. Нажмите «Новая экспедиция» и выходите в поле снова.";
+        }
+        if (locale === "tr") {
+            return 'Skimmer, Collector\'ı son anda çekip aldı. "Yeni Sefer" ile yeniden sahaya çıkın.';
+        }
+        return "The Skimmer has lifted the Collector clear. Press New Run and cut another line across the Amber Waste.";
     }
     if (lossReason === "sinkjaw_attack") {
-        return locale === "ru"
-            ? "Sinkjaw забрал Collector. Нажмите «Новая экспедиция» и отправьте новый экипаж."
-            : "Sinkjaw has taken the Collector. Press New Run and send another expedition.";
+        if (locale === "ru") {
+            return "Sinkjaw забрал Collector. Нажмите «Новая экспедиция» и отправьте новый экипаж.";
+        }
+        if (locale === "tr") {
+            return 'Sinkjaw Collector\'ı aldı. "Yeni Sefer" ile yeni bir ekip gönderin.';
+        }
+        return "Sinkjaw has taken the Collector. Press New Run and send another expedition.";
     }
-    return locale === "ru"
-        ? "Нажмите «Новая экспедиция», чтобы выйти в поле снова."
-        : "Press New Run to open the field again.";
+    if (locale === "ru") {
+        return "Нажмите «Новая экспедиция», чтобы выйти в поле снова.";
+    }
+    if (locale === "tr") {
+        return '"Yeni Sefer" ile sahaya yeniden çıkın.';
+    }
+    return "Press New Run to open the field again.";
 }
