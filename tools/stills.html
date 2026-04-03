@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Amber Dunes Harvest Stills</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg-0: #130d09;
+        --bg-1: #23160f;
+        --bg-2: #5f3b22;
+        --sand: #f6dfb1;
+        --amber: #f1bf6f;
+        --copy: rgba(248, 237, 212, 0.92);
+        --muted: rgba(248, 237, 212, 0.62);
+        --line: rgba(248, 221, 174, 0.18);
+        --panel: rgba(21, 14, 10, 0.72);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        width: 2560px;
+        height: 1440px;
+        overflow: hidden;
+        background:
+          radial-gradient(circle at 18% 18%, rgba(233, 188, 113, 0.16), transparent 26%),
+          radial-gradient(circle at 80% 74%, rgba(198, 104, 59, 0.18), transparent 24%),
+          linear-gradient(135deg, var(--bg-0), var(--bg-1) 44%, var(--bg-2) 120%);
+        font-family: "IBM Plex Mono", "SFMono-Regular", ui-monospace, monospace;
+        color: var(--copy);
+      }
+
+      body {
+        display: grid;
+        grid-template-columns: 760px 1fr;
+        gap: 48px;
+        padding: 56px;
+      }
+
+      body.clean {
+        display: block;
+        padding: 0;
+        background:
+          radial-gradient(circle at 18% 18%, rgba(233, 188, 113, 0.12), transparent 26%),
+          radial-gradient(circle at 80% 74%, rgba(198, 104, 59, 0.14), transparent 24%),
+          linear-gradient(135deg, var(--bg-0), var(--bg-1) 44%, var(--bg-2) 120%);
+      }
+
+      .sidebar,
+      .board-shell {
+        position: relative;
+        border: 1px solid var(--line);
+        border-radius: 36px;
+        background: linear-gradient(180deg, rgba(34, 22, 16, 0.74), rgba(15, 10, 8, 0.82));
+        backdrop-filter: blur(10px);
+        overflow: hidden;
+      }
+
+      .sidebar {
+        padding: 48px 44px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+
+      body.clean .sidebar,
+      body.clean .topbar,
+      body.clean .overlay-status {
+        display: none;
+      }
+
+      .kicker {
+        margin: 0 0 12px;
+        font-size: 20px;
+        letter-spacing: 0.32em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 84px;
+        line-height: 0.92;
+        letter-spacing: -0.04em;
+        text-transform: uppercase;
+      }
+
+      .subtitle {
+        margin: 20px 0 0;
+        font-size: 24px;
+        line-height: 1.5;
+        color: var(--muted);
+        max-width: 30ch;
+      }
+
+      .stats {
+        display: grid;
+        gap: 16px;
+      }
+
+      .stat {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 16px;
+        padding: 18px 22px;
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        background: rgba(246, 223, 177, 0.04);
+      }
+
+      .stat-label {
+        font-size: 18px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .stat-value {
+        font-size: 26px;
+        color: var(--sand);
+      }
+
+      .footer-copy {
+        font-size: 19px;
+        line-height: 1.6;
+        color: var(--muted);
+        max-width: 36ch;
+      }
+
+      .board-shell {
+        padding: 28px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      body.clean .board-shell {
+        width: 100%;
+        height: 100%;
+        padding: 44px;
+        border: none;
+        border-radius: 0;
+        background: transparent;
+      }
+
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 24px;
+        padding: 8px 12px 24px;
+      }
+
+      .topbar-title {
+        font-size: 24px;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .topbar-badge {
+        padding: 12px 18px;
+        border-radius: 999px;
+        border: 1px solid rgba(248, 221, 174, 0.22);
+        background: rgba(246, 223, 177, 0.05);
+        font-size: 18px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--sand);
+      }
+
+      .canvas-wrap {
+        position: relative;
+        flex: 1;
+        border-radius: 28px;
+        overflow: hidden;
+        background:
+          linear-gradient(180deg, rgba(30, 20, 14, 0.38), rgba(16, 11, 8, 0.58)),
+          radial-gradient(circle at 50% 20%, rgba(244, 208, 146, 0.08), transparent 38%);
+      }
+
+      body.clean .canvas-wrap {
+        border-radius: 44px;
+        border: 1px solid rgba(248, 221, 174, 0.12);
+        background:
+          linear-gradient(180deg, rgba(30, 20, 14, 0.22), rgba(16, 11, 8, 0.34)),
+          radial-gradient(circle at 50% 20%, rgba(244, 208, 146, 0.06), transparent 38%);
+      }
+
+      canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      .overlay-status {
+        position: absolute;
+        left: 24px;
+        right: 24px;
+        bottom: 24px;
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 24px;
+        pointer-events: none;
+      }
+
+      .status-panel {
+        max-width: 62%;
+        padding: 18px 22px;
+        border-radius: 22px;
+        border: 1px solid rgba(248, 221, 174, 0.18);
+        background: rgba(17, 11, 8, 0.76);
+      }
+
+      .status-panel .label {
+        font-size: 16px;
+        letter-spacing: 0.24em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .status-panel .value {
+        margin-top: 10px;
+        font-size: 30px;
+        line-height: 1.35;
+        color: var(--sand);
+      }
+
+      .mini-counters {
+        display: flex;
+        gap: 14px;
+      }
+
+      .mini {
+        min-width: 188px;
+        padding: 16px 18px;
+        border-radius: 18px;
+        border: 1px solid rgba(248, 221, 174, 0.18);
+        background: rgba(17, 11, 8, 0.76);
+      }
+
+      .mini .label {
+        font-size: 14px;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .mini .value {
+        margin-top: 8px;
+        font-size: 24px;
+        color: var(--sand);
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="sidebar">
+      <div>
+        <p class="kicker" id="scene-kicker">Gameplay Still</p>
+        <h1 id="scene-title">Amber Run</h1>
+        <p class="subtitle" id="scene-subtitle"></p>
+      </div>
+
+      <div class="stats" id="scene-stats"></div>
+
+      <p class="footer-copy" id="scene-footer"></p>
+    </aside>
+
+    <section class="board-shell">
+      <div class="topbar">
+        <div class="topbar-title">Amber Dunes Harvest</div>
+        <div class="topbar-badge" id="scene-badge">Fullscreen Mobile Capture</div>
+      </div>
+
+      <div class="canvas-wrap">
+        <canvas id="scene-canvas" width="1600" height="1180"></canvas>
+        <div class="overlay-status">
+          <div class="status-panel">
+            <div class="label" id="status-label">Pilot</div>
+            <div class="value" id="status-value"></div>
+          </div>
+          <div class="mini-counters">
+            <div class="mini">
+              <div class="label">Amber</div>
+              <div class="value" id="amber-value"></div>
+            </div>
+            <div class="mini">
+              <div class="label">Moves</div>
+              <div class="value" id="moves-value"></div>
+            </div>
+            <div class="mini">
+              <div class="label">Position</div>
+              <div class="value" id="position-value"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <script type="module" src="./stills.js"></script>
+  </body>
+</html>
