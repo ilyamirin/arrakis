@@ -13,7 +13,7 @@ export class GameMusicController {
     isStopped = false;
     activeTrackIndex = null;
     remainingIndices = [];
-    constructor(trackUrls, volume = 0.42) {
+    constructor(trackUrls, volume = 0.31) {
         this.volume = volume;
         this.tracks = trackUrls.map((url, index) => this.createTrack(url, index));
         this.refillQueue();

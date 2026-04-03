@@ -30,7 +30,7 @@ export class GameMusicController {
   private activeTrackIndex: number | null = null;
   private remainingIndices: number[] = [];
 
-  constructor(trackUrls: string[], volume = 0.42) {
+  constructor(trackUrls: string[], volume = 0.31) {
     this.volume = volume;
     this.tracks = trackUrls.map((url, index) => this.createTrack(url, index));
     this.refillQueue();
