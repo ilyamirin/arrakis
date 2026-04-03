@@ -106,10 +106,10 @@ const RU_COPY: StaticCopy = {
     "Зачистите поле на сетке 8x8 в The Amber Waste. Collector ходит как конь, а Sinkjaw всплывает в радиусе четырёх клеток после каждого вашего хода.",
   projectNote:
     "Код, арт, музыка, тексты и интерфейс созданы с помощью AI. Звуковые эффекты CC0 — с OpenGameArt.",
-  restart: "Новый заход",
+  restart: "Новая экспедиция",
   canvasLabel: "Игровое поле Amber Dunes Harvest",
   stateKicker: "Статус",
-  initialStatusTitle: "Заход идёт",
+  initialStatusTitle: "Экспедиция идёт",
   initialStatusMessage: "Выберите одну из подсвеченных клеток.",
   amberLabel: "Amber",
   movesLabel: "Ходы",
@@ -133,7 +133,7 @@ const RU_COPY: StaticCopy = {
     "Пилот показывает направление угрозы прямо на поле.",
     "Буря сдвигается на одну клетку за ход и выбрасывает Collector на случайную чистую клетку.",
     "Первые три хода Sinkjaw не может всплыть прямо под Collector.",
-    "Если Sinkjaw всплывает под Collector, заход окончен.",
+    "Если Sinkjaw всплывает под Collector, экспедиция окончена.",
     "Как только взята последняя залежь amber, поле ваше.",
   ],
   authorKicker: "Автор",
@@ -167,7 +167,7 @@ export function statusTitleCopy(
     }
     return locale === "ru" ? "Выхода нет" : "Road gone dark";
   }
-  return locale === "ru" ? "Заход идёт" : "Run underway";
+  return locale === "ru" ? "Экспедиция идёт" : "Run underway";
 }
 
 export function flightTitleCopy(
@@ -221,7 +221,7 @@ export function gameMessageCopy(
   switch (key) {
     case "initial":
       return locale === "ru"
-        ? "Выберите одну из подсвеченных клеток и начните заход."
+        ? "Выберите одну из подсвеченных клеток и начните экспедицию."
         : "Choose one of the lit squares to begin your run across the Amber Waste.";
     case "cheat_victory":
       return locale === "ru"
@@ -247,7 +247,7 @@ export function gameMessageCopy(
         : "A barren stretch of Waste. Keep the run moving.";
     case "run_complete":
       return locale === "ru"
-        ? `Заход завершён за ${params.moves ?? 0} ходов. Поле очищено.`
+        ? `Экспедиция завершена за ${params.moves ?? 0} ходов. Поле очищено.`
         : `Run complete in ${params.moves ?? 0} moves. The amber field is stripped clean.`;
     case "no_moves":
       return locale === "ru"
@@ -255,7 +255,7 @@ export function gameMessageCopy(
         : "No jumps remain. The Collector has been boxed in.";
     case "sinkjaw_attack":
       return locale === "ru"
-        ? "Sinkjaw всплыл прямо под Collector. Заход окончен."
+        ? "Sinkjaw всплыл прямо под Collector. Экспедиция окончена."
         : "Sinkjaw broke surface beneath the Collector. The expedition is done.";
   }
 }
@@ -399,15 +399,15 @@ export function overlayBodyCopy(
 ): string {
   if (status === "won") {
     return locale === "ru"
-      ? "Skimmer успел вытащить Collector. Нажмите «Новый заход» и выходите на маршрут снова."
+      ? "Skimmer успел вытащить Collector. Нажмите «Новая экспедиция» и выходите в поле снова."
       : "The Skimmer has lifted the Collector clear. Press New Run and cut another line across the Amber Waste.";
   }
   if (lossReason === "sinkjaw_attack") {
     return locale === "ru"
-      ? "Sinkjaw забрал Collector. Нажмите «Новый заход» и отправьте новую экспедицию."
+      ? "Sinkjaw забрал Collector. Нажмите «Новая экспедиция» и отправьте новый экипаж."
       : "Sinkjaw has taken the Collector. Press New Run and send another expedition.";
   }
   return locale === "ru"
-    ? "Нажмите «Новый заход», чтобы выйти в поле снова."
+    ? "Нажмите «Новая экспедиция», чтобы выйти в поле снова."
     : "Press New Run to open the field again.";
 }

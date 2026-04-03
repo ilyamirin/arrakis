@@ -159,6 +159,8 @@ export class GameMusicController {
 export class GameSfxController {
   private readonly effects: Record<string, EffectHandle>;
   private isUnlocked = false;
+  private isSuppressed = false;
+  private readonly activeEffects = new Set<HTMLAudioElement>();
 
   constructor(effectUrls: Record<string, { url: string; volume?: number }>) {
     this.effects = Object.fromEntries(
@@ -170,8 +172,23 @@ export class GameSfxController {
     this.isUnlocked = true;
   }
 
+  public pause(): void {
+    this.isSuppressed = true;
+
+    for (const audio of this.activeEffects) {
+      audio.pause();
+      audio.currentTime = 0;
+    }
+
+    this.activeEffects.clear();
+  }
+
+  public resume(): void {
+    this.isSuppressed = false;
+  }
+
   public play(name: string, volumeScale = 1): void {
-    if (!this.isUnlocked) {
+    if (!this.isUnlocked || this.isSuppressed) {
       return;
     }
 
@@ -183,6 +200,23 @@ export class GameSfxController {
     const audio = effect.audio.cloneNode(true) as HTMLAudioElement;
     audio.volume = Math.max(0, Math.min(1, effect.volume * volumeScale));
     audio.currentTime = 0;
+    this.activeEffects.add(audio);
+    audio.addEventListener(
+      "ended",
+      () => {
+        this.activeEffects.delete(audio);
+      },
+      { once: true },
+    );
+    audio.addEventListener(
+      "pause",
+      () => {
+        if (audio.currentTime === 0 || audio.ended) {
+          this.activeEffects.delete(audio);
+        }
+      },
+      { once: true },
+    );
     void audio.play().catch(() => {});
   }
 

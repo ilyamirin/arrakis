@@ -264,7 +264,7 @@ async function main() {
         skimmerTakeoff: { url: "./assets/audio/sfx/skimmer-takeoff.mp3", volume: 0.44 },
         amberPickup: { url: "./assets/audio/sfx/amber-pickup.mp3", volume: 0.54 },
         stormEnter: { url: "./assets/audio/sfx/storm-enter.wav", volume: 0.38 },
-        sinkjawSpawn: { url: "./assets/audio/sfx/sinkjaw-spawn.mp3", volume: 0.34 },
+        sinkjawSpawn: { url: "./assets/audio/sfx/sinkjaw-spawn.mp3", volume: 0.07 },
         sinkjawAttack: { url: "./assets/audio/sfx/sinkjaw-attack.wav", volume: 0.52 },
         victory: { url: "./assets/audio/sfx/victory.mp3", volume: 0.56 },
     });
@@ -411,6 +411,7 @@ async function main() {
         isPaused = true;
         pausedAt = performance.now();
         music.pause();
+        sfx.pause();
         const flight = activeFlight;
         if (flight && flight.animationFrameId !== null) {
             window.cancelAnimationFrame(flight.animationFrameId);
@@ -425,6 +426,7 @@ async function main() {
         const pausedDuration = performance.now() - pausedAt;
         isPaused = false;
         music.resume();
+        sfx.resume();
         if (activeFlight) {
             activeFlight.startedAt += pausedDuration;
             activeFlight.animationFrameId = window.requestAnimationFrame(runFlightFrame);
