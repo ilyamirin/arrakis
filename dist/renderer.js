@@ -1,8 +1,10 @@
 import { BOARD_SIZE, } from "./types.js";
+import { overlayBodyCopy, overlayTitleCopy, telegraphCaptionCopy, telegraphKickerCopy, } from "./i18n.js";
 export class CanvasRenderer {
     canvas;
     ctx;
     assets;
+    locale = "en";
     lastState = null;
     lastAnimation = null;
     lastPreviewMove = null;
@@ -14,6 +16,9 @@ export class CanvasRenderer {
         this.canvas = canvas;
         this.ctx = context;
         this.assets = assets;
+    }
+    setLocale(locale) {
+        this.locale = locale;
     }
     render(state, animation = null, previewMove = null) {
         this.lastState = state;
@@ -163,16 +168,16 @@ export class CanvasRenderer {
         const centerX = metrics.originX + (previewMove.target.x + 0.5) * metrics.cellSize;
         const centerY = metrics.originY + (previewMove.target.y + 0.5) * metrics.cellSize;
         if (previewMove.telegraphSector === "obscured") {
-            this.drawPreviewCaption(metrics, "TREMOR READ", "READ LOST");
+            this.drawPreviewCaption(metrics, telegraphKickerCopy(this.locale), telegraphCaptionCopy(this.locale, "obscured"));
             return;
         }
         if (previewMove.telegraphSector === "encircling") {
             this.drawEncirclingSignal(centerX, centerY, metrics.cellSize);
-            this.drawPreviewCaption(metrics, "TREMOR READ", "NO SAFE SIDE");
+            this.drawPreviewCaption(metrics, telegraphKickerCopy(this.locale), telegraphCaptionCopy(this.locale, "encircling"));
             return;
         }
         this.drawDirectionalSignal(centerX, centerY, metrics.cellSize, this.sectorVector(previewMove.telegraphSector));
-        this.drawPreviewCaption(metrics, "TREMOR READ", this.sectorCaption(previewMove.telegraphSector));
+        this.drawPreviewCaption(metrics, telegraphKickerCopy(this.locale), this.sectorCaption(previewMove.telegraphSector));
     }
     drawPreviewCaption(metrics, kicker, message) {
         const { ctx } = this;
@@ -379,26 +384,7 @@ export class CanvasRenderer {
         ctx.restore();
     }
     sectorCaption(sector) {
-        switch (sector) {
-            case "north":
-                return "THREAT NORTH";
-            case "northeast":
-                return "THREAT NE";
-            case "east":
-                return "THREAT EAST";
-            case "southeast":
-                return "THREAT SE";
-            case "south":
-                return "THREAT SOUTH";
-            case "southwest":
-                return "THREAT SW";
-            case "west":
-                return "THREAT WEST";
-            case "northwest":
-                return "THREAT NW";
-            default:
-                return "NO SAFE SIDE";
-        }
+        return telegraphCaptionCopy(this.locale, sector);
     }
     sectorVector(sector) {
         switch (sector) {
@@ -489,22 +475,14 @@ export class CanvasRenderer {
         this.ctx.font = `700 ${isSinkjawAttack ? metrics.cellSize * 0.5 : isVictory ? metrics.cellSize * 0.4 : metrics.cellSize * 0.42}px "IBM Plex Mono", monospace`;
         this.ctx.textAlign = "center";
         this.ctx.textBaseline = "middle";
-        this.ctx.fillText(isVictory
-            ? "AMBER SECURED"
-            : isSinkjawAttack
-                ? "COLLECTOR CONSUMED"
-                : "SINKJAW STRIKE", metrics.width / 2, isVictory
+        this.ctx.fillText(overlayTitleCopy(this.locale, state.status, state.lossReason), metrics.width / 2, isVictory
             ? overlayY + metrics.cellSize * 3.28
             : hasSceneArt
                 ? overlayY + metrics.cellSize * 3.15
                 : metrics.originY + metrics.cellSize * 4.0);
         this.ctx.fillStyle = "rgba(249, 241, 223, 0.86)";
         this.ctx.font = `${metrics.cellSize * 0.22}px "IBM Plex Mono", monospace`;
-        const bodyText = isVictory
-            ? "The Skimmer has lifted the Collector clear. Press New Run and cut another line across the Amber Waste."
-            : isSinkjawAttack
-                ? "Sinkjaw has taken the Collector. Press New Run and send another expedition."
-                : "Press New Run to open the field again.";
+        const bodyText = overlayBodyCopy(this.locale, state.status, state.lossReason);
         const bodyY = isVictory
             ? overlayY + metrics.cellSize * 4.08
             : hasSceneArt

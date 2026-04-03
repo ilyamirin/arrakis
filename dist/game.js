@@ -1,4 +1,5 @@
 import { BOARD_SIZE, CENTER_INDEX, TOTAL_AMBER, } from "./types.js";
+import { gameMessageCopy, pilotLineCopy, sinkjawSightedCopy, stormDriftMessageCopy, } from "./i18n.js";
 const SINKJAW_SPAWN_RADIUS = 4;
 const SAFE_ONESHOT_TURNS = 3;
 const STORM_CLUSTER_SIZE = 3;
@@ -13,6 +14,7 @@ const KNIGHT_OFFSETS = [
     { x: 2, y: 1 },
 ];
 export class AmberDunesGame {
+    locale;
     board = [];
     stormCells = [];
     collector = { x: CENTER_INDEX, y: CENTER_INDEX };
@@ -22,7 +24,8 @@ export class AmberDunesGame {
     status = "playing";
     lossReason = null;
     message = "";
-    constructor() {
+    constructor(locale = "en") {
+        this.locale = locale;
         this.reset();
     }
     reset() {
@@ -35,7 +38,7 @@ export class AmberDunesGame {
         this.collectedAmber = 0;
         this.status = "playing";
         this.lossReason = null;
-        this.message = "Choose one of the lit squares to begin your run across the Amber Waste.";
+        this.message = gameMessageCopy(this.locale, "initial");
         return this.getState();
     }
     getState() {
@@ -51,6 +54,34 @@ export class AmberDunesGame {
             message: this.message,
             lossReason: this.lossReason,
         };
+    }
+    exportState() {
+        return {
+            version: 1,
+            board: this.board.map((row) => row.map((cell) => ({ ...cell }))),
+            collector: { ...this.collector },
+            sinkjaw: this.sinkjaw ? { ...this.sinkjaw } : null,
+            moves: this.moves,
+            collectedAmber: this.collectedAmber,
+            status: this.status,
+            message: this.message,
+            lossReason: this.lossReason,
+        };
+    }
+    restore(savedState) {
+        if (!this.isValidSavedState(savedState)) {
+            return this.reset();
+        }
+        this.board = savedState.board.map((row) => row.map((cell) => ({ ...cell })));
+        this.stormCells = this.board.flatMap((row, y) => row.flatMap((cell, x) => (cell.hasStorm ? [{ x, y }] : [])));
+        this.collector = { ...savedState.collector };
+        this.sinkjaw = savedState.sinkjaw ? { ...savedState.sinkjaw } : null;
+        this.moves = savedState.moves;
+        this.collectedAmber = savedState.collectedAmber;
+        this.status = savedState.status;
+        this.message = savedState.message;
+        this.lossReason = savedState.lossReason;
+        return this.getState();
     }
     moveTo(target) {
         return this.moveToWithPlan({ target, driftTarget: null });
@@ -68,7 +99,7 @@ export class AmberDunesGame {
         this.status = "won";
         this.lossReason = null;
         this.sinkjaw = null;
-        this.message = "A hidden signal cut across the Waste. The Collector is clear and the amber line is yours.";
+        this.message = gameMessageCopy(this.locale, "cheat_victory");
         return this.getState();
     }
     planMove(target) {
@@ -100,7 +131,7 @@ export class AmberDunesGame {
         }
         const validMove = this.computeValidMoves(this.sinkjaw).find((move) => this.positionsEqual(move.target, plan.target));
         if (!validMove) {
-            this.message = "That jump is out of line. Take one of the lit squares.";
+            this.message = gameMessageCopy(this.locale, "invalid_move");
             return this.getState();
         }
         this.collector = { ...validMove.target };
@@ -115,33 +146,33 @@ export class AmberDunesGame {
                 : null;
             if (plannedTarget) {
                 this.collector = { ...plannedTarget };
-                message = `Storm shear flung the Collector clear to sector ${this.toBoardNotation(plannedTarget)}.`;
+                message = stormDriftMessageCopy(this.locale, this.toBoardNotation(plannedTarget));
             }
             else if (driftTargets.length > 0) {
                 const driftTarget = driftTargets[Math.floor(Math.random() * driftTargets.length)];
                 this.collector = { ...driftTarget };
-                message = `Storm shear flung the Collector clear to sector ${this.toBoardNotation(driftTarget)}.`;
+                message = stormDriftMessageCopy(this.locale, this.toBoardNotation(driftTarget));
             }
             else {
-                message = "The storm closed around the Collector, but there was nowhere left to throw it.";
+                message = gameMessageCopy(this.locale, "storm_trapped");
             }
         }
         if (this.board[this.collector.y][this.collector.x].hasAmber) {
             this.board[this.collector.y][this.collector.x].hasAmber = false;
             this.collectedAmber += 1;
             message = message
-                ? `${message} Amber was waiting there.`
-                : "Amber taken. Sinkjaw will have felt the tremor.";
+                ? `${message}${gameMessageCopy(this.locale, "amber_waiting")}`
+                : gameMessageCopy(this.locale, "amber_taken");
         }
         else if (!message) {
-            message = "A barren stretch of Waste. Keep the run moving.";
+            message = gameMessageCopy(this.locale, "empty_cell");
         }
         this.message = message;
         if (this.collectedAmber >= TOTAL_AMBER) {
             this.status = "won";
             this.lossReason = null;
             this.sinkjaw = null;
-            this.message = `Run complete in ${this.moves} moves. The amber field is stripped clean.`;
+            this.message = gameMessageCopy(this.locale, "run_complete", { moves: this.moves });
             return this.getState();
         }
         this.moveStormCluster();
@@ -149,7 +180,7 @@ export class AmberDunesGame {
         if (this.status === "playing" && this.computeValidMoves(this.sinkjaw).length === 0) {
             this.status = "lost";
             this.lossReason = "trapped";
-            this.message = "No jumps remain. The Collector has been boxed in.";
+            this.message = gameMessageCopy(this.locale, "no_moves");
         }
         return this.getState();
     }
@@ -178,6 +209,25 @@ export class AmberDunesGame {
             board,
             stormCells: stormCells.map((cell) => ({ ...cell })),
         };
+    }
+    isValidSavedState(savedState) {
+        if (savedState.version !== 1) {
+            return false;
+        }
+        if (savedState.board.length !== BOARD_SIZE ||
+            savedState.board.some((row) => row.length !== BOARD_SIZE)) {
+            return false;
+        }
+        if (!this.isInside(savedState.collector)) {
+            return false;
+        }
+        if (savedState.sinkjaw && !this.isInside(savedState.sinkjaw)) {
+            return false;
+        }
+        if (savedState.moves < 0 || savedState.collectedAmber < 0 || savedState.collectedAmber > TOTAL_AMBER) {
+            return false;
+        }
+        return true;
     }
     computeValidMoves(blockedCell) {
         return KNIGHT_OFFSETS.map((delta) => ({
@@ -214,10 +264,10 @@ export class AmberDunesGame {
         if (this.positionsEqual(nextSinkjaw, this.collector)) {
             this.status = "lost";
             this.lossReason = "sinkjaw_attack";
-            this.message = "Sinkjaw broke surface beneath the Collector. The expedition is done.";
+            this.message = gameMessageCopy(this.locale, "sinkjaw_attack");
             return;
         }
-        this.message = `Sinkjaw sighted in sector ${this.toBoardNotation(nextSinkjaw)}.`;
+        this.message = sinkjawSightedCopy(this.locale, this.toBoardNotation(nextSinkjaw));
     }
     toBoardNotation(position) {
         const file = String.fromCharCode(65 + position.x);
@@ -242,7 +292,7 @@ export class AmberDunesGame {
             return {
                 sector: "obscured",
                 candidates: [...uniqueCandidates.values()],
-                pilotLine: "Pilot: Storm interference. Read unreliable beyond the squall.",
+                pilotLine: pilotLineCopy(this.locale, "obscured", this.toBoardNotation(target)),
                 isStormLanding,
             };
         }
@@ -337,27 +387,7 @@ export class AmberDunesGame {
         return "southeast";
     }
     buildPilotLine(target, sector) {
-        const sectorName = this.toBoardNotation(target);
-        switch (sector) {
-            case "north":
-                return `Pilot: Put down at ${sectorName}. Sinkjaw favors the north reach.`;
-            case "northeast":
-                return `Pilot: Put down at ${sectorName}. Watch the northeast reach.`;
-            case "east":
-                return `Pilot: Put down at ${sectorName}. Sinkjaw favors the east reach.`;
-            case "southeast":
-                return `Pilot: Put down at ${sectorName}. The southeast is running hot.`;
-            case "south":
-                return `Pilot: Put down at ${sectorName}. Sinkjaw favors the south reach.`;
-            case "southwest":
-                return `Pilot: Put down at ${sectorName}. Watch the southwest reach.`;
-            case "west":
-                return `Pilot: Put down at ${sectorName}. Sinkjaw favors the west reach.`;
-            case "northwest":
-                return `Pilot: Put down at ${sectorName}. The northwest turns dangerous.`;
-            default:
-                return `Pilot: Put down at ${sectorName}. Sinkjaw can break all around you.`;
-        }
+        return pilotLineCopy(this.locale, sector, this.toBoardNotation(target));
     }
     createStormCluster() {
         const start = this.randomNonCenterCell();
