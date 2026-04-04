@@ -1,5 +1,5 @@
 import { AmberDunesGame } from "./game.js";
-import { flightMessageCopy, flightTitleCopy, getStaticCopy, normalizeLocale, statusTitleCopy, } from "./i18n.js";
+import { flightMessageCopy, flightTitleCopy, getStaticCopy, monetizationMessageCopy, normalizeLocale, statusTitleCopy, } from "./i18n.js";
 import { GameMusicController, GameSfxController } from "./music.js";
 import { PlatformBridge } from "./platform.js";
 import { CanvasRenderer, loadAssets, } from "./renderer.js";
@@ -16,6 +16,7 @@ const SECRET_VICTORY_SEQUENCE = [
     "KeyR",
 ];
 const SAVE_KEY = "amber-dunes-harvest.run-state.v1";
+const META_SAVE_KEY = "amber-dunes-harvest.session-meta.v1";
 function boardLabel(x, y) {
     return `${String.fromCharCode(65 + x)}${BOARD_SIZE - y}`;
 }
@@ -179,6 +180,7 @@ function applyStaticCopy(locale) {
     setText("#hero-text", copy.heroText);
     setText("#project-note", copy.projectNote);
     setText("#restart-button", copy.restart);
+    setText("#second-chance-button", copy.secondChance);
     setText("#state-kicker", copy.stateKicker);
     setText("#status-title", copy.initialStatusTitle);
     setText("#status-message", copy.initialStatusMessage);
@@ -227,6 +229,33 @@ function loadSavedRunState() {
         return null;
     }
 }
+function cloneSavedRunState(state) {
+    if (!state) {
+        return null;
+    }
+    return JSON.parse(JSON.stringify(state));
+}
+function loadSavedSessionMeta() {
+    try {
+        const raw = window.localStorage.getItem(META_SAVE_KEY);
+        if (!raw) {
+            return null;
+        }
+        const parsed = JSON.parse(raw);
+        if (parsed?.version !== 1) {
+            return null;
+        }
+        return {
+            version: 1,
+            continueUsed: Boolean(parsed.continueUsed),
+            recoverableState: cloneSavedRunState(parsed.recoverableState),
+        };
+    }
+    catch (error) {
+        console.warn("Saved session meta could not be restored.", error);
+        return null;
+    }
+}
 function persistRunState(game) {
     try {
         window.localStorage.setItem(SAVE_KEY, JSON.stringify(game.exportState()));
@@ -235,12 +264,27 @@ function persistRunState(game) {
         console.warn("Run state could not be saved.", error);
     }
 }
+function persistSessionMeta(continueUsed, recoverableState) {
+    try {
+        const payload = {
+            version: 1,
+            continueUsed,
+            recoverableState: cloneSavedRunState(recoverableState),
+        };
+        window.localStorage.setItem(META_SAVE_KEY, JSON.stringify(payload));
+    }
+    catch (error) {
+        console.warn("Session meta could not be saved.", error);
+    }
+}
 async function main() {
     const platform = await PlatformBridge.init();
     const locale = normalizeLocale(platform.locale);
+    const staticCopy = getStaticCopy(locale);
     applyStaticCopy(locale);
     const canvas = document.querySelector("#game-canvas");
     const restartButton = document.querySelector("#restart-button");
+    const secondChanceButton = document.querySelector("#second-chance-button");
     const statusTitleElement = document.querySelector("#status-title");
     const statusMessageElement = document.querySelector("#status-message");
     const amberValueElement = document.querySelector("#amber-value");
@@ -248,6 +292,7 @@ async function main() {
     const positionValueElement = document.querySelector("#position-value");
     if (!canvas ||
         !restartButton ||
+        !secondChanceButton ||
         !statusTitleElement ||
         !statusMessageElement ||
         !amberValueElement ||
@@ -278,14 +323,56 @@ async function main() {
     renderer.setLocale(locale);
     const game = new AmberDunesGame(locale);
     const savedRunState = loadSavedRunState();
+    const savedSessionMeta = loadSavedSessionMeta();
     let currentState = savedRunState ? game.restore(savedRunState) : game.getState();
     let secretProgress = 0;
     let isPaused = false;
+    let isAdShowing = false;
+    let rewardRequestInFlight = false;
     let pausedAt = 0;
+    let statusMessageOverride = null;
+    let continueUsed = savedSessionMeta?.continueUsed ?? false;
+    let recoverableState = cloneSavedRunState(savedSessionMeta?.recoverableState ?? null) ??
+        (currentState.status === "playing" ? cloneSavedRunState(game.exportState()) : null);
     let activeFlight = null;
     let previewMove = null;
     const syncGameplayState = () => {
-        platform.setGameplayActive(currentState.status === "playing" && !isPaused);
+        platform.setGameplayActive(currentState.status === "playing" && !isPaused && !isAdShowing);
+    };
+    const persistSessionState = () => {
+        persistRunState(game);
+        persistSessionMeta(continueUsed, recoverableState);
+    };
+    const canOfferSecondChance = () => currentState.status === "lost" && !continueUsed && recoverableState !== null;
+    const renderMonetizationUi = () => {
+        restartButton.disabled = isAdShowing || rewardRequestInFlight;
+        secondChanceButton.hidden = !canOfferSecondChance();
+        secondChanceButton.disabled = isAdShowing || rewardRequestInFlight;
+        secondChanceButton.textContent = rewardRequestInFlight
+            ? staticCopy.secondChancePending
+            : staticCopy.secondChance;
+    };
+    const enterAdMode = () => {
+        if (isAdShowing) {
+            return;
+        }
+        isAdShowing = true;
+        music.pause();
+        sfx.pause();
+        syncGameplayState();
+        renderMonetizationUi();
+    };
+    const exitAdMode = () => {
+        if (!isAdShowing) {
+            return;
+        }
+        isAdShowing = false;
+        if (!isPaused) {
+            music.resume();
+            sfx.resume();
+        }
+        syncGameplayState();
+        renderMonetizationUi();
     };
     const renderView = (now = performance.now()) => {
         const flight = activeFlight;
@@ -315,7 +402,7 @@ async function main() {
         else {
             statusTitleElement.textContent = statusTitleCopy(locale, currentState.status, currentState.lossReason);
             statusTitleElement.className = statusClass(currentState);
-            statusMessageElement.textContent = currentState.message;
+            statusMessageElement.textContent = statusMessageOverride ?? currentState.message;
         }
         amberValueElement.textContent = `${currentState.collectedAmber} / ${currentState.totalAmber}`;
         movesValueElement.textContent = String(currentState.moves);
@@ -332,6 +419,7 @@ async function main() {
         else {
             positionValueElement.textContent = boardLabel(currentState.collector.x, currentState.collector.y);
         }
+        renderMonetizationUi();
     };
     const stopFlight = () => {
         const flight = activeFlight;
@@ -394,12 +482,20 @@ async function main() {
     const update = (state) => {
         const previousState = currentState;
         currentState = state;
+        statusMessageOverride = null;
         if (previewMove &&
             !currentState.validMoves.some((move) => move.target.x === previewMove?.target.x && move.target.y === previewMove?.target.y)) {
             previewMove = null;
         }
         playStateTransitionSfx(previousState, currentState);
-        persistRunState(game);
+        if (currentState.status === "playing") {
+            recoverableState = cloneSavedRunState(game.exportState());
+        }
+        else if (currentState.status === "won") {
+            continueUsed = false;
+            recoverableState = null;
+        }
+        persistSessionState();
         syncGameplayState();
         renderView();
     };
@@ -458,22 +554,61 @@ async function main() {
         renderView(activeFlight.startedAt);
         activeFlight.animationFrameId = window.requestAnimationFrame(runFlightFrame);
     };
-    restartButton.addEventListener("click", () => {
-        if (isPaused) {
+    const startNewRun = async () => {
+        if (isPaused || isAdShowing || rewardRequestInFlight) {
             return;
         }
+        const shouldShowInterstitial = currentState.status === "lost";
+        if (shouldShowInterstitial) {
+            enterAdMode();
+            await platform.showInterstitial();
+            exitAdMode();
+        }
         stopFlight();
+        continueUsed = false;
+        recoverableState = null;
         update(game.reset());
+    };
+    const trySecondChance = async () => {
+        if (isPaused ||
+            isAdShowing ||
+            rewardRequestInFlight ||
+            !canOfferSecondChance() ||
+            recoverableState === null) {
+            return;
+        }
+        rewardRequestInFlight = true;
+        renderView();
+        enterAdMode();
+        const rewarded = await platform.showRewardedAd();
+        exitAdMode();
+        rewardRequestInFlight = false;
+        if (!rewarded || recoverableState === null) {
+            statusMessageOverride = monetizationMessageCopy(locale, "reward_unavailable");
+            renderView();
+            return;
+        }
+        continueUsed = true;
+        const restoredState = game.restore(cloneSavedRunState(recoverableState));
+        update(restoredState);
+        statusMessageOverride = monetizationMessageCopy(locale, "reward_restored");
+        renderView();
+    };
+    restartButton.addEventListener("click", () => {
+        void startNewRun();
+    });
+    secondChanceButton.addEventListener("click", () => {
+        void trySecondChance();
     });
     canvas.addEventListener("contextmenu", (event) => {
         event.preventDefault();
     });
     canvas.addEventListener("click", (event) => {
-        if (activeFlight || isPaused) {
+        if (activeFlight || isPaused || isAdShowing || rewardRequestInFlight) {
             return;
         }
         if (currentState.status !== "playing") {
-            update(game.reset());
+            void startNewRun();
             return;
         }
         const target = renderer.cellFromClientPoint(event.clientX, event.clientY);
@@ -506,7 +641,7 @@ async function main() {
         startFlight(move);
     });
     canvas.addEventListener("pointermove", (event) => {
-        if (activeFlight || isMobileTapPreviewMode() || isPaused) {
+        if (activeFlight || isMobileTapPreviewMode() || isPaused || isAdShowing || rewardRequestInFlight) {
             return;
         }
         const hoveredCell = renderer.cellFromClientPoint(event.clientX, event.clientY);
@@ -542,7 +677,12 @@ async function main() {
     });
     const unbindPauseResume = platform.bindPauseResume(pauseGame, resumeGame);
     window.addEventListener("keydown", (event) => {
-        if (event.repeat || activeFlight || currentState.status !== "playing" || isPaused) {
+        if (event.repeat ||
+            activeFlight ||
+            currentState.status !== "playing" ||
+            isPaused ||
+            isAdShowing ||
+            rewardRequestInFlight) {
             return;
         }
         const expectedCode = SECRET_VICTORY_SEQUENCE[secretProgress];

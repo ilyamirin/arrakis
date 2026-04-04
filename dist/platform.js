@@ -4,7 +4,10 @@ function shouldLoadSdk() {
     if (sdkMode === "relative") {
         return true;
     }
-    return window.location.hostname.includes("yandex");
+    const hostname = window.location.hostname;
+    return (hostname.includes("yandex") ||
+        hostname === "localhost" ||
+        hostname === "127.0.0.1");
 }
 function sdkUrl() {
     return "/sdk.js";
@@ -76,5 +79,66 @@ export class PlatformBridge {
             this.ysdk?.off?.("game_api_pause", onPause);
             this.ysdk?.off?.("game_api_resume", onResume);
         };
+    }
+    async showInterstitial() {
+        const adv = this.ysdk?.adv;
+        if (!adv?.showFullscreenAdv) {
+            return false;
+        }
+        return await new Promise((resolve) => {
+            let settled = false;
+            const finish = (wasShown) => {
+                if (settled) {
+                    return;
+                }
+                settled = true;
+                resolve(wasShown);
+            };
+            try {
+                adv.showFullscreenAdv({
+                    callbacks: {
+                        onClose: (wasShown) => finish(wasShown),
+                        onError: () => finish(false),
+                        onOffline: () => finish(false),
+                    },
+                });
+            }
+            catch (error) {
+                console.warn("Interstitial ad could not be shown.", error);
+                finish(false);
+            }
+        });
+    }
+    async showRewardedAd() {
+        const adv = this.ysdk?.adv;
+        if (!adv?.showRewardedVideo) {
+            return false;
+        }
+        return await new Promise((resolve) => {
+            let settled = false;
+            let rewarded = false;
+            const finish = (granted) => {
+                if (settled) {
+                    return;
+                }
+                settled = true;
+                resolve(granted);
+            };
+            try {
+                adv.showRewardedVideo({
+                    callbacks: {
+                        onRewarded: () => {
+                            rewarded = true;
+                        },
+                        onClose: () => finish(rewarded),
+                        onError: () => finish(false),
+                    },
+                });
+            }
+            catch (error) {
+                console.warn("Rewarded ad could not be shown.", error);
+                finish(false);
+            }
+        });
     }
 }

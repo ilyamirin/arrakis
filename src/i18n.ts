@@ -12,6 +12,8 @@ export interface StaticCopy {
   heroText: string;
   projectNote: string;
   restart: string;
+  secondChance: string;
+  secondChancePending: string;
   canvasLabel: string;
   stateKicker: string;
   initialStatusTitle: string;
@@ -54,6 +56,8 @@ const EN_COPY: StaticCopy = {
   projectNote:
     "AI-generated code, art, music, copy, and interface. Sound effects use CC0 audio from OpenGameArt.",
   restart: "New Run",
+  secondChance: "Watch ad for second chance",
+  secondChancePending: "Opening ad...",
   canvasLabel: "Amber Dunes Harvest game board",
   stateKicker: "Status",
   initialStatusTitle: "Expedition underway",
@@ -107,6 +111,8 @@ const RU_COPY: StaticCopy = {
   projectNote:
     "Код, арт, музыка, тексты и интерфейс созданы с помощью AI. Звуковые эффекты CC0 — с OpenGameArt.",
   restart: "Новая экспедиция",
+  secondChance: "Реклама за второй шанс",
+  secondChancePending: "Открываем рекламу...",
   canvasLabel: "Игровое поле Amber Dunes Harvest",
   stateKicker: "Статус",
   initialStatusTitle: "Экспедиция идёт",
@@ -160,6 +166,8 @@ const TR_COPY: StaticCopy = {
   projectNote:
     "Kod, görseller, müzik, metinler ve arayüz yapay zekâyla üretildi. Ses efektleri ise OpenGameArt'tan alınan CC0 içeriklerdir.",
   restart: "Yeni Sefer",
+  secondChance: "İkinci şans için reklam izle",
+  secondChancePending: "Reklam açılıyor...",
   canvasLabel: "Amber Dunes Harvest oyun alanı",
   stateKicker: "Durum",
   initialStatusTitle: "Sefer sürüyor",
@@ -561,4 +569,19 @@ export function overlayBodyCopy(
     return '"Yeni Sefer" ile sahaya yeniden çıkın.';
   }
   return "Press New Run to head back into the field.";
+}
+
+export function monetizationMessageCopy(
+  locale: Locale,
+  key: "reward_unavailable" | "reward_restored",
+): string {
+  if (key === "reward_restored") {
+    if (locale === "ru") return "Сигнал принят. У вас есть еще один ход.";
+    if (locale === "tr") return "Sinyal onaylandı. Bir hamle daha kazandınız.";
+    return "Signal confirmed. You have one more chance.";
+  }
+
+  if (locale === "ru") return "Реклама сейчас недоступна. Попробуйте снова или начните новую экспедицию.";
+  if (locale === "tr") return "Reklam şu anda kullanılamıyor. Tekrar deneyin veya yeni bir sefere başlayın.";
+  return "Ad is unavailable right now. Try again or start a new run.";
 }
