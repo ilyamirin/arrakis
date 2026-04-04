@@ -819,6 +819,8 @@ export class CanvasRenderer {
     const bodyText = overlayBodyCopy(this.locale, state.status, state.lossReason);
     const bodyY = isVictory
       ? overlayY + metrics.cellSize * 4.08
+      : isSinkjawAttack
+        ? overlayY + metrics.cellSize * 3.98
       : hasSceneArt
         ? overlayY + metrics.cellSize * 3.75
         : metrics.originY + metrics.cellSize * 4.7;

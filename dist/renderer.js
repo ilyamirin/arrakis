@@ -485,9 +485,11 @@ export class CanvasRenderer {
         const bodyText = overlayBodyCopy(this.locale, state.status, state.lossReason);
         const bodyY = isVictory
             ? overlayY + metrics.cellSize * 4.08
-            : hasSceneArt
-                ? overlayY + metrics.cellSize * 3.75
-                : metrics.originY + metrics.cellSize * 4.7;
+            : isSinkjawAttack
+                ? overlayY + metrics.cellSize * 3.98
+                : hasSceneArt
+                    ? overlayY + metrics.cellSize * 3.75
+                    : metrics.originY + metrics.cellSize * 4.7;
         const maxTextWidth = overlayWidth - metrics.cellSize * (isVictory ? 1.08 : 0.8);
         const lineHeight = metrics.cellSize * 0.34;
         this.drawWrappedCenteredText(bodyText, metrics.width / 2, bodyY, maxTextWidth, lineHeight);
