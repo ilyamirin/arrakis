@@ -11,6 +11,37 @@ python3 server.py
 
 Open [http://127.0.0.1:8000](http://127.0.0.1:8000) or your LAN URL from `server.py`.
 
+## Yandex SDK and ads
+
+- The production archive uses the Yandex SDK from the relative path `/sdk.js`.
+- Local Yandex SDK testing is supported on:
+  - `localhost`
+  - `127.0.0.1`
+  - real Yandex Games hosts
+- The current monetization flow is intentionally simple:
+  - only `interstitial` ads are enabled
+  - the ad is shown automatically once when a run ends
+  - this applies to both `won` and `lost` outcomes
+  - `rewarded` ads are not used
+
+### Local Yandex dev-mode check
+
+Recommended desktop flow:
+
+```bash
+npx @yandex-games/sdk-dev-proxy -p /ABS/PATH/TO/arrakis --dev-mode=true --port 8080
+```
+
+Then open:
+
+- [https://localhost:8080](https://localhost:8080)
+
+Notes:
+
+- `sdk-dev-proxy` is useful for desktop SDK callback checks.
+- The proxy is tied to `localhost`, so its mock ad windows are not suitable for direct phone testing over LAN.
+- For phone UI checks, use the normal local server instead of the Yandex proxy.
+
 ## Simulation setup
 
 The table below summarizes `10,000` simulated runs for each player strategy against the ordinary random Sinkjaw.
