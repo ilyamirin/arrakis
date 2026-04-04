@@ -3,7 +3,6 @@ import {
   flightMessageCopy,
   flightTitleCopy,
   getStaticCopy,
-  monetizationMessageCopy,
   normalizeLocale,
   statusTitleCopy,
   type Locale,
@@ -36,13 +35,6 @@ const SECRET_VICTORY_SEQUENCE = [
   "KeyR",
 ];
 const SAVE_KEY = "amber-dunes-harvest.run-state.v1";
-const META_SAVE_KEY = "amber-dunes-harvest.session-meta.v1";
-
-interface SavedSessionMeta {
-  version: 1;
-  continueUsed: boolean;
-  recoverableState: SavedRunState | null;
-}
 
 function boardLabel(x: number, y: number): string {
   return `${String.fromCharCode(65 + x)}${BOARD_SIZE - y}`;
@@ -238,7 +230,6 @@ function applyStaticCopy(locale: Locale): void {
   setText("#hero-text", copy.heroText);
   setText("#project-note", copy.projectNote);
   setText("#restart-button", copy.restart);
-  setText("#second-chance-button", copy.secondChance);
   setText("#state-kicker", copy.stateKicker);
   setText("#status-title", copy.initialStatusTitle);
   setText("#status-message", copy.initialStatusMessage);
@@ -290,37 +281,6 @@ function loadSavedRunState(): SavedRunState | null {
   }
 }
 
-function cloneSavedRunState(state: SavedRunState | null): SavedRunState | null {
-  if (!state) {
-    return null;
-  }
-
-  return JSON.parse(JSON.stringify(state)) as SavedRunState;
-}
-
-function loadSavedSessionMeta(): SavedSessionMeta | null {
-  try {
-    const raw = window.localStorage.getItem(META_SAVE_KEY);
-    if (!raw) {
-      return null;
-    }
-
-    const parsed = JSON.parse(raw) as SavedSessionMeta;
-    if (parsed?.version !== 1) {
-      return null;
-    }
-
-    return {
-      version: 1,
-      continueUsed: Boolean(parsed.continueUsed),
-      recoverableState: cloneSavedRunState(parsed.recoverableState),
-    };
-  } catch (error) {
-    console.warn("Saved session meta could not be restored.", error);
-    return null;
-  }
-}
-
 function persistRunState(game: AmberDunesGame): void {
   try {
     window.localStorage.setItem(SAVE_KEY, JSON.stringify(game.exportState()));
@@ -329,28 +289,13 @@ function persistRunState(game: AmberDunesGame): void {
   }
 }
 
-function persistSessionMeta(continueUsed: boolean, recoverableState: SavedRunState | null): void {
-  try {
-    const payload: SavedSessionMeta = {
-      version: 1,
-      continueUsed,
-      recoverableState: cloneSavedRunState(recoverableState),
-    };
-    window.localStorage.setItem(META_SAVE_KEY, JSON.stringify(payload));
-  } catch (error) {
-    console.warn("Session meta could not be saved.", error);
-  }
-}
-
 async function main(): Promise<void> {
   const platform = await PlatformBridge.init();
   const locale = normalizeLocale(platform.locale);
-  const staticCopy = getStaticCopy(locale);
   applyStaticCopy(locale);
 
   const canvas = document.querySelector<HTMLCanvasElement>("#game-canvas");
   const restartButton = document.querySelector<HTMLButtonElement>("#restart-button");
-  const secondChanceButton = document.querySelector<HTMLButtonElement>("#second-chance-button");
   const statusTitleElement = document.querySelector<HTMLElement>("#status-title");
   const statusMessageElement = document.querySelector<HTMLElement>("#status-message");
   const amberValueElement = document.querySelector<HTMLElement>("#amber-value");
@@ -360,7 +305,6 @@ async function main(): Promise<void> {
   if (
     !canvas ||
     !restartButton ||
-    !secondChanceButton ||
     !statusTitleElement ||
     !statusMessageElement ||
     !amberValueElement ||
@@ -394,18 +338,11 @@ async function main(): Promise<void> {
   renderer.setLocale(locale);
   const game = new AmberDunesGame(locale);
   const savedRunState = loadSavedRunState();
-  const savedSessionMeta = loadSavedSessionMeta();
   let currentState = savedRunState ? game.restore(savedRunState) : game.getState();
   let secretProgress = 0;
   let isPaused = false;
   let isAdShowing = false;
-  let rewardRequestInFlight = false;
   let pausedAt = 0;
-  let statusMessageOverride: string | null = null;
-  let continueUsed = savedSessionMeta?.continueUsed ?? false;
-  let recoverableState =
-    cloneSavedRunState(savedSessionMeta?.recoverableState ?? null) ??
-    (currentState.status === "playing" ? cloneSavedRunState(game.exportState()) : null);
   let activeFlight:
     | {
         phase: "flight" | "storm-approach" | "storm-drift";
@@ -423,23 +360,6 @@ async function main(): Promise<void> {
     platform.setGameplayActive(currentState.status === "playing" && !isPaused && !isAdShowing);
   };
 
-  const persistSessionState = (): void => {
-    persistRunState(game);
-    persistSessionMeta(continueUsed, recoverableState);
-  };
-
-  const canOfferSecondChance = (): boolean =>
-    currentState.status === "lost" && !continueUsed && recoverableState !== null;
-
-  const renderMonetizationUi = (): void => {
-    restartButton.disabled = isAdShowing || rewardRequestInFlight;
-    secondChanceButton.hidden = !canOfferSecondChance();
-    secondChanceButton.disabled = isAdShowing || rewardRequestInFlight;
-    secondChanceButton.textContent = rewardRequestInFlight
-      ? staticCopy.secondChancePending
-      : staticCopy.secondChance;
-  };
-
   const enterAdMode = (): void => {
     if (isAdShowing) {
       return;
@@ -449,7 +369,7 @@ async function main(): Promise<void> {
     music.pause();
     sfx.pause();
     syncGameplayState();
-    renderMonetizationUi();
+    restartButton.disabled = true;
   };
 
   const exitAdMode = (): void => {
@@ -463,7 +383,7 @@ async function main(): Promise<void> {
       sfx.resume();
     }
     syncGameplayState();
-    renderMonetizationUi();
+    restartButton.disabled = false;
   };
 
   const renderView = (now = performance.now()): void => {
@@ -523,7 +443,7 @@ async function main(): Promise<void> {
         currentState.lossReason,
       );
       statusTitleElement.className = statusClass(currentState);
-      statusMessageElement.textContent = statusMessageOverride ?? currentState.message;
+      statusMessageElement.textContent = currentState.message;
     }
 
     amberValueElement.textContent = `${currentState.collectedAmber} / ${currentState.totalAmber}`;
@@ -539,8 +459,7 @@ async function main(): Promise<void> {
     } else {
       positionValueElement.textContent = boardLabel(currentState.collector.x, currentState.collector.y);
     }
-
-    renderMonetizationUi();
+    restartButton.disabled = isAdShowing;
   };
 
   const stopFlight = (): void => {
@@ -618,7 +537,6 @@ async function main(): Promise<void> {
   const update = (state: GameState): void => {
     const previousState = currentState;
     currentState = state;
-    statusMessageOverride = null;
     if (
       previewMove &&
       !currentState.validMoves.some(
@@ -628,17 +546,17 @@ async function main(): Promise<void> {
       previewMove = null;
     }
     playStateTransitionSfx(previousState, currentState);
-
-    if (currentState.status === "playing") {
-      recoverableState = cloneSavedRunState(game.exportState());
-    } else if (currentState.status === "won") {
-      continueUsed = false;
-      recoverableState = null;
-    }
-
-    persistSessionState();
+    persistRunState(game);
     syncGameplayState();
     renderView();
+
+    if (previousState.status === "playing" && currentState.status !== "playing") {
+      void (async () => {
+        enterAdMode();
+        await platform.showInterstitial();
+        exitAdMode();
+      })();
+    }
   };
 
   const isMobileTapPreviewMode = (): boolean =>
@@ -708,59 +626,15 @@ async function main(): Promise<void> {
   };
 
   const startNewRun = async (): Promise<void> => {
-    if (isPaused || isAdShowing || rewardRequestInFlight) {
+    if (isPaused || isAdShowing) {
       return;
-    }
-
-    const shouldShowInterstitial = currentState.status === "lost";
-    if (shouldShowInterstitial) {
-      enterAdMode();
-      await platform.showInterstitial();
-      exitAdMode();
     }
 
     stopFlight();
-    continueUsed = false;
-    recoverableState = null;
     update(game.reset());
   };
-
-  const trySecondChance = async (): Promise<void> => {
-    if (
-      isPaused ||
-      isAdShowing ||
-      rewardRequestInFlight ||
-      !canOfferSecondChance() ||
-      recoverableState === null
-    ) {
-      return;
-    }
-
-    rewardRequestInFlight = true;
-    renderView();
-    enterAdMode();
-    const rewarded = await platform.showRewardedAd();
-    exitAdMode();
-    rewardRequestInFlight = false;
-
-    if (!rewarded || recoverableState === null) {
-      statusMessageOverride = monetizationMessageCopy(locale, "reward_unavailable");
-      renderView();
-      return;
-    }
-
-    continueUsed = true;
-    const restoredState = game.restore(cloneSavedRunState(recoverableState)!);
-    update(restoredState);
-    statusMessageOverride = monetizationMessageCopy(locale, "reward_restored");
-    renderView();
-  };
-
   restartButton.addEventListener("click", () => {
     void startNewRun();
-  });
-  secondChanceButton.addEventListener("click", () => {
-    void trySecondChance();
   });
 
   canvas.addEventListener("contextmenu", (event) => {
@@ -768,7 +642,7 @@ async function main(): Promise<void> {
   });
 
   canvas.addEventListener("click", (event) => {
-    if (activeFlight || isPaused || isAdShowing || rewardRequestInFlight) {
+    if (activeFlight || isPaused || isAdShowing) {
       return;
     }
 
@@ -825,7 +699,7 @@ async function main(): Promise<void> {
   });
 
   canvas.addEventListener("pointermove", (event) => {
-    if (activeFlight || isMobileTapPreviewMode() || isPaused || isAdShowing || rewardRequestInFlight) {
+    if (activeFlight || isMobileTapPreviewMode() || isPaused || isAdShowing) {
       return;
     }
 
@@ -880,8 +754,7 @@ async function main(): Promise<void> {
       activeFlight ||
       currentState.status !== "playing" ||
       isPaused ||
-      isAdShowing ||
-      rewardRequestInFlight
+      isAdShowing
     ) {
       return;
     }

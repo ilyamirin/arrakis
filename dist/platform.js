@@ -109,36 +109,4 @@ export class PlatformBridge {
             }
         });
     }
-    async showRewardedAd() {
-        const adv = this.ysdk?.adv;
-        if (!adv?.showRewardedVideo) {
-            return false;
-        }
-        return await new Promise((resolve) => {
-            let settled = false;
-            let rewarded = false;
-            const finish = (granted) => {
-                if (settled) {
-                    return;
-                }
-                settled = true;
-                resolve(granted);
-            };
-            try {
-                adv.showRewardedVideo({
-                    callbacks: {
-                        onRewarded: () => {
-                            rewarded = true;
-                        },
-                        onClose: () => finish(rewarded),
-                        onError: () => finish(false),
-                    },
-                });
-            }
-            catch (error) {
-                console.warn("Rewarded ad could not be shown.", error);
-                finish(false);
-            }
-        });
-    }
 }

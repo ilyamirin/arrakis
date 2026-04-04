@@ -8,8 +8,6 @@ const EN_COPY = {
     heroText: "Strip the Amber Waste clean across an 8x8 grid. The Collector moves with a knight's stride, and Sinkjaw can break surface within four tiles after every move.",
     projectNote: "AI-generated code, art, music, copy, and interface. Sound effects use CC0 audio from OpenGameArt.",
     restart: "New Run",
-    secondChance: "Watch ad for second chance",
-    secondChancePending: "Opening ad...",
     canvasLabel: "Amber Dunes Harvest game board",
     stateKicker: "Status",
     initialStatusTitle: "Expedition underway",
@@ -54,8 +52,6 @@ const RU_COPY = {
     heroText: "Зачистите поле на сетке 8x8 в The Amber Waste. Collector ходит как конь, а Sinkjaw всплывает в радиусе четырёх клеток после каждого вашего хода.",
     projectNote: "Код, арт, музыка, тексты и интерфейс созданы с помощью AI. Звуковые эффекты CC0 — с OpenGameArt.",
     restart: "Новая экспедиция",
-    secondChance: "Реклама за второй шанс",
-    secondChancePending: "Открываем рекламу...",
     canvasLabel: "Игровое поле Amber Dunes Harvest",
     stateKicker: "Статус",
     initialStatusTitle: "Экспедиция идёт",
@@ -100,8 +96,6 @@ const TR_COPY = {
     heroText: "Amber Waste üzerindeki 8x8 sahayı temizleyin. Collector satrançtaki at gibi ilerler; her hamlenizin ardından Sinkjaw en fazla dört kare ötede yüzeye çıkar.",
     projectNote: "Kod, görseller, müzik, metinler ve arayüz yapay zekâyla üretildi. Ses efektleri ise OpenGameArt'tan alınan CC0 içeriklerdir.",
     restart: "Yeni Sefer",
-    secondChance: "İkinci şans için reklam izle",
-    secondChancePending: "Reklam açılıyor...",
     canvasLabel: "Amber Dunes Harvest oyun alanı",
     stateKicker: "Durum",
     initialStatusTitle: "Sefer sürüyor",
@@ -503,18 +497,4 @@ export function overlayBodyCopy(locale, status, lossReason) {
         return '"Yeni Sefer" ile sahaya yeniden çıkın.';
     }
     return "Press New Run to head back into the field.";
-}
-export function monetizationMessageCopy(locale, key) {
-    if (key === "reward_restored") {
-        if (locale === "ru")
-            return "Сигнал принят. У вас есть еще один ход.";
-        if (locale === "tr")
-            return "Sinyal onaylandı. Bir hamle daha kazandınız.";
-        return "Signal confirmed. You have one more chance.";
-    }
-    if (locale === "ru")
-        return "Реклама сейчас недоступна. Попробуйте снова или начните новую экспедицию.";
-    if (locale === "tr")
-        return "Reklam şu anda kullanılamıyor. Tekrar deneyin veya yeni bir sefere başlayın.";
-    return "Ad is unavailable right now. Try again or start a new run.";
 }
