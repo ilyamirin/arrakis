@@ -158,7 +158,7 @@ export class GameSfxController {
                 this.activeEffects.delete(audio);
             }
         }, { once: true });
-        void audio.play().catch(() => { });
+        void audio.play().catch(() => undefined);
     }
     createEffect(url, volume) {
         const audio = new Audio(url);

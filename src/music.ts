@@ -217,7 +217,7 @@ export class GameSfxController {
       },
       { once: true },
     );
-    void audio.play().catch(() => {});
+    void audio.play().catch(() => undefined);
   }
 
   private createEffect(url: string, volume: number): EffectHandle {

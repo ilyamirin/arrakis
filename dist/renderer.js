@@ -105,7 +105,7 @@ export class CanvasRenderer {
                 const isCollector = state.collector.x === x && state.collector.y === y;
                 const isSinkjaw = state.sinkjaw?.x === x && state.sinkjaw?.y === y;
                 const cell = state.board[y][x];
-                const isPreviewTarget = Boolean(previewMove && previewMove.target.x === x && previewMove.target.y === y);
+                const isPreviewTarget = Boolean(previewMove?.target.x === x && previewMove.target.y === y);
                 const baseTone = (x + y) % 2 === 0 ? 0.16 : 0.11;
                 this.ctx.fillStyle = `rgba(248, 227, 184, ${baseTone})`;
                 this.roundRect(px, py, metrics.cellSize - 2, metrics.cellSize - 2, metrics.radius);
@@ -199,13 +199,13 @@ export class CanvasRenderer {
         const minMessageSize = 12;
         ctx.save();
         const maxTextWidth = maxBoxWidth - paddingX * 2;
-        let kickerWidth = 0;
-        let messageWidth = 0;
+        let measuredWidths;
         for (;;) {
             ctx.font = `${kickerSize}px "IBM Plex Mono", "SFMono-Regular", ui-monospace, monospace`;
-            kickerWidth = ctx.measureText(kicker).width;
+            const kickerWidth = ctx.measureText(kicker).width;
             ctx.font = `700 ${messageSize}px "IBM Plex Mono", "SFMono-Regular", ui-monospace, monospace`;
-            messageWidth = ctx.measureText(message).width;
+            const messageWidth = ctx.measureText(message).width;
+            measuredWidths = { kicker: kickerWidth, message: messageWidth };
             if (Math.max(kickerWidth, messageWidth) <= maxTextWidth ||
                 (kickerSize <= minKickerSize && messageSize <= minMessageSize)) {
                 break;
@@ -213,7 +213,7 @@ export class CanvasRenderer {
             kickerSize = Math.max(minKickerSize, kickerSize - 1);
             messageSize = Math.max(minMessageSize, messageSize - 1);
         }
-        const boxWidth = Math.max(kickerWidth, messageWidth) + paddingX * 2;
+        const boxWidth = Math.max(measuredWidths.kicker, measuredWidths.message) + paddingX * 2;
         const boxHeight = paddingY * 2 + kickerSize + messageSize + metrics.cellSize * 0.08;
         ctx.fillStyle = "rgba(23, 16, 12, 0.8)";
         this.roundRect(boxX, boxY, boxWidth, boxHeight, metrics.radius * 0.9);
@@ -446,7 +446,7 @@ export class CanvasRenderer {
     }
     drawPieces(state, metrics, animation) {
         const sinkjawConsumedCollector = state.status === "lost" && state.lossReason === "sinkjaw_attack";
-        const isAnimatingCollector = Boolean(animation?.carriedCollector || animation?.landedCollector);
+        const isAnimatingCollector = Boolean(animation?.carriedCollector ?? animation?.landedCollector);
         if (state.sinkjaw && !sinkjawConsumedCollector) {
             const px = metrics.originX + state.sinkjaw.x * metrics.cellSize;
             const py = metrics.originY + state.sinkjaw.y * metrics.cellSize;

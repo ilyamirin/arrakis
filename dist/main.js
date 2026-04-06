@@ -464,9 +464,8 @@ async function main() {
             sfx.play("amberPickup");
         }
         const sinkjawChanged = nextState.sinkjaw &&
-            (!previousState.sinkjaw ||
-                previousState.sinkjaw.x !== nextState.sinkjaw.x ||
-                previousState.sinkjaw.y !== nextState.sinkjaw.y);
+            (previousState.sinkjaw?.x !== nextState.sinkjaw.x ||
+                previousState.sinkjaw?.y !== nextState.sinkjaw.y);
         if (sinkjawChanged) {
             if (nextState.status === "playing" &&
                 nextState.sinkjaw &&
@@ -560,7 +559,7 @@ async function main() {
         renderView(activeFlight.startedAt);
         activeFlight.animationFrameId = window.requestAnimationFrame(runFlightFrame);
     };
-    const startNewRun = async () => {
+    const startNewRun = () => {
         if (isPaused || isAdShowing) {
             return;
         }
@@ -568,7 +567,7 @@ async function main() {
         update(game.reset());
     };
     restartButton.addEventListener("click", () => {
-        void startNewRun();
+        startNewRun();
     });
     canvas.addEventListener("contextmenu", (event) => {
         event.preventDefault();
@@ -578,7 +577,7 @@ async function main() {
             return;
         }
         if (currentState.status !== "playing") {
-            void startNewRun();
+            startNewRun();
             return;
         }
         const target = renderer.cellFromClientPoint(event.clientX, event.clientY);

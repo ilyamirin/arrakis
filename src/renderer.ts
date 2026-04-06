@@ -186,7 +186,7 @@ export class CanvasRenderer {
         const isSinkjaw = state.sinkjaw?.x === x && state.sinkjaw?.y === y;
         const cell = state.board[y][x];
         const isPreviewTarget = Boolean(
-          previewMove && previewMove.target.x === x && previewMove.target.y === y,
+          previewMove?.target.x === x && previewMove.target.y === y,
         );
 
         const baseTone = (x + y) % 2 === 0 ? 0.16 : 0.11;
@@ -387,14 +387,14 @@ export class CanvasRenderer {
 
     ctx.save();
     const maxTextWidth = maxBoxWidth - paddingX * 2;
-    let kickerWidth = 0;
-    let messageWidth = 0;
+    let measuredWidths: { kicker: number; message: number };
 
     for (;;) {
       ctx.font = `${kickerSize}px "IBM Plex Mono", "SFMono-Regular", ui-monospace, monospace`;
-      kickerWidth = ctx.measureText(kicker).width;
+      const kickerWidth = ctx.measureText(kicker).width;
       ctx.font = `700 ${messageSize}px "IBM Plex Mono", "SFMono-Regular", ui-monospace, monospace`;
-      messageWidth = ctx.measureText(message).width;
+      const messageWidth = ctx.measureText(message).width;
+      measuredWidths = { kicker: kickerWidth, message: messageWidth };
 
       if (
         Math.max(kickerWidth, messageWidth) <= maxTextWidth ||
@@ -407,7 +407,7 @@ export class CanvasRenderer {
       messageSize = Math.max(minMessageSize, messageSize - 1);
     }
 
-    const boxWidth = Math.max(kickerWidth, messageWidth) + paddingX * 2;
+    const boxWidth = Math.max(measuredWidths.kicker, measuredWidths.message) + paddingX * 2;
     const boxHeight = paddingY * 2 + kickerSize + messageSize + metrics.cellSize * 0.08;
 
     ctx.fillStyle = "rgba(23, 16, 12, 0.8)";
@@ -743,7 +743,7 @@ export class CanvasRenderer {
     animation: FlightAnimationFrame | null,
   ): void {
     const sinkjawConsumedCollector = state.status === "lost" && state.lossReason === "sinkjaw_attack";
-    const isAnimatingCollector = Boolean(animation?.carriedCollector || animation?.landedCollector);
+    const isAnimatingCollector = Boolean(animation?.carriedCollector ?? animation?.landedCollector);
 
     if (state.sinkjaw && !sinkjawConsumedCollector) {
       const px = metrics.originX + state.sinkjaw.x * metrics.cellSize;

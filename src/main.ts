@@ -605,9 +605,8 @@ async function main(): Promise<void> {
 
     const sinkjawChanged =
       nextState.sinkjaw &&
-      (!previousState.sinkjaw ||
-        previousState.sinkjaw.x !== nextState.sinkjaw.x ||
-        previousState.sinkjaw.y !== nextState.sinkjaw.y);
+      (previousState.sinkjaw?.x !== nextState.sinkjaw.x ||
+        previousState.sinkjaw?.y !== nextState.sinkjaw.y);
 
     if (sinkjawChanged) {
       if (
@@ -723,7 +722,7 @@ async function main(): Promise<void> {
     activeFlight.animationFrameId = window.requestAnimationFrame(runFlightFrame);
   };
 
-  const startNewRun = async (): Promise<void> => {
+  const startNewRun = (): void => {
     if (isPaused || isAdShowing) {
       return;
     }
@@ -732,7 +731,7 @@ async function main(): Promise<void> {
     update(game.reset());
   };
   restartButton.addEventListener("click", () => {
-    void startNewRun();
+    startNewRun();
   });
 
   canvas.addEventListener("contextmenu", (event) => {
@@ -745,7 +744,7 @@ async function main(): Promise<void> {
     }
 
     if (currentState.status !== "playing") {
-      void startNewRun();
+      startNewRun();
       return;
     }
 
