@@ -1,5 +1,7 @@
 import { AmberDunesGame } from "./game.js";
+import { flightMessageCopy, flightTitleCopy, getStaticCopy, normalizeLocale, statusTitleCopy, } from "./i18n.js";
 import { GameMusicController, GameSfxController } from "./music.js";
+import { PlatformBridge } from "./platform.js";
 import { CanvasRenderer, loadAssets, } from "./renderer.js";
 import { BOARD_SIZE, } from "./types.js";
 const SKIMMER_FLIGHT_MS = 760;
@@ -13,20 +15,9 @@ const SECRET_VICTORY_SEQUENCE = [
     "KeyE",
     "KeyR",
 ];
+const SAVE_KEY = "amber-dunes-harvest.run-state.v1";
 function boardLabel(x, y) {
     return `${String.fromCharCode(65 + x)}${BOARD_SIZE - y}`;
-}
-function statusTitle(state) {
-    if (state.status === "won") {
-        return "Amber secured";
-    }
-    if (state.status === "lost") {
-        if (state.lossReason === "sinkjaw_attack") {
-            return "Collector consumed";
-        }
-        return "Road gone dark";
-    }
-    return "Run underway";
 }
 function statusClass(state) {
     if (state.status === "won") {
@@ -165,7 +156,89 @@ function buildStormDriftFrame(source, target, progress) {
         landedCollector: null,
     };
 }
+function applyStaticCopy(locale) {
+    const copy = getStaticCopy(locale);
+    document.documentElement.lang = copy.htmlLang;
+    document.title = copy.title;
+    const metaDescription = document.querySelector('meta[name="description"]');
+    const ogDescription = document.querySelector('meta[property="og:description"]');
+    const twitterDescription = document.querySelector('meta[name="twitter:description"]');
+    if (metaDescription)
+        metaDescription.content = copy.metaDescription;
+    if (ogDescription)
+        ogDescription.content = copy.ogDescription;
+    if (twitterDescription)
+        twitterDescription.content = copy.twitterDescription;
+    const setText = (selector, value) => {
+        const element = document.querySelector(selector);
+        if (element) {
+            element.textContent = value;
+        }
+    };
+    setText("#eyebrow", copy.eyebrow);
+    setText("#hero-text", copy.heroText);
+    setText("#project-note", copy.projectNote);
+    setText("#restart-button", copy.restart);
+    setText("#state-kicker", copy.stateKicker);
+    setText("#status-title", copy.initialStatusTitle);
+    setText("#status-message", copy.initialStatusMessage);
+    setText("#amber-label", copy.amberLabel);
+    setText("#moves-label", copy.movesLabel);
+    setText("#position-label", copy.positionLabel);
+    setText("#legend-collector-title", copy.legendCollectorTitle);
+    setText("#legend-collector-text", copy.legendCollectorText);
+    setText("#legend-sinkjaw-title", copy.legendSinkjawTitle);
+    setText("#legend-sinkjaw-text", copy.legendSinkjawText);
+    setText("#legend-amber-title", copy.legendAmberTitle);
+    setText("#legend-amber-text", copy.legendAmberText);
+    setText("#legend-skimmer-title", copy.legendSkimmerTitle);
+    setText("#legend-skimmer-text", copy.legendSkimmerText);
+    setText("#legend-storm-title", copy.legendStormTitle);
+    setText("#legend-storm-text", copy.legendStormText);
+    setText("#rules-kicker", copy.rulesKicker);
+    setText("#rules-title", copy.rulesTitle);
+    setText("#author-kicker", copy.authorKicker);
+    setText("#author-copy", copy.authorCopy);
+    setText("#author-meta", copy.authorMeta);
+    setText("#footer-text", copy.footerText);
+    setText("#footer-license", copy.footerLicense);
+    for (const item of Array.from(document.querySelectorAll("[data-rule-index]"))) {
+        const index = Number(item.dataset.ruleIndex);
+        const rule = copy.rulesItems[index];
+        if (rule) {
+            item.textContent = rule;
+        }
+    }
+    const canvas = document.querySelector("#game-canvas");
+    if (canvas) {
+        canvas.setAttribute("aria-label", copy.canvasLabel);
+    }
+}
+function loadSavedRunState() {
+    try {
+        const raw = window.localStorage.getItem(SAVE_KEY);
+        if (!raw) {
+            return null;
+        }
+        return JSON.parse(raw);
+    }
+    catch (error) {
+        console.warn("Saved run state could not be restored.", error);
+        return null;
+    }
+}
+function persistRunState(game) {
+    try {
+        window.localStorage.setItem(SAVE_KEY, JSON.stringify(game.exportState()));
+    }
+    catch (error) {
+        console.warn("Run state could not be saved.", error);
+    }
+}
 async function main() {
+    const platform = await PlatformBridge.init();
+    const locale = normalizeLocale(platform.locale);
+    applyStaticCopy(locale);
     const canvas = document.querySelector("#game-canvas");
     const restartButton = document.querySelector("#restart-button");
     const statusTitleElement = document.querySelector("#status-title");
@@ -191,7 +264,7 @@ async function main() {
         skimmerTakeoff: { url: "./assets/audio/sfx/skimmer-takeoff.mp3", volume: 0.44 },
         amberPickup: { url: "./assets/audio/sfx/amber-pickup.mp3", volume: 0.54 },
         stormEnter: { url: "./assets/audio/sfx/storm-enter.wav", volume: 0.38 },
-        sinkjawSpawn: { url: "./assets/audio/sfx/sinkjaw-spawn.mp3", volume: 0.34 },
+        sinkjawSpawn: { url: "./assets/audio/sfx/sinkjaw-spawn.mp3", volume: 0.07 },
         sinkjawAttack: { url: "./assets/audio/sfx/sinkjaw-attack.wav", volume: 0.52 },
         victory: { url: "./assets/audio/sfx/victory.mp3", volume: 0.56 },
     });
@@ -202,11 +275,41 @@ async function main() {
     window.addEventListener("pointerdown", unlockMusic, { once: true });
     window.addEventListener("keydown", unlockMusic, { once: true });
     const renderer = new CanvasRenderer(canvas, await loadAssets());
-    const game = new AmberDunesGame();
-    let currentState = game.getState();
+    renderer.setLocale(locale);
+    const game = new AmberDunesGame(locale);
+    const savedRunState = loadSavedRunState();
+    let currentState = savedRunState ? game.restore(savedRunState) : game.getState();
     let secretProgress = 0;
+    let isPaused = false;
+    let isAdShowing = false;
+    let pausedAt = 0;
     let activeFlight = null;
     let previewMove = null;
+    const syncGameplayState = () => {
+        platform.setGameplayActive(currentState.status === "playing" && !isPaused && !isAdShowing);
+    };
+    const enterAdMode = () => {
+        if (isAdShowing) {
+            return;
+        }
+        isAdShowing = true;
+        music.pause();
+        sfx.pause();
+        syncGameplayState();
+        restartButton.disabled = true;
+    };
+    const exitAdMode = () => {
+        if (!isAdShowing) {
+            return;
+        }
+        isAdShowing = false;
+        if (!isPaused) {
+            music.resume();
+            sfx.resume();
+        }
+        syncGameplayState();
+        restartButton.disabled = false;
+    };
     const renderView = (now = performance.now()) => {
         const flight = activeFlight;
         const animation = flight === null
@@ -220,23 +323,20 @@ async function main() {
         if (animation && flight) {
             statusTitleElement.className = "status-playing";
             if (flight.phase === "storm-approach") {
-                statusTitleElement.textContent = "Storm front";
-                statusMessageElement.textContent =
-                    `The Skimmer cuts into the squall at sector ${boardLabel(flight.target.x, flight.target.y)}.`;
+                statusTitleElement.textContent = flightTitleCopy(locale, "storm-approach");
+                statusMessageElement.textContent = flightMessageCopy(locale, "storm-approach", boardLabel(flight.target.x, flight.target.y));
             }
             else if (flight.phase === "storm-drift" && flight.plan.driftTarget) {
-                statusTitleElement.textContent = "Storm shear";
-                statusMessageElement.textContent =
-                    `Wind shear catches the Skimmer and drags it toward sector ${boardLabel(flight.plan.driftTarget.x, flight.plan.driftTarget.y)}.`;
+                statusTitleElement.textContent = flightTitleCopy(locale, "storm-drift");
+                statusMessageElement.textContent = flightMessageCopy(locale, "storm-drift", boardLabel(flight.plan.driftTarget.x, flight.plan.driftTarget.y));
             }
             else {
-                statusTitleElement.textContent = "Skimmer in transit";
-                statusMessageElement.textContent =
-                    `The Skimmer carries the Collector toward sector ${boardLabel(flight.target.x, flight.target.y)}.`;
+                statusTitleElement.textContent = flightTitleCopy(locale, "flight");
+                statusMessageElement.textContent = flightMessageCopy(locale, "flight", boardLabel(flight.target.x, flight.target.y));
             }
         }
         else {
-            statusTitleElement.textContent = statusTitle(currentState);
+            statusTitleElement.textContent = statusTitleCopy(locale, currentState.status, currentState.lossReason);
             statusTitleElement.className = statusClass(currentState);
             statusMessageElement.textContent = currentState.message;
         }
@@ -255,6 +355,7 @@ async function main() {
         else {
             positionValueElement.textContent = boardLabel(currentState.collector.x, currentState.collector.y);
         }
+        restartButton.disabled = isAdShowing;
     };
     const stopFlight = () => {
         const flight = activeFlight;
@@ -262,6 +363,35 @@ async function main() {
             window.cancelAnimationFrame(flight.animationFrameId);
         }
         activeFlight = null;
+    };
+    const runFlightFrame = (now) => {
+        if (!activeFlight || isPaused) {
+            return;
+        }
+        renderView(now);
+        if (now - activeFlight.startedAt < activeFlight.duration) {
+            activeFlight.animationFrameId = window.requestAnimationFrame(runFlightFrame);
+            return;
+        }
+        if (activeFlight.phase === "storm-approach" && activeFlight.plan.driftTarget) {
+            sfx.play("stormEnter");
+            activeFlight = {
+                ...activeFlight,
+                phase: "storm-drift",
+                source: { ...activeFlight.target },
+                startedAt: now,
+                duration: STORM_DRIFT_MS,
+                animationFrameId: window.requestAnimationFrame(runFlightFrame),
+            };
+            renderView(now);
+            return;
+        }
+        const planToCommit = {
+            target: { ...activeFlight.plan.target },
+            driftTarget: activeFlight.plan.driftTarget ? { ...activeFlight.plan.driftTarget } : null,
+        };
+        stopFlight();
+        update(game.moveToWithPlan(planToCommit));
     };
     const playStateTransitionSfx = (previousState, nextState) => {
         if (nextState.status === "won" && previousState.status !== "won") {
@@ -293,10 +423,52 @@ async function main() {
             previewMove = null;
         }
         playStateTransitionSfx(previousState, currentState);
+        persistRunState(game);
+        syncGameplayState();
         renderView();
+        if (previousState.status === "playing" && currentState.status !== "playing") {
+            void (async () => {
+                enterAdMode();
+                await platform.showInterstitial();
+                exitAdMode();
+            })();
+        }
     };
     const isMobileTapPreviewMode = () => window.matchMedia("(hover: none) and (pointer: coarse)").matches;
+    const pauseGame = () => {
+        if (isPaused) {
+            return;
+        }
+        isPaused = true;
+        pausedAt = performance.now();
+        music.pause();
+        sfx.pause();
+        const flight = activeFlight;
+        if (flight && flight.animationFrameId !== null) {
+            window.cancelAnimationFrame(flight.animationFrameId);
+            flight.animationFrameId = null;
+        }
+        syncGameplayState();
+    };
+    const resumeGame = () => {
+        if (!isPaused) {
+            return;
+        }
+        const pausedDuration = performance.now() - pausedAt;
+        isPaused = false;
+        music.resume();
+        sfx.resume();
+        if (activeFlight) {
+            activeFlight.startedAt += pausedDuration;
+            activeFlight.animationFrameId = window.requestAnimationFrame(runFlightFrame);
+        }
+        syncGameplayState();
+        renderView();
+    };
     const startFlight = (move) => {
+        if (isPaused) {
+            return;
+        }
         const plan = game.planMove(move.target);
         if (!plan) {
             return;
@@ -314,48 +486,28 @@ async function main() {
             animationFrameId: null,
         };
         previewMove = null;
-        const step = (now) => {
-            if (!activeFlight) {
-                return;
-            }
-            renderView(now);
-            if (now - activeFlight.startedAt < activeFlight.duration) {
-                activeFlight.animationFrameId = window.requestAnimationFrame(step);
-                return;
-            }
-            if (activeFlight.phase === "storm-approach" && activeFlight.plan.driftTarget) {
-                sfx.play("stormEnter");
-                activeFlight = {
-                    ...activeFlight,
-                    phase: "storm-drift",
-                    source: { ...activeFlight.target },
-                    startedAt: now,
-                    duration: STORM_DRIFT_MS,
-                    animationFrameId: window.requestAnimationFrame(step),
-                };
-                renderView(now);
-                return;
-            }
-            const planToCommit = {
-                target: { ...activeFlight.plan.target },
-                driftTarget: activeFlight.plan.driftTarget ? { ...activeFlight.plan.driftTarget } : null,
-            };
-            stopFlight();
-            update(game.moveToWithPlan(planToCommit));
-        };
         renderView(activeFlight.startedAt);
-        activeFlight.animationFrameId = window.requestAnimationFrame(step);
+        activeFlight.animationFrameId = window.requestAnimationFrame(runFlightFrame);
     };
-    restartButton.addEventListener("click", () => {
+    const startNewRun = async () => {
+        if (isPaused || isAdShowing) {
+            return;
+        }
         stopFlight();
         update(game.reset());
+    };
+    restartButton.addEventListener("click", () => {
+        void startNewRun();
+    });
+    canvas.addEventListener("contextmenu", (event) => {
+        event.preventDefault();
     });
     canvas.addEventListener("click", (event) => {
-        if (activeFlight) {
+        if (activeFlight || isPaused || isAdShowing) {
             return;
         }
         if (currentState.status !== "playing") {
-            update(game.reset());
+            void startNewRun();
             return;
         }
         const target = renderer.cellFromClientPoint(event.clientX, event.clientY);
@@ -388,7 +540,7 @@ async function main() {
         startFlight(move);
     });
     canvas.addEventListener("pointermove", (event) => {
-        if (activeFlight || isMobileTapPreviewMode()) {
+        if (activeFlight || isMobileTapPreviewMode() || isPaused || isAdShowing) {
             return;
         }
         const hoveredCell = renderer.cellFromClientPoint(event.clientX, event.clientY);
@@ -415,8 +567,20 @@ async function main() {
         renderView();
     });
     window.addEventListener("resize", () => renderView());
+    document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "hidden") {
+            pauseGame();
+            return;
+        }
+        resumeGame();
+    });
+    const unbindPauseResume = platform.bindPauseResume(pauseGame, resumeGame);
     window.addEventListener("keydown", (event) => {
-        if (event.repeat || activeFlight || currentState.status !== "playing") {
+        if (event.repeat ||
+            activeFlight ||
+            currentState.status !== "playing" ||
+            isPaused ||
+            isAdShowing) {
             return;
         }
         const expectedCode = SECRET_VICTORY_SEQUENCE[secretProgress];
@@ -431,5 +595,10 @@ async function main() {
         secretProgress = event.code === SECRET_VICTORY_SEQUENCE[0] ? 1 : 0;
     });
     update(game.getState());
+    platform.markReady();
+    window.addEventListener("beforeunload", () => {
+        unbindPauseResume();
+        platform.setGameplayActive(false);
+    });
 }
 void main();

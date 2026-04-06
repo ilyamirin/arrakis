@@ -2,22 +2,21 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta
       name="description"
-      content="Amber Dunes Harvest is a retro-futurist desert game with AI-generated code, art, copy, and interface. Guide a collector across an 8x8 grid in The Amber Waste, secure amber, evade Sinkjaw strikes, and survive the route."
+      content="Amber Dunes Harvest is a retro-futurist desert game with AI-generated code, art, music, copy, and interface. Guide a collector across an 8x8 grid in The Amber Waste, secure amber, evade Sinkjaw strikes, and survive the route."
     />
     <meta name="theme-color" content="#130f0b" />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://ilyamirin.github.io/arrakis/" />
     <meta property="og:title" content="Amber Dunes Harvest" />
     <meta
       property="og:description"
-      content="A retro-futurist desert game by Ilya Mirin with AI-generated code, art, copy, and interface. Guide a collector through The Amber Waste, gather amber, and evade Sinkjaw strikes on an 8x8 board."
+      content="A retro-futurist desert game by Ilya Mirin with AI-generated code, art, music, copy, and interface. Guide a collector through The Amber Waste, gather amber, and evade Sinkjaw strikes on an 8x8 board."
     />
     <meta property="og:site_name" content="Amber Dunes Harvest" />
-    <meta property="og:image" content="https://ilyamirin.github.io/arrakis/assets/social-card.jpg" />
-    <meta property="og:image:secure_url" content="https://ilyamirin.github.io/arrakis/assets/social-card.jpg" />
+    <meta property="og:image" content="./assets/social-card.jpg" />
+    <meta property="og:image:secure_url" content="./assets/social-card.jpg" />
     <meta property="og:image:type" content="image/jpeg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
@@ -29,9 +28,9 @@
     <meta name="twitter:title" content="Amber Dunes Harvest" />
     <meta
       name="twitter:description"
-      content="A retro-futurist desert game with AI-generated code, art, copy, and interface: gather amber, move like a knight, and evade Sinkjaw strikes."
+      content="A retro-futurist desert game with AI-generated code, art, music, copy, and interface: gather amber, move like a knight, and evade Sinkjaw strikes."
     />
-    <meta name="twitter:image" content="https://ilyamirin.github.io/arrakis/assets/social-card.jpg" />
+    <meta name="twitter:image" content="./assets/social-card.jpg" />
     <title>Amber Dunes Harvest</title>
     <link rel="icon" type="image/svg+xml" href="./assets/favicon-sinkjaw.svg" />
     <link rel="stylesheet" href="./styles.css" />
@@ -40,14 +39,14 @@
     <div class="page-shell">
       <header class="hero">
         <div class="hero-copy">
-          <p class="eyebrow">Retro-Futurist Desert Game</p>
+          <p id="eyebrow" class="eyebrow">Retro-Futurist Desert Game</p>
           <h1>Amber Dunes Harvest</h1>
-          <p class="hero-text">
+          <p id="hero-text" class="hero-text">
             Sweep the amber field across an 8x8 grid in The Amber Waste.
             The Collector leaps like a knight, and Sinkjaw breaks surface
             within four tiles after every move you make.
           </p>
-          <p class="project-note">AI-generated code, art, music, copy, and interface. CC0 sound effects from OpenGameArt.</p>
+          <p id="project-note" class="project-note">AI-generated code, art, music, copy, and interface. CC0 sound effects from OpenGameArt.</p>
         </div>
         <button id="restart-button" class="primary-button" type="button">
           New Run
@@ -69,7 +68,7 @@
         <aside class="sidebar">
           <section class="panel status-panel">
             <div class="panel-header">
-              <p class="panel-kicker">Current state</p>
+              <p id="state-kicker" class="panel-kicker">Current state</p>
               <h2 id="status-title">Run Underway</h2>
             </div>
             <p id="status-message" class="status-message">
@@ -79,15 +78,15 @@
 
           <section class="panel metrics-panel">
             <div class="metric">
-              <span class="metric-label">Amber</span>
+              <span id="amber-label" class="metric-label">Amber</span>
               <strong id="amber-value">0 / 20</strong>
             </div>
             <div class="metric">
-              <span class="metric-label">Moves</span>
+              <span id="moves-label" class="metric-label">Moves</span>
               <strong id="moves-value">0</strong>
             </div>
             <div class="metric">
-              <span class="metric-label">Position</span>
+              <span id="position-label" class="metric-label">Position</span>
               <strong id="position-value">E4</strong>
             </div>
           </section>
@@ -96,84 +95,76 @@
             <div class="legend-item">
               <img src="./assets/collector.svg" alt="" />
               <div>
-                <span>Collector</span>
-                <p>Takes amber the instant it touches down.</p>
+                <span id="legend-collector-title">Collector</span>
+                <p id="legend-collector-text">Takes amber the instant it touches down.</p>
               </div>
             </div>
             <div class="legend-item">
               <img src="./assets/sinkjaw.svg" alt="" />
               <div>
-                <span>Sinkjaw</span>
-                <p>Breaks surface within four tiles and closes a square to you.</p>
+                <span id="legend-sinkjaw-title">Sinkjaw</span>
+                <p id="legend-sinkjaw-text">Breaks surface within four tiles and closes a square to you.</p>
               </div>
             </div>
             <div class="legend-item">
               <img src="./assets/amber.svg" alt="" />
               <div>
-                <span>Amber</span>
-                <p>Strip the field clean. All 20 deposits must be taken.</p>
+                <span id="legend-amber-title">Amber</span>
+                <p id="legend-amber-text">Strip the field clean. All 20 deposits must be taken.</p>
               </div>
             </div>
             <div class="legend-item">
               <img src="./assets/skimmer.svg" alt="" />
               <div>
-                <span>Skimmer</span>
-                <p>Carries the Collector to the legal square you choose.</p>
+                <span id="legend-skimmer-title">Skimmer</span>
+                <p id="legend-skimmer-text">Carries the Collector to the legal square you choose.</p>
               </div>
             </div>
             <div class="legend-item">
               <span class="legend-storm" aria-hidden="true"></span>
               <div>
-                <span>Storm front</span>
-                <p>Drifts one cell each turn. If you drop into it, the squall throws the Collector clear.</p>
+                <span id="legend-storm-title">Storm front</span>
+                <p id="legend-storm-text">Drifts one cell each turn. If you drop into it, the squall throws the Collector clear.</p>
               </div>
             </div>
           </section>
 
           <section class="panel rules-panel">
             <div class="panel-header compact">
-              <p class="panel-kicker">Rules</p>
-              <h2>Field guide</h2>
+              <p id="rules-kicker" class="panel-kicker">Rules</p>
+              <h2 id="rules-title">Field guide</h2>
             </div>
             <ul>
-              <li>The Collector moves in the knight's L-shaped stride.</li>
-              <li>The lit marks on the field show every legal landing square.</li>
-              <li>The pilot marks Sinkjaw pressure directly on the field.</li>
-              <li>Storm cells shift one square each turn and throw the Collector to a random clear square.</li>
-              <li>For the first three moves, Sinkjaw cannot surface under the Collector.</li>
-              <li>If Sinkjaw surfaces beneath the Collector, the run is lost.</li>
-              <li>The moment the last amber deposit is taken, the field is yours.</li>
+              <li data-rule-index="0">The Collector moves in the knight's L-shaped stride.</li>
+              <li data-rule-index="1">The lit marks on the field show every legal landing square.</li>
+              <li data-rule-index="2">The pilot marks Sinkjaw pressure directly on the field.</li>
+              <li data-rule-index="3">Storm cells shift one square each turn and throw the Collector to a random clear square.</li>
+              <li data-rule-index="4">For the first three moves, Sinkjaw cannot surface under the Collector.</li>
+              <li data-rule-index="5">If Sinkjaw surfaces beneath the Collector, the run is lost.</li>
+              <li data-rule-index="6">The moment the last amber deposit is taken, the field is yours.</li>
             </ul>
           </section>
 
           <section class="panel author-panel">
             <div class="panel-header compact">
-              <p class="panel-kicker">Author</p>
+              <p id="author-kicker" class="panel-kicker">Author</p>
               <h2>Ilya Mirin</h2>
             </div>
-            <p class="author-copy">
+            <p id="author-copy" class="author-copy">
               Staff LLM engineer. Product-minded builder focused on practical AI
               systems, developer workflows, and shipping usable tools.
             </p>
-            <p class="author-meta">
+            <p id="author-meta" class="author-meta">
               Gameplay code, music, interface copy, and visual assets are AI-generated.
               Sound effects use CC0 audio from OpenGameArt.
             </p>
-            <a
-              class="author-link"
-              href="https://www.linkedin.com/in/ilyamirin"
-              target="_blank"
-              rel="noreferrer"
-            >
-              linkedin.com/in/ilyamirin
-            </a>
           </section>
         </aside>
       </main>
 
       <footer class="site-footer">
-        <p>© 2026 Ilya Mirin. Released under the MIT License.</p>
-        <a href="./LICENSE" target="_blank" rel="noreferrer">View license</a>
+        <p id="footer-text">© 2026 Ilya Mirin. Released under the MIT License.</p>
+        <a id="footer-license" href="./LICENSE" target="_blank" rel="noreferrer">View license</a>
       </footer>
     </div>
 

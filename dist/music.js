@@ -13,7 +13,7 @@ export class GameMusicController {
     isStopped = false;
     activeTrackIndex = null;
     remainingIndices = [];
-    constructor(trackUrls, volume = 0.42) {
+    constructor(trackUrls, volume = 0.31) {
         this.volume = volume;
         this.tracks = trackUrls.map((url, index) => this.createTrack(url, index));
         this.refillQueue();
@@ -21,6 +21,30 @@ export class GameMusicController {
     unlock() {
         this.isUnlocked = true;
         this.tryPlayNext();
+    }
+    pause() {
+        if (this.activeTrackIndex === null) {
+            return;
+        }
+        this.tracks[this.activeTrackIndex]?.audio.pause();
+    }
+    resume() {
+        if (!this.isUnlocked || this.isStopped) {
+            return;
+        }
+        if (this.activeTrackIndex === null) {
+            this.tryPlayNext();
+            return;
+        }
+        const activeTrack = this.tracks[this.activeTrackIndex];
+        if (!activeTrack) {
+            this.tryPlayNext();
+            return;
+        }
+        void activeTrack.audio.play().catch(() => {
+            this.activeTrackIndex = null;
+            this.tryPlayNext();
+        });
     }
     createTrack(url, index) {
         const audio = new Audio(url);
@@ -95,14 +119,27 @@ export class GameMusicController {
 export class GameSfxController {
     effects;
     isUnlocked = false;
+    isSuppressed = false;
+    activeEffects = new Set();
     constructor(effectUrls) {
         this.effects = Object.fromEntries(Object.entries(effectUrls).map(([name, config]) => [name, this.createEffect(config.url, config.volume ?? 1)]));
     }
     unlock() {
         this.isUnlocked = true;
     }
+    pause() {
+        this.isSuppressed = true;
+        for (const audio of this.activeEffects) {
+            audio.pause();
+            audio.currentTime = 0;
+        }
+        this.activeEffects.clear();
+    }
+    resume() {
+        this.isSuppressed = false;
+    }
     play(name, volumeScale = 1) {
-        if (!this.isUnlocked) {
+        if (!this.isUnlocked || this.isSuppressed) {
             return;
         }
         const effect = this.effects[name];
@@ -112,6 +149,15 @@ export class GameSfxController {
         const audio = effect.audio.cloneNode(true);
         audio.volume = Math.max(0, Math.min(1, effect.volume * volumeScale));
         audio.currentTime = 0;
+        this.activeEffects.add(audio);
+        audio.addEventListener("ended", () => {
+            this.activeEffects.delete(audio);
+        }, { once: true });
+        audio.addEventListener("pause", () => {
+            if (audio.currentTime === 0 || audio.ended) {
+                this.activeEffects.delete(audio);
+            }
+        }, { once: true });
         void audio.play().catch(() => { });
     }
     createEffect(url, volume) {
