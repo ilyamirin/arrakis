@@ -183,15 +183,31 @@ export class CanvasRenderer {
         const { ctx } = this;
         const paddingX = metrics.cellSize * 0.22;
         const paddingY = metrics.cellSize * 0.16;
-        const boxX = metrics.originX + metrics.cellSize * 0.2;
-        const boxY = metrics.originY + metrics.boardSize - metrics.cellSize * 0.98;
-        const kickerSize = Math.max(10, metrics.cellSize * 0.16);
-        const messageSize = Math.max(14, metrics.cellSize * 0.23);
+        const safeInsetX = metrics.cellSize * 0.42;
+        const safeInsetY = metrics.cellSize * 0.34;
+        const boxX = metrics.originX + safeInsetX;
+        const boxY = metrics.originY + safeInsetY;
+        const maxBoxWidth = metrics.boardSize - safeInsetX * 2;
+        let kickerSize = Math.max(10, metrics.cellSize * 0.16);
+        let messageSize = Math.max(14, metrics.cellSize * 0.23);
+        const minKickerSize = 9;
+        const minMessageSize = 12;
         ctx.save();
-        ctx.font = `${kickerSize}px "IBM Plex Mono", "SFMono-Regular", ui-monospace, monospace`;
-        const kickerWidth = ctx.measureText(kicker).width;
-        ctx.font = `700 ${messageSize}px "IBM Plex Mono", "SFMono-Regular", ui-monospace, monospace`;
-        const messageWidth = ctx.measureText(message).width;
+        const maxTextWidth = maxBoxWidth - paddingX * 2;
+        let kickerWidth = 0;
+        let messageWidth = 0;
+        for (;;) {
+            ctx.font = `${kickerSize}px "IBM Plex Mono", "SFMono-Regular", ui-monospace, monospace`;
+            kickerWidth = ctx.measureText(kicker).width;
+            ctx.font = `700 ${messageSize}px "IBM Plex Mono", "SFMono-Regular", ui-monospace, monospace`;
+            messageWidth = ctx.measureText(message).width;
+            if (Math.max(kickerWidth, messageWidth) <= maxTextWidth ||
+                (kickerSize <= minKickerSize && messageSize <= minMessageSize)) {
+                break;
+            }
+            kickerSize = Math.max(minKickerSize, kickerSize - 1);
+            messageSize = Math.max(minMessageSize, messageSize - 1);
+        }
         const boxWidth = Math.max(kickerWidth, messageWidth) + paddingX * 2;
         const boxHeight = paddingY * 2 + kickerSize + messageSize + metrics.cellSize * 0.08;
         ctx.fillStyle = "rgba(23, 16, 12, 0.8)";
