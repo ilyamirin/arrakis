@@ -13,6 +13,7 @@ import {
   CanvasRenderer,
   loadAssets,
   type FlightAnimationFrame,
+  type ScreenShakeOffset,
 } from "./renderer.js";
 import {
   BOARD_SIZE,
@@ -27,6 +28,8 @@ const SKIMMER_FLIGHT_MS = 760;
 const STORM_DRIFT_MS = 1000;
 const PICKUP_PHASE_END = 0.22;
 const DROPOFF_PHASE_START = 0.8;
+const DANGER_SHAKE_MS = 340;
+const DANGER_SHAKE_AMPLITUDE = 11;
 const SECRET_VICTORY_SEQUENCE = [
   "KeyA",
   "KeyM",
@@ -67,6 +70,13 @@ function clamp01(value: number): number {
 
 function samePosition(left: Position | null, right: Position | null): boolean {
   return left?.x === right?.x && left?.y === right?.y;
+}
+
+function chebyshevDistance(left: Position, right: Position): number {
+  return Math.max(
+    Math.abs(left.x - right.x),
+    Math.abs(left.y - right.y),
+  );
 }
 
 function easeInOutCubic(value: number): number {
@@ -324,6 +334,7 @@ async function main(): Promise<void> {
     amberPickup: { url: "./assets/audio/sfx/amber-pickup.mp3", volume: 0.54 },
     stormEnter: { url: "./assets/audio/sfx/storm-enter.wav", volume: 0.38 },
     sinkjawSpawn: { url: "./assets/audio/sfx/sinkjaw-spawn.mp3", volume: 0.07 },
+    sinkjawDanger: { url: "./assets/audio/sfx/sinkjaw-attack.wav", volume: 0.22 },
     sinkjawAttack: { url: "./assets/audio/sfx/sinkjaw-attack.wav", volume: 0.52 },
     victory: { url: "./assets/audio/sfx/victory.mp3", volume: 0.56 },
   });
@@ -355,6 +366,34 @@ async function main(): Promise<void> {
       }
     | null = null;
   let previewMove: MoveOption | null = null;
+  let activeShake:
+    | {
+        startedAt: number;
+        duration: number;
+        amplitude: number;
+        animationFrameId: number | null;
+      }
+    | null = null;
+
+  const currentShakeOffset = (now: number): ScreenShakeOffset | null => {
+    if (!activeShake) {
+      return null;
+    }
+
+    const elapsed = now - activeShake.startedAt;
+    if (elapsed >= activeShake.duration) {
+      return null;
+    }
+
+    const progress = elapsed / activeShake.duration;
+    const decay = 1 - progress;
+    const angle = elapsed * 0.11;
+
+    return {
+      x: Math.sin(angle) * activeShake.amplitude * decay,
+      y: Math.cos(angle * 1.37) * activeShake.amplitude * 0.7 * decay,
+    };
+  };
 
   const syncGameplayState = (): void => {
     platform.setGameplayActive(currentState.status === "playing" && !isPaused && !isAdShowing);
@@ -409,7 +448,7 @@ async function main(): Promise<void> {
                 clamp01((now - flight.startedAt) / flight.duration),
               );
 
-    renderer.render(currentState, animation, previewMove);
+    renderer.render(currentState, animation, previewMove, currentShakeOffset(now));
 
     if (animation && flight) {
       statusTitleElement.className = "status-playing";
@@ -468,6 +507,47 @@ async function main(): Promise<void> {
       window.cancelAnimationFrame(flight.animationFrameId);
     }
     activeFlight = null;
+  };
+
+  const stopShake = (): void => {
+    const shake = activeShake;
+    if (shake && shake.animationFrameId !== null) {
+      window.cancelAnimationFrame(shake.animationFrameId);
+    }
+    activeShake = null;
+  };
+
+  const runShakeFrame = (now: number): void => {
+    if (!activeShake || isPaused) {
+      return;
+    }
+
+    renderView(now);
+
+    if (now - activeShake.startedAt < activeShake.duration) {
+      activeShake.animationFrameId = window.requestAnimationFrame(runShakeFrame);
+      return;
+    }
+
+    stopShake();
+    renderView(now);
+  };
+
+  const triggerDangerShake = (): void => {
+    const now = performance.now();
+    stopShake();
+    activeShake = {
+      startedAt: now,
+      duration: DANGER_SHAKE_MS,
+      amplitude: DANGER_SHAKE_AMPLITUDE,
+      animationFrameId: null,
+    };
+
+    if (!activeFlight) {
+      renderView(now);
+    }
+
+    activeShake.animationFrameId = window.requestAnimationFrame(runShakeFrame);
   };
 
   const runFlightFrame = (now: number): void => {
@@ -530,6 +610,16 @@ async function main(): Promise<void> {
         previousState.sinkjaw.y !== nextState.sinkjaw.y);
 
     if (sinkjawChanged) {
+      if (
+        nextState.status === "playing" &&
+        nextState.sinkjaw &&
+        chebyshevDistance(nextState.sinkjaw, nextState.collector) === 1
+      ) {
+        sfx.play("sinkjawDanger");
+        triggerDangerShake();
+        return;
+      }
+
       sfx.play("sinkjawSpawn");
     }
   };
@@ -576,6 +666,10 @@ async function main(): Promise<void> {
       window.cancelAnimationFrame(flight.animationFrameId);
       flight.animationFrameId = null;
     }
+    if (activeShake && activeShake.animationFrameId !== null) {
+      window.cancelAnimationFrame(activeShake.animationFrameId);
+      activeShake.animationFrameId = null;
+    }
     syncGameplayState();
   };
 
@@ -591,6 +685,10 @@ async function main(): Promise<void> {
     if (activeFlight) {
       activeFlight.startedAt += pausedDuration;
       activeFlight.animationFrameId = window.requestAnimationFrame(runFlightFrame);
+    }
+    if (activeShake) {
+      activeShake.startedAt += pausedDuration;
+      activeShake.animationFrameId = window.requestAnimationFrame(runShakeFrame);
     }
     syncGameplayState();
     renderView();

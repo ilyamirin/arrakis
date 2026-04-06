@@ -20,14 +20,18 @@ export class CanvasRenderer {
     setLocale(locale) {
         this.locale = locale;
     }
-    render(state, animation = null, previewMove = null) {
+    render(state, animation = null, previewMove = null, shakeOffset = null) {
         this.lastState = state;
         this.lastAnimation = animation;
         this.lastPreviewMove = previewMove;
         this.resizeBackingStore();
         const metrics = this.getMetrics();
         const { ctx } = this;
+        const offsetX = shakeOffset?.x ?? 0;
+        const offsetY = shakeOffset?.y ?? 0;
         ctx.clearRect(0, 0, metrics.width, metrics.height);
+        ctx.save();
+        ctx.translate(offsetX, offsetY);
         this.drawBackground(metrics);
         this.drawCells(state, metrics, animation, previewMove);
         this.drawStormFront(state, metrics);
@@ -35,6 +39,7 @@ export class CanvasRenderer {
         this.drawPieces(state, metrics, animation);
         this.drawOverlay(state, metrics);
         this.drawPreviewTelegraph(metrics, previewMove, state.status === "playing");
+        ctx.restore();
     }
     rerender() {
         if (this.lastState) {

@@ -30,6 +30,11 @@ export interface FlightAnimationFrame {
   landedCollector: Position | null;
 }
 
+export interface ScreenShakeOffset {
+  x: number;
+  y: number;
+}
+
 interface BoardMetrics {
   width: number;
   height: number;
@@ -68,6 +73,7 @@ export class CanvasRenderer {
     state: GameState,
     animation: FlightAnimationFrame | null = null,
     previewMove: MoveOption | null = null,
+    shakeOffset: ScreenShakeOffset | null = null,
   ): void {
     this.lastState = state;
     this.lastAnimation = animation;
@@ -76,8 +82,12 @@ export class CanvasRenderer {
 
     const metrics = this.getMetrics();
     const { ctx } = this;
+    const offsetX = shakeOffset?.x ?? 0;
+    const offsetY = shakeOffset?.y ?? 0;
 
     ctx.clearRect(0, 0, metrics.width, metrics.height);
+    ctx.save();
+    ctx.translate(offsetX, offsetY);
     this.drawBackground(metrics);
     this.drawCells(state, metrics, animation, previewMove);
     this.drawStormFront(state, metrics);
@@ -85,6 +95,7 @@ export class CanvasRenderer {
     this.drawPieces(state, metrics, animation);
     this.drawOverlay(state, metrics);
     this.drawPreviewTelegraph(metrics, previewMove, state.status === "playing");
+    ctx.restore();
   }
 
   public rerender(): void {
