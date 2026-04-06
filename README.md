@@ -42,70 +42,61 @@ Notes:
 - The proxy is tied to `localhost`, so its mock ad windows are not suitable for direct phone testing over LAN.
 - For phone UI checks, use the normal local server instead of the Yandex proxy.
 
-## Simulation setup
+## Live balance
 
-The table below summarizes `10,000` simulated runs for each player strategy against the ordinary random Sinkjaw.
+The current live rules are:
 
-- Adaptive Sinkjaw memory was disabled.
-- The board size was `9x9`.
-- The win condition was full amber collection.
-- The baseline hazard model was the default in-game random Sinkjaw spawn.
+- board size: `8x8`
+- win condition: collect all `20` amber
+- `Sinkjaw` threat radius: `4`
+- direct `Sinkjaw` strike unlock: after move `3`
 
-## Results
+`Sinkjaw` now uses a split model:
 
-| Strategy | Collector win rate | Sinkjaw win rate | Sinkjaw attacks | Traps | Avg. moves | Avg. amber | Balance (Sinkjaw:Collector) |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| `amber_hunter` | `0.20%` | `99.80%` | `99.80%` | `0.00%` | `78.32` | `11.32 / 25` | `9980:20` |
-| `amber_hunter_avoid_repeats` | `54.38%` | `45.62%` | `45.62%` | `0.00%` | `38.20` | `19.87 / 25` | `4562:5438` |
-| `amber_hunter_lookahead_1step` | `41.41%` | `58.59%` | `58.59%` | `0.00%` | `49.12` | `20.19 / 25` | `5859:4141` |
-| `amber_hunter_anti_risk` | `0.00%` | `100.00%` | `100.00%` | `0.00%` | `78.90` | `10.80 / 25` | `10000:0` |
+- normal spawns stay in the local threat radius around the `Collector`
+- direct strikes are no longer taken from the ordinary spawn pool
+- instead, the instant-kill chance grows exponentially with move count
 
-## Strategy guide
+The direct strike chance is:
 
-### `amber_hunter`
+```text
+p(move) = 1 - exp(-0.005252185473469883 * exp((move - 4) / 10))
+```
 
-The simplest greedy policy.
+That calibration was chosen so that cumulative death-by-`30` from direct `Sinkjaw` strikes is about `50%`.
 
-- If a legal move lands on amber, it takes one of those moves immediately.
-- Otherwise it chooses the move that gets closest to the nearest remaining amber.
-- It does not care about repetition, future mobility, or positional safety.
+### Direct strike calibration
 
-This strategy performs very poorly against the default Sinkjaw because it keeps stretching games and repeatedly walks into high-risk routes.
+Monte Carlo check on the current formula:
 
-### `amber_hunter_avoid_repeats`
+- runs: `200000`
+- death by move `30`: `50.141%`
+- survival by move `30`: `49.859%`
 
-Greedy amber collection with an in-run memory penalty.
+Per-move direct strike chance:
 
-- It still prioritizes immediate amber.
-- Among otherwise similar moves it avoids cells it has already visited often in the same run.
-- That shortens routes, reduces wasteful loops, and lowers exposure to random Sinkjaw attacks.
+- move `4`: `0.52%`
+- move `10`: `0.95%`
+- move `20`: `2.57%`
+- move `30`: `6.83%`
 
-This was the strongest simulated strategy in the current balance run.
+### Gameplay simulations
 
-### `amber_hunter_lookahead_1step`
+Quick heuristic runs on the current `8x8 / 20 amber` ruleset still show that overall victory is much rarer than simple survival to move `30`.
 
-A slightly smarter planning policy with one move of lookahead.
+`3000` runs per strategy:
 
-- It values immediate amber.
-- It rewards moves that leave more future mobility.
-- It rewards moves that place the Collector near amber-rich follow-up options on the next knight jump.
-- It still uses a greedy amber bias, but with a better short-term route forecast.
+| Strategy | Collector win rate | Sinkjaw attack losses | Trap losses | Avg. moves | Avg. amber |
+|---|---:|---:|---:|---:|---:|
+| `amber_hunter` | `0.10%` | `99.90%` | `0.00%` | `29.25` | `9.97 / 20` |
+| `avoid_repeats` | `5.73%` | `94.27%` | `0.00%` | `29.06` | `14.76 / 20` |
+| `lookahead_1step` | `0.20%` | `99.80%` | `0.00%` | `29.16` | `9.75 / 20` |
 
-This strategy is materially better than pure greed, but still weaker than the repeat-avoidance policy in the current ruleset.
+### Takeaway
 
-### `amber_hunter_anti_risk`
+The `Sinkjaw` attack curve is now calibrated to a readable exponential ramp instead of a dirty random one-shot from the generic spawn pool. That fixes the worst fairness issue.
 
-A safety-biased policy.
-
-- It prefers positions that look structurally safer.
-- It values centrality and mobility more heavily.
-- It only keeps a lighter amber preference instead of all-out harvesting pressure.
-
-In this ruleset that caution backfires. The strategy survives longer routes without actually finishing the board, so the random Sinkjaw eventually catches it every time.
-
-## Takeaway
-
-Under the current default random Sinkjaw rules, the best of the four tested heuristics was `amber_hunter_avoid_repeats`. The pure greedy route and the overly defensive route were both heavily punished. That suggests the live balance rewards efficient, low-loop harvesting more than either raw greed or passive caution.
+It does **not** mean the game is now `50%` winnable by move `30`. On the current objective (`20 amber` on `8x8`), the run goal itself is still much harder than the calibrated survival target. If overall win rate needs to move toward `50%`, the next balancing lever should be the objective pace: `TOTAL_AMBER`, board size, or route pressure, not a harsher `Sinkjaw`.
 
 ## License
 

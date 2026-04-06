@@ -3,6 +3,8 @@ import { gameMessageCopy, pilotLineCopy, sinkjawSightedCopy, stormDriftMessageCo
 const SINKJAW_SPAWN_RADIUS = 4;
 const SAFE_ONESHOT_TURNS = 3;
 const STORM_CLUSTER_SIZE = 3;
+const SINKJAW_ATTACK_ALPHA = 0.005252185473469883;
+const SINKJAW_ATTACK_GROWTH = 10;
 const KNIGHT_OFFSETS = [
     { x: -2, y: -1 },
     { x: -2, y: 1 },
@@ -254,19 +256,20 @@ export class AmberDunesGame {
             .sort((left, right) => left.target.y - right.target.y || left.target.x - right.target.x);
     }
     spawnSinkjaw() {
-        const candidates = this.computeSinkjawCandidates(this.collector, this.moves);
+        const candidates = this.computeSinkjawCandidates(this.collector);
+        if (this.canSinkjawStrike(this.moves) && Math.random() < this.computeSinkjawStrikeChance(this.moves)) {
+            this.sinkjaw = { ...this.collector };
+            this.status = "lost";
+            this.lossReason = "sinkjaw_attack";
+            this.message = gameMessageCopy(this.locale, "sinkjaw_attack");
+            return;
+        }
         if (candidates.length === 0) {
             this.sinkjaw = null;
             return;
         }
         const nextSinkjaw = candidates[Math.floor(Math.random() * candidates.length)];
         this.sinkjaw = nextSinkjaw;
-        if (this.positionsEqual(nextSinkjaw, this.collector)) {
-            this.status = "lost";
-            this.lossReason = "sinkjaw_attack";
-            this.message = gameMessageCopy(this.locale, "sinkjaw_attack");
-            return;
-        }
         this.message = sinkjawSightedCopy(this.locale, this.toBoardNotation(nextSinkjaw));
     }
     toBoardNotation(position) {
@@ -285,7 +288,7 @@ export class AmberDunesGame {
             const driftTargets = this.computeStormDriftTargets();
             const uniqueCandidates = new Map();
             for (const driftTarget of driftTargets) {
-                for (const candidate of this.computeSinkjawCandidates(driftTarget, this.moves + 1)) {
+                for (const candidate of this.computeSinkjawCandidates(driftTarget)) {
                     uniqueCandidates.set(this.positionKey(candidate), candidate);
                 }
             }
@@ -296,7 +299,7 @@ export class AmberDunesGame {
                 isStormLanding,
             };
         }
-        const candidates = this.computeSinkjawCandidates(target, this.moves + 1);
+        const candidates = this.computeSinkjawCandidates(target);
         const sector = this.summarizeTelegraphSector(target, candidates);
         return {
             sector,
@@ -305,7 +308,7 @@ export class AmberDunesGame {
             isStormLanding,
         };
     }
-    computeSinkjawCandidates(collector, moveNumber) {
+    computeSinkjawCandidates(collector) {
         const candidates = [];
         for (let y = 0; y < BOARD_SIZE; y += 1) {
             for (let x = 0; x < BOARD_SIZE; x += 1) {
@@ -316,13 +319,23 @@ export class AmberDunesGame {
                 if (this.distanceBetween(next, collector) > SINKJAW_SPAWN_RADIUS) {
                     continue;
                 }
-                if (moveNumber <= SAFE_ONESHOT_TURNS && this.positionsEqual(next, collector)) {
+                if (this.positionsEqual(next, collector)) {
                     continue;
                 }
                 candidates.push(next);
             }
         }
         return candidates;
+    }
+    canSinkjawStrike(moveNumber) {
+        return moveNumber > SAFE_ONESHOT_TURNS;
+    }
+    computeSinkjawStrikeChance(moveNumber) {
+        if (!this.canSinkjawStrike(moveNumber)) {
+            return 0;
+        }
+        const exponent = (moveNumber - (SAFE_ONESHOT_TURNS + 1)) / SINKJAW_ATTACK_GROWTH;
+        return 1 - Math.exp(-SINKJAW_ATTACK_ALPHA * Math.exp(exponent));
     }
     computeStormDriftTargets() {
         const targets = [];
