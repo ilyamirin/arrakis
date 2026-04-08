@@ -254,20 +254,6 @@ function applyStaticCopy(locale: Locale): void {
   setText("#legend-skimmer-text", copy.legendSkimmerText);
   setText("#legend-storm-title", copy.legendStormTitle);
   setText("#legend-storm-text", copy.legendStormText);
-  setText("#rules-kicker", copy.rulesKicker);
-  setText("#rules-title", copy.rulesTitle);
-  setText("#author-kicker", copy.authorKicker);
-  setText("#author-copy", copy.authorCopy);
-  setText("#author-meta", copy.authorMeta);
-  setText("#footer-text", copy.footerText);
-
-  for (const item of Array.from(document.querySelectorAll<HTMLElement>("[data-rule-index]"))) {
-    const index = Number(item.dataset.ruleIndex);
-    const rule = copy.rulesItems[index];
-    if (rule) {
-      item.textContent = rule;
-    }
-  }
 
   const canvas = document.querySelector<HTMLCanvasElement>("#game-canvas");
   if (canvas) {

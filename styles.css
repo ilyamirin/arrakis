@@ -67,7 +67,7 @@ select {
 
 .page-shell {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr);
   gap: 1rem;
   width: min(1320px, calc(100vw - 2rem));
   margin: 0 auto;
@@ -89,9 +89,18 @@ select {
 
 .hero {
   display: grid;
-  grid-template-columns: minmax(0, 1.618fr) auto;
+  grid-template-columns: minmax(0, 1.618fr) minmax(20rem, 1fr);
   gap: 1rem;
   align-items: end;
+}
+
+.hero-copy {
+  min-width: 0;
+}
+
+#restart-button {
+  justify-self: end;
+  align-self: center;
 }
 
 .eyebrow,
@@ -119,9 +128,7 @@ select {
 
 .status-message,
 .legend-item p,
-.rules-panel li,
-.author-copy,
-.author-meta {
+.status-panel p {
   color: var(--muted);
   line-height: 1.6;
 }
@@ -184,11 +191,12 @@ select {
   display: grid;
   grid-template-columns: minmax(0, 1.618fr) minmax(20rem, 1fr);
   gap: var(--space-3);
-  align-items: start;
+  align-items: stretch;
   min-height: 0;
 }
 
 .board-card,
+.sidebar,
 .panel {
   position: relative;
   overflow: hidden;
@@ -202,6 +210,7 @@ select {
 }
 
 .board-card::before,
+.sidebar::before,
 .panel::before {
   content: "";
   position: absolute;
@@ -241,14 +250,55 @@ select {
   display: grid;
   gap: var(--space-3);
   min-height: 0;
+  height: 100%;
+  padding: var(--space-3);
   overflow: auto;
   overscroll-behavior: contain;
 }
 
 @media (min-width: 1280px) and (min-height: 860px) {
+  .hero {
+    grid-template-columns: minmax(0, 0.95fr) clamp(25rem, 29vw, 29rem);
+  }
+
   .layout {
     grid-template-columns: minmax(0, 0.95fr) clamp(25rem, 29vw, 29rem);
     gap: 1.4rem;
+  }
+
+  .sidebar {
+    gap: 1.1rem;
+    padding: 1.25rem;
+  }
+
+  .panel {
+    padding: 1.25rem;
+  }
+
+  .status-panel {
+    min-height: 9.1rem;
+  }
+
+  .legend-panel {
+    gap: 0.9rem;
+  }
+
+  .legend-item {
+    grid-template-columns: 2.8rem minmax(0, 1fr);
+    gap: 0.85rem;
+  }
+
+  .legend-item img,
+  .legend-storm {
+    width: 2.8rem;
+    height: 2.8rem;
+    padding: 0.4rem;
+    border-radius: 0.9rem;
+  }
+
+  .legend-item p {
+    font-size: 0.88rem;
+    line-height: 1.45;
   }
 }
 
@@ -256,13 +306,26 @@ select {
   padding: var(--space-3);
 }
 
-.panel-header.compact h2 {
-  font-size: 1.15rem;
+.sidebar > .panel {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  padding: 0;
 }
 
-.rules-panel .panel-header.compact,
-.author-panel .panel-header.compact {
-  margin-bottom: 1rem;
+.sidebar > .panel::before {
+  display: none;
+}
+
+.sidebar > .panel + .panel {
+  padding-top: var(--space-3);
+  border-top: 1px solid rgba(241, 201, 123, 0.12);
+}
+
+.panel-header.compact h2 {
+  font-size: 1.15rem;
 }
 
 .status-panel {
@@ -372,40 +435,6 @@ select {
   font-size: 0.92rem;
 }
 
-.rules-panel ul {
-  margin: 0;
-  padding-left: 1.2rem;
-}
-
-.rules-panel li + li {
-  margin-top: 0.72rem;
-}
-
-.author-copy {
-  margin: 0 0 1rem;
-}
-
-.author-meta {
-  margin: 0 0 1rem;
-}
-
-.site-footer {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: var(--space-3);
-  padding: 0.9rem 0 0;
-  border-top: 1px solid rgba(241, 201, 123, 0.12);
-  color: var(--muted);
-  font-size: 0.85rem;
-}
-
-.site-footer p {
-  margin: 0;
-}
-
 .status-playing {
   color: var(--sand-0);
 }
@@ -443,13 +472,9 @@ select {
     );
   }
 
-  .site-footer {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
   .board-frame,
-  .panel {
+  .panel,
+  .sidebar {
     padding: 1.1rem;
   }
 

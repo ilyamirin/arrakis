@@ -27,13 +27,6 @@ export interface StaticCopy {
   legendSkimmerText: string;
   legendStormTitle: string;
   legendStormText: string;
-  rulesKicker: string;
-  rulesTitle: string;
-  rulesItems: string[];
-  authorKicker: string;
-  authorCopy: string;
-  authorMeta: string;
-  footerText: string;
 }
 
 const EN_COPY: StaticCopy = {
@@ -65,23 +58,6 @@ const EN_COPY: StaticCopy = {
   legendStormTitle: "Storm front",
   legendStormText:
     "Drifts one square each turn. If you fly into it, the squall throws the Collector clear.",
-  rulesKicker: "Rules",
-  rulesTitle: "Field guide",
-  rulesItems: [
-    "The Collector moves in the knight's L-shaped stride.",
-    "The lit marks show every legal landing square.",
-    "The pilot marks Sinkjaw pressure directly on the field.",
-    "Storm cells drift one square each turn and throw the Collector to a random clear square.",
-    "For the first three moves, Sinkjaw cannot surface under the Collector.",
-    "If Sinkjaw surfaces beneath the Collector, the run is lost.",
-    "The moment the last amber deposit is taken, the field is yours.",
-  ],
-  authorKicker: "Author",
-  authorCopy:
-    "Staff LLM engineer building practical AI systems, sharper developer workflows, and tools meant to be shipped, not admired.",
-  authorMeta:
-    "Gameplay code, music, interface copy, and visual assets are AI-generated. Sound effects use CC0 audio from OpenGameArt.",
-  footerText: "© 2026 Ilya Mirin. Released under the MIT License.",
 };
 
 const RU_COPY: StaticCopy = {
@@ -113,23 +89,6 @@ const RU_COPY: StaticCopy = {
   legendStormTitle: "Фронт бури",
   legendStormText:
     "Сдвигается на одну клетку за ход. Если войти в бурю, шквал выбросит Collector прочь.",
-  rulesKicker: "Правила",
-  rulesTitle: "Кратко",
-  rulesItems: [
-    "Collector ходит Г-образным прыжком, как шахматный конь.",
-    "Подсвеченные отметки на поле показывают все допустимые клетки.",
-    "Пилот показывает направление угрозы прямо на поле.",
-    "Буря сдвигается на одну клетку за ход и выбрасывает Collector на случайную чистую клетку.",
-    "Первые три хода Sinkjaw не может всплыть прямо под Collector.",
-    "Если Sinkjaw всплывает под Collector, экспедиция окончена.",
-    "Как только взята последняя залежь amber, поле ваше.",
-  ],
-  authorKicker: "Автор",
-  authorCopy:
-    "Staff LLM engineer. Делает практичные AI-системы, выстраивает developer workflows и доводит инструменты до рабочего релиза.",
-  authorMeta:
-    "Геймплейный код, музыка, интерфейсные тексты и визуальные ассеты созданы с помощью AI. Звуковые эффекты — CC0-аудио с OpenGameArt.",
-  footerText: "© 2026 Ilya Mirin. Проект выпущен под лицензией MIT.",
 };
 
 const TR_COPY: StaticCopy = {
@@ -161,23 +120,6 @@ const TR_COPY: StaticCopy = {
   legendStormTitle: "Fırtına cephesi",
   legendStormText:
     "Her tur bir kare kayar. İçine inerseniz Collector'ı açık bir kareye savurur.",
-  rulesKicker: "Kurallar",
-  rulesTitle: "Kısaca",
-  rulesItems: [
-    "Collector, satrançtaki at gibi L şeklinde ilerler.",
-    "Aydınlık işaretler geçerli iniş karelerini gösterir.",
-    "Pilot, Sinkjaw baskısını doğrudan saha üzerinde gösterir.",
-    "Fırtına her tur bir kare kayar ve Collector'ı rastgele boş bir kareye savurur.",
-    "İlk üç hamlede Sinkjaw doğrudan Collector'ın altında beliremez.",
-    "Sinkjaw Collector'ın altında yüzeye çıkarsa sefer biter.",
-    "Son amber yatağı alındığında saha sizindir.",
-  ],
-  authorKicker: "Yazar",
-  authorCopy:
-    "Staff LLM engineer. Pratik AI sistemleri kurar, geliştirici iş akışlarını iyileştirir ve araçları kullanılır hâlde yayına alır.",
-  authorMeta:
-    "Oynanış kodu, müzik, arayüz metinleri ve görsel varlıklar yapay zekâyla üretildi. Ses efektleri OpenGameArt'tan alınan CC0 varlıklardır.",
-  footerText: "© 2026 Ilya Mirin. Proje MIT lisansı ile yayımlanmıştır.",
 };
 
 export function normalizeLocale(rawLocale?: string | null): Locale {
