@@ -9,8 +9,6 @@ export interface StaticCopy {
   ogDescription: string;
   twitterDescription: string;
   eyebrow: string;
-  heroText: string;
-  projectNote: string;
   restart: string;
   canvasLabel: string;
   stateKicker: string;
@@ -48,10 +46,6 @@ const EN_COPY: StaticCopy = {
   twitterDescription:
     "A retro-futurist desert game with AI-generated code, art, music, copy, and interface: gather amber, move like a knight, and stay clear of Sinkjaw.",
   eyebrow: "Retro-Futurist Desert Game",
-  heroText:
-    "Strip the Amber Waste clean across an 8x8 grid. The Collector moves with a knight's stride, and Sinkjaw can break surface within four tiles after every move.",
-  projectNote:
-    "AI-generated code, art, music, copy, and interface. Sound effects use CC0 audio from OpenGameArt.",
   restart: "New Run",
   canvasLabel: "Amber Dunes Harvest game board",
   stateKicker: "Status",
@@ -100,10 +94,6 @@ const RU_COPY: StaticCopy = {
   twitterDescription:
     "Ретрофутуристическая пустынная игра с AI-generated кодом, артом, музыкой, текстами и интерфейсом: собирайте amber, ходите как конь и уходите от Sinkjaw.",
   eyebrow: "Ретрофутуристическая пустынная игра",
-  heroText:
-    "Зачистите поле на сетке 8x8 в The Amber Waste. Collector ходит как конь, а Sinkjaw всплывает в радиусе четырёх клеток после каждого вашего хода.",
-  projectNote:
-    "Код, арт, музыка, тексты и интерфейс созданы с помощью AI. Звуковые эффекты CC0 — с OpenGameArt.",
   restart: "Новая экспедиция",
   canvasLabel: "Игровое поле Amber Dunes Harvest",
   stateKicker: "Статус",
@@ -152,10 +142,6 @@ const TR_COPY: StaticCopy = {
   twitterDescription:
     "Yapay zekâyla üretilmiş kod, görseller, müzik, metinler ve arayüze sahip retro-fütüristik bir çöl oyunu: amber topla, at gibi ilerle, Sinkjaw'dan kaç.",
   eyebrow: "Retro-Fütüristik Çöl Oyunu",
-  heroText:
-    "Amber Waste üzerindeki 8x8 sahayı temizleyin. Collector satrançtaki at gibi ilerler; her hamlenizin ardından Sinkjaw en fazla dört kare ötede yüzeye çıkar.",
-  projectNote:
-    "Kod, görseller, müzik, metinler ve arayüz yapay zekâyla üretildi. Ses efektleri ise OpenGameArt'tan alınan CC0 içeriklerdir.",
   restart: "Yeni Sefer",
   canvasLabel: "Amber Dunes Harvest oyun alanı",
   stateKicker: "Durum",

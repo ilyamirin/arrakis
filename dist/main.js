@@ -181,8 +181,6 @@ function applyStaticCopy(locale) {
         }
     };
     setText("#eyebrow", copy.eyebrow);
-    setText("#hero-text", copy.heroText);
-    setText("#project-note", copy.projectNote);
     setText("#restart-button", copy.restart);
     setText("#state-kicker", copy.stateKicker);
     setText("#status-title", copy.initialStatusTitle);
@@ -269,10 +267,10 @@ async function main() {
         moveSelect: { url: "./assets/audio/sfx/move-select.mp3", volume: 0.48 },
         skimmerTakeoff: { url: "./assets/audio/sfx/skimmer-takeoff.mp3", volume: 0.44 },
         amberPickup: { url: "./assets/audio/sfx/amber-pickup.mp3", volume: 0.54 },
-        stormEnter: { url: "./assets/audio/sfx/storm-enter.wav", volume: 0.38 },
+        stormEnter: { url: "./assets/audio/sfx/storm-enter.mp3", volume: 0.38 },
         sinkjawSpawn: { url: "./assets/audio/sfx/sinkjaw-spawn.mp3", volume: 0.07 },
-        sinkjawDanger: { url: "./assets/audio/sfx/sinkjaw-attack.wav", volume: 0.22 },
-        sinkjawAttack: { url: "./assets/audio/sfx/sinkjaw-attack.wav", volume: 0.52 },
+        sinkjawDanger: { url: "./assets/audio/sfx/sinkjaw-attack.mp3", volume: 0.22 },
+        sinkjawAttack: { url: "./assets/audio/sfx/sinkjaw-attack.mp3", volume: 0.52 },
         victory: { url: "./assets/audio/sfx/victory.mp3", volume: 0.56 },
     });
     const unlockMusic = () => {
