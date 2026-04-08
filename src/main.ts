@@ -262,7 +262,6 @@ function applyStaticCopy(locale: Locale): void {
   setText("#author-copy", copy.authorCopy);
   setText("#author-meta", copy.authorMeta);
   setText("#footer-text", copy.footerText);
-  setText("#footer-license", copy.footerLicense);
 
   for (const item of Array.from(document.querySelectorAll<HTMLElement>("[data-rule-index]"))) {
     const index = Number(item.dataset.ruleIndex);
@@ -305,6 +304,7 @@ async function main(): Promise<void> {
   applyStaticCopy(locale);
 
   const canvas = document.querySelector<HTMLCanvasElement>("#game-canvas");
+  const pageShell = document.querySelector<HTMLElement>(".page-shell");
   const restartButton = document.querySelector<HTMLButtonElement>("#restart-button");
   const statusTitleElement = document.querySelector<HTMLElement>("#status-title");
   const statusMessageElement = document.querySelector<HTMLElement>("#status-message");
@@ -314,6 +314,7 @@ async function main(): Promise<void> {
 
   if (
     !canvas ||
+    !pageShell ||
     !restartButton ||
     !statusTitleElement ||
     !statusMessageElement ||
@@ -344,6 +345,36 @@ async function main(): Promise<void> {
   };
   window.addEventListener("pointerdown", unlockMusic, { once: true });
   window.addEventListener("keydown", unlockMusic, { once: true });
+
+  const preventShellDefault = (event: Event): void => {
+    if (event.target instanceof Node && pageShell.contains(event.target)) {
+      event.preventDefault();
+    }
+  };
+  let isResettingShellScroll = false;
+
+  pageShell.addEventListener("contextmenu", preventShellDefault);
+  pageShell.addEventListener("dragstart", preventShellDefault);
+  pageShell.addEventListener("selectstart", preventShellDefault);
+  pageShell.addEventListener("scroll", () => {
+    if (pageShell.scrollTop === 0 || isResettingShellScroll) {
+      return;
+    }
+
+    isResettingShellScroll = true;
+    pageShell.scrollTop = 0;
+    isResettingShellScroll = false;
+  });
+  pageShell.addEventListener("touchstart", preventShellDefault, { passive: false });
+  pageShell.addEventListener("touchmove", preventShellDefault, { passive: false });
+  pageShell.addEventListener("wheel", preventShellDefault, { passive: false });
+  window.addEventListener("touchstart", preventShellDefault, { passive: false, capture: true });
+  window.addEventListener("touchmove", preventShellDefault, { passive: false, capture: true });
+  window.addEventListener("wheel", preventShellDefault, { passive: false, capture: true });
+  canvas.addEventListener("pointerdown", preventShellDefault);
+  canvas.addEventListener("touchstart", preventShellDefault, { passive: false });
+  canvas.addEventListener("touchmove", preventShellDefault, { passive: false });
+  canvas.addEventListener("wheel", preventShellDefault, { passive: false });
 
   const renderer = new CanvasRenderer(canvas, await loadAssets());
   renderer.setLocale(locale);
@@ -732,10 +763,6 @@ async function main(): Promise<void> {
   };
   restartButton.addEventListener("click", () => {
     startNewRun();
-  });
-
-  canvas.addEventListener("contextmenu", (event) => {
-    event.preventDefault();
   });
 
   canvas.addEventListener("click", (event) => {

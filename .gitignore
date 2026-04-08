@@ -9,3 +9,5 @@ marketing/screens-clean/
 marketing/screens-portrait/
 .playwright-cli/
 output/
+moderation-review/
+.yandex-build/

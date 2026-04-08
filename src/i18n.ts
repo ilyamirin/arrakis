@@ -36,7 +36,6 @@ export interface StaticCopy {
   authorCopy: string;
   authorMeta: string;
   footerText: string;
-  footerLicense: string;
 }
 
 const EN_COPY: StaticCopy = {
@@ -89,7 +88,6 @@ const EN_COPY: StaticCopy = {
   authorMeta:
     "Gameplay code, music, interface copy, and visual assets are AI-generated. Sound effects use CC0 audio from OpenGameArt.",
   footerText: "© 2026 Ilya Mirin. Released under the MIT License.",
-  footerLicense: "View license",
 };
 
 const RU_COPY: StaticCopy = {
@@ -142,7 +140,6 @@ const RU_COPY: StaticCopy = {
   authorMeta:
     "Геймплейный код, музыка, интерфейсные тексты и визуальные ассеты созданы с помощью AI. Звуковые эффекты — CC0-аудио с OpenGameArt.",
   footerText: "© 2026 Ilya Mirin. Проект выпущен под лицензией MIT.",
-  footerLicense: "Открыть лицензию",
 };
 
 const TR_COPY: StaticCopy = {
@@ -195,7 +192,6 @@ const TR_COPY: StaticCopy = {
   authorMeta:
     "Oynanış kodu, müzik, arayüz metinleri ve görsel varlıklar yapay zekâyla üretildi. Ses efektleri OpenGameArt'tan alınan CC0 varlıklardır.",
   footerText: "© 2026 Ilya Mirin. Proje MIT lisansı ile yayımlanmıştır.",
-  footerLicense: "Lisansı aç",
 };
 
 export function normalizeLocale(rawLocale?: string | null): Locale {

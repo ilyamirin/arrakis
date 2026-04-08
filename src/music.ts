@@ -1,14 +1,35 @@
-interface TrackHandle {
-  audio: HTMLAudioElement;
+interface AudioBufferHandle {
+  url: string;
+  buffer: AudioBuffer | null;
   ready: boolean;
   failed: boolean;
+  loading: Promise<void> | null;
 }
 
-interface EffectHandle {
-  audio: HTMLAudioElement;
-  ready: boolean;
-  failed: boolean;
+type AudioConfigMap = Record<string, { url: string; volume?: number }>;
+
+interface EffectHandle extends AudioBufferHandle {
   volume: number;
+}
+
+interface ActiveEffect {
+  source: AudioBufferSourceNode;
+  gain: GainNode;
+}
+
+const WebAudioCtor =
+  window.AudioContext ??
+  (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+
+let sharedContext: AudioContext | null = null;
+
+function getSharedContext(): AudioContext {
+  if (!WebAudioCtor) {
+    throw new Error("Web Audio API is unavailable in this browser.");
+  }
+
+  sharedContext ??= new WebAudioCtor();
+  return sharedContext;
 }
 
 function shuffle<T>(items: T[]): T[] {
@@ -22,101 +43,113 @@ function shuffle<T>(items: T[]): T[] {
   return copy;
 }
 
+async function loadAudioBuffer(handle: AudioBufferHandle, context: AudioContext): Promise<void> {
+  if (handle.ready || handle.failed) {
+    return;
+  }
+
+  handle.loading ??= (async () => {
+    try {
+      const response = await fetch(handle.url);
+      if (!response.ok) {
+        throw new Error(`Audio fetch failed: ${response.status}`);
+      }
+
+      const data = await response.arrayBuffer();
+      handle.buffer = await context.decodeAudioData(data.slice(0));
+      handle.ready = true;
+    } catch (error) {
+      handle.failed = true;
+      console.warn("Audio asset could not be loaded.", handle.url, error);
+    }
+  })();
+
+  await handle.loading;
+}
+
 export class GameMusicController {
-  private readonly tracks: TrackHandle[];
-  private readonly volume: number;
+  private readonly context = getSharedContext();
+  private readonly tracks: AudioBufferHandle[];
+  private readonly outputGain: GainNode;
   private isUnlocked = false;
-  private isStopped = false;
   private activeTrackIndex: number | null = null;
+  private activeSource: AudioBufferSourceNode | null = null;
+  private activeOffset = 0;
+  private activeStartedAt = 0;
   private remainingIndices: number[] = [];
 
   constructor(trackUrls: string[], volume = 0.31) {
-    this.volume = volume;
+    this.outputGain = this.context.createGain();
+    this.outputGain.gain.value = volume;
+    this.outputGain.connect(this.context.destination);
     this.tracks = trackUrls.map((url, index) => this.createTrack(url, index));
     this.refillQueue();
   }
 
   public unlock(): void {
     this.isUnlocked = true;
-    this.tryPlayNext();
+    void this.context.resume().then(() => {
+      this.tryPlayNext();
+    });
   }
 
   public pause(): void {
-    if (this.activeTrackIndex === null) {
+    if (this.activeTrackIndex === null || this.activeSource === null) {
       return;
     }
 
-    this.tracks[this.activeTrackIndex]?.audio.pause();
+    this.activeOffset = this.currentOffset();
+    this.stopActiveSource();
   }
 
   public resume(): void {
-    if (!this.isUnlocked || this.isStopped) {
+    if (!this.isUnlocked) {
       return;
     }
 
-    if (this.activeTrackIndex === null) {
-      this.tryPlayNext();
-      return;
-    }
+    void this.context.resume().then(() => {
+      if (this.activeTrackIndex === null) {
+        this.tryPlayNext();
+        return;
+      }
 
-    const activeTrack = this.tracks[this.activeTrackIndex];
-    if (!activeTrack) {
-      this.tryPlayNext();
-      return;
-    }
+      if (this.activeSource !== null) {
+        return;
+      }
 
-    void activeTrack.audio.play().catch(() => {
-      this.activeTrackIndex = null;
-      this.tryPlayNext();
+      this.startTrack(this.activeTrackIndex, this.activeOffset);
     });
   }
 
-  private createTrack(url: string, index: number): TrackHandle {
-    const audio = new Audio(url);
-    audio.preload = "auto";
-    audio.loop = false;
-    audio.volume = this.volume;
-
-    const handle: TrackHandle = {
-      audio,
-      ready: audio.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA,
+  private createTrack(url: string, index: number): AudioBufferHandle {
+    const handle: AudioBufferHandle = {
+      url,
+      buffer: null,
+      ready: false,
       failed: false,
+      loading: null,
     };
 
-    const markReady = (): void => {
-      handle.ready = true;
-      this.tryPlayNext();
-    };
-
-    const markFailed = (): void => {
-      handle.failed = true;
-      if (this.activeTrackIndex === index) {
+    void loadAudioBuffer(handle, this.context).then(() => {
+      if (!handle.failed) {
+        this.tryPlayNext();
+      } else if (this.activeTrackIndex === index) {
         this.activeTrackIndex = null;
+        this.activeOffset = 0;
+        this.tryPlayNext();
       }
-      this.tryPlayNext();
-    };
-
-    audio.addEventListener("canplay", markReady);
-    audio.addEventListener("ended", () => {
-      if (this.activeTrackIndex !== index) {
-        return;
-      }
-      this.activeTrackIndex = null;
-      this.tryPlayNext();
     });
-    audio.addEventListener("error", markFailed);
-    audio.load();
 
     return handle;
   }
 
   private refillQueue(): void {
-    const playableIndices = this.tracks
-      .map((track, index) => ({ track, index }))
-      .filter(({ track }) => !track.failed)
-      .map(({ index }) => index);
-
-    this.remainingIndices = shuffle(playableIndices);
+    this.remainingIndices = shuffle(
+      this.tracks
+        .map((track, index) => ({ track, index }))
+        .filter(({ track }) => !track.failed)
+        .map(({ index }) => index),
+    );
   }
 
   private pickNextReadyTrack(): number | null {
@@ -134,8 +167,65 @@ export class GameMusicController {
     return nextIndex;
   }
 
+  private currentOffset(): number {
+    if (this.activeTrackIndex === null) {
+      return 0;
+    }
+
+    const track = this.tracks[this.activeTrackIndex];
+    const duration = track?.buffer?.duration ?? 0;
+    if (duration <= 0) {
+      return 0;
+    }
+
+    return (this.activeOffset + (this.context.currentTime - this.activeStartedAt)) % duration;
+  }
+
+  private stopActiveSource(): void {
+    const source = this.activeSource;
+    if (!source) {
+      return;
+    }
+
+    source.onended = null;
+    source.stop();
+    source.disconnect();
+    this.activeSource = null;
+  }
+
+  private startTrack(index: number, offset = 0): void {
+    const track = this.tracks[index];
+    if (!track?.buffer || track.failed) {
+      this.activeTrackIndex = null;
+      this.activeOffset = 0;
+      this.tryPlayNext();
+      return;
+    }
+
+    const source = this.context.createBufferSource();
+    source.buffer = track.buffer;
+    source.connect(this.outputGain);
+    source.onended = () => {
+      if (this.activeSource !== source) {
+        return;
+      }
+
+      source.disconnect();
+      this.activeSource = null;
+      this.activeTrackIndex = null;
+      this.activeOffset = 0;
+      this.tryPlayNext();
+    };
+
+    this.activeTrackIndex = index;
+    this.activeOffset = offset % track.buffer.duration;
+    this.activeStartedAt = this.context.currentTime;
+    this.activeSource = source;
+    source.start(0, this.activeOffset);
+  }
+
   private tryPlayNext(): void {
-    if (this.isStopped || !this.isUnlocked || this.activeTrackIndex !== null) {
+    if (!this.isUnlocked || this.activeSource !== null) {
       return;
     }
 
@@ -144,25 +234,22 @@ export class GameMusicController {
       return;
     }
 
-    const nextTrack = this.tracks[nextIndex];
-    nextTrack.audio.currentTime = 0;
-    this.activeTrackIndex = nextIndex;
-
-    void nextTrack.audio.play().catch(() => {
-      if (this.activeTrackIndex === nextIndex) {
-        this.activeTrackIndex = null;
-      }
-    });
+    this.startTrack(nextIndex, 0);
   }
 }
 
 export class GameSfxController {
+  private readonly context = getSharedContext();
   private readonly effects: Record<string, EffectHandle>;
+  private readonly outputGain: GainNode;
   private isUnlocked = false;
   private isSuppressed = false;
-  private readonly activeEffects = new Set<HTMLAudioElement>();
+  private readonly activeEffects = new Set<ActiveEffect>();
 
-  constructor(effectUrls: Record<string, { url: string; volume?: number }>) {
+  constructor(effectUrls: AudioConfigMap) {
+    this.outputGain = this.context.createGain();
+    this.outputGain.gain.value = 1;
+    this.outputGain.connect(this.context.destination);
     this.effects = Object.fromEntries(
       Object.entries(effectUrls).map(([name, config]) => [name, this.createEffect(config.url, config.volume ?? 1)]),
     );
@@ -170,14 +257,17 @@ export class GameSfxController {
 
   public unlock(): void {
     this.isUnlocked = true;
+    void this.context.resume();
   }
 
   public pause(): void {
     this.isSuppressed = true;
 
-    for (const audio of this.activeEffects) {
-      audio.pause();
-      audio.currentTime = 0;
+    for (const effect of this.activeEffects) {
+      effect.source.onended = null;
+      effect.source.stop();
+      effect.source.disconnect();
+      effect.gain.disconnect();
     }
 
     this.activeEffects.clear();
@@ -185,6 +275,9 @@ export class GameSfxController {
 
   public resume(): void {
     this.isSuppressed = false;
+    if (this.isUnlocked) {
+      void this.context.resume();
+    }
   }
 
   public play(name: string, volumeScale = 1): void {
@@ -193,52 +286,39 @@ export class GameSfxController {
     }
 
     const effect = this.effects[name];
-    if (!effect || effect.failed) {
+    if (!effect?.buffer || effect.failed) {
       return;
     }
 
-    const audio = effect.audio.cloneNode(true) as HTMLAudioElement;
-    audio.volume = Math.max(0, Math.min(1, effect.volume * volumeScale));
-    audio.currentTime = 0;
-    this.activeEffects.add(audio);
-    audio.addEventListener(
-      "ended",
-      () => {
-        this.activeEffects.delete(audio);
-      },
-      { once: true },
-    );
-    audio.addEventListener(
-      "pause",
-      () => {
-        if (audio.currentTime === 0 || audio.ended) {
-          this.activeEffects.delete(audio);
-        }
-      },
-      { once: true },
-    );
-    void audio.play().catch(() => undefined);
+    const source = this.context.createBufferSource();
+    const gain = this.context.createGain();
+    gain.gain.value = Math.max(0, Math.min(1, effect.volume * volumeScale));
+    source.buffer = effect.buffer;
+    source.connect(gain);
+    gain.connect(this.outputGain);
+
+    const activeEffect: ActiveEffect = { source, gain };
+    this.activeEffects.add(activeEffect);
+    source.onended = () => {
+      source.disconnect();
+      gain.disconnect();
+      this.activeEffects.delete(activeEffect);
+    };
+
+    source.start();
   }
 
   private createEffect(url: string, volume: number): EffectHandle {
-    const audio = new Audio(url);
-    audio.preload = "auto";
-
     const handle: EffectHandle = {
-      audio,
-      ready: audio.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA,
+      url,
+      buffer: null,
+      ready: false,
       failed: false,
+      loading: null,
       volume,
     };
 
-    audio.addEventListener("canplay", () => {
-      handle.ready = true;
-    });
-    audio.addEventListener("error", () => {
-      handle.failed = true;
-    });
-    audio.load();
-
+    void loadAudioBuffer(handle, this.context);
     return handle;
   }
 }

@@ -39,6 +39,8 @@ body {
   min-height: 100dvh;
   font-family: var(--font-main);
   color: var(--ink);
+  overflow: clip;
+  overflow: hidden;
   overflow-x: hidden;
   background:
     radial-gradient(circle at top, rgba(243, 202, 126, 0.22), transparent 38%),
@@ -62,8 +64,17 @@ select {
 }
 
 .page-shell {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: var(--space-3);
   width: min(1320px, calc(100vw - 2rem));
   margin: 0 auto;
+  height: 100dvh;
+  overflow: clip;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
   padding:
     max(var(--space-4), env(safe-area-inset-top))
     max(0px, env(safe-area-inset-right))
@@ -76,7 +87,6 @@ select {
   grid-template-columns: minmax(0, 1.618fr) auto;
   gap: var(--space-3);
   align-items: end;
-  margin-bottom: var(--space-4);
 }
 
 .eyebrow,
@@ -185,6 +195,7 @@ select {
   grid-template-columns: minmax(0, 1.618fr) minmax(20rem, 1fr);
   gap: var(--space-3);
   align-items: start;
+  min-height: 0;
 }
 
 .board-card,
@@ -212,7 +223,13 @@ select {
 }
 
 .board-frame {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  height: 100%;
   padding: var(--space-3);
+  touch-action: none;
 }
 
 #game-canvas {
@@ -233,6 +250,9 @@ select {
 .sidebar {
   display: grid;
   gap: var(--space-3);
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
 }
 
 .panel {
@@ -387,17 +407,6 @@ select {
 
 .site-footer p {
   margin: 0;
-}
-
-.site-footer a {
-  color: var(--sand-0);
-  text-decoration: none;
-  border-bottom: 1px solid rgba(241, 201, 123, 0.3);
-  padding-bottom: 0.14rem;
-}
-
-.site-footer a:hover {
-  border-color: rgba(241, 201, 123, 0.7);
 }
 
 .status-playing {

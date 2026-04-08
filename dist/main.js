@@ -206,7 +206,6 @@ function applyStaticCopy(locale) {
     setText("#author-copy", copy.authorCopy);
     setText("#author-meta", copy.authorMeta);
     setText("#footer-text", copy.footerText);
-    setText("#footer-license", copy.footerLicense);
     for (const item of Array.from(document.querySelectorAll("[data-rule-index]"))) {
         const index = Number(item.dataset.ruleIndex);
         const rule = copy.rulesItems[index];
@@ -245,6 +244,7 @@ async function main() {
     const locale = normalizeLocale(platform.locale);
     applyStaticCopy(locale);
     const canvas = document.querySelector("#game-canvas");
+    const pageShell = document.querySelector(".page-shell");
     const restartButton = document.querySelector("#restart-button");
     const statusTitleElement = document.querySelector("#status-title");
     const statusMessageElement = document.querySelector("#status-message");
@@ -252,6 +252,7 @@ async function main() {
     const movesValueElement = document.querySelector("#moves-value");
     const positionValueElement = document.querySelector("#position-value");
     if (!canvas ||
+        !pageShell ||
         !restartButton ||
         !statusTitleElement ||
         !statusMessageElement ||
@@ -280,6 +281,33 @@ async function main() {
     };
     window.addEventListener("pointerdown", unlockMusic, { once: true });
     window.addEventListener("keydown", unlockMusic, { once: true });
+    const preventShellDefault = (event) => {
+        if (event.target instanceof Node && pageShell.contains(event.target)) {
+            event.preventDefault();
+        }
+    };
+    let isResettingShellScroll = false;
+    pageShell.addEventListener("contextmenu", preventShellDefault);
+    pageShell.addEventListener("dragstart", preventShellDefault);
+    pageShell.addEventListener("selectstart", preventShellDefault);
+    pageShell.addEventListener("scroll", () => {
+        if (pageShell.scrollTop === 0 || isResettingShellScroll) {
+            return;
+        }
+        isResettingShellScroll = true;
+        pageShell.scrollTop = 0;
+        isResettingShellScroll = false;
+    });
+    pageShell.addEventListener("touchstart", preventShellDefault, { passive: false });
+    pageShell.addEventListener("touchmove", preventShellDefault, { passive: false });
+    pageShell.addEventListener("wheel", preventShellDefault, { passive: false });
+    window.addEventListener("touchstart", preventShellDefault, { passive: false, capture: true });
+    window.addEventListener("touchmove", preventShellDefault, { passive: false, capture: true });
+    window.addEventListener("wheel", preventShellDefault, { passive: false, capture: true });
+    canvas.addEventListener("pointerdown", preventShellDefault);
+    canvas.addEventListener("touchstart", preventShellDefault, { passive: false });
+    canvas.addEventListener("touchmove", preventShellDefault, { passive: false });
+    canvas.addEventListener("wheel", preventShellDefault, { passive: false });
     const renderer = new CanvasRenderer(canvas, await loadAssets());
     renderer.setLocale(locale);
     const game = new AmberDunesGame(locale);
@@ -568,9 +596,6 @@ async function main() {
     };
     restartButton.addEventListener("click", () => {
         startNewRun();
-    });
-    canvas.addEventListener("contextmenu", (event) => {
-        event.preventDefault();
     });
     canvas.addEventListener("click", (event) => {
         if (activeFlight || isPaused || isAdShowing) {
