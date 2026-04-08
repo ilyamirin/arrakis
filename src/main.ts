@@ -349,14 +349,11 @@ async function main(): Promise<void> {
     pageShell.scrollTop = 0;
     isResettingShellScroll = false;
   });
-  pageShell.addEventListener("touchstart", preventShellDefault, { passive: false });
   pageShell.addEventListener("touchmove", preventShellDefault, { passive: false });
   pageShell.addEventListener("wheel", preventShellDefault, { passive: false });
-  window.addEventListener("touchstart", preventShellDefault, { passive: false, capture: true });
   window.addEventListener("touchmove", preventShellDefault, { passive: false, capture: true });
   window.addEventListener("wheel", preventShellDefault, { passive: false, capture: true });
   canvas.addEventListener("pointerdown", preventShellDefault);
-  canvas.addEventListener("touchstart", preventShellDefault, { passive: false });
   canvas.addEventListener("touchmove", preventShellDefault, { passive: false });
   canvas.addEventListener("wheel", preventShellDefault, { passive: false });
 
