@@ -3,7 +3,7 @@ import { gameMessageCopy, pilotLineCopy, sinkjawSightedCopy, stormDriftMessageCo
 const SINKJAW_SPAWN_RADIUS = 4;
 const SAFE_ONESHOT_TURNS = 3;
 const STORM_CLUSTER_SIZE = 3;
-const SINKJAW_ATTACK_ALPHA = 0.005252185473469883;
+const SINKJAW_ATTACK_ALPHA = 0.004989576199796389;
 const SINKJAW_ATTACK_GROWTH = 10;
 const KNIGHT_OFFSETS = [
     { x: -2, y: -1 },
