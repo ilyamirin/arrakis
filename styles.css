@@ -71,9 +71,8 @@ select {
   gap: 1rem;
   width: min(1320px, calc(100vw - 2rem));
   margin: 0 auto;
-  height: 100dvh;
-  overflow: clip;
-  overflow: hidden;
+  min-height: 100dvh;
+  overflow: visible;
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
