@@ -230,6 +230,7 @@ async function main() {
     applyStaticCopy(locale);
     const canvas = document.querySelector("#game-canvas");
     const pageShell = document.querySelector(".page-shell");
+    const projectFooter = document.querySelector("#project-footer");
     const restartButton = document.querySelector("#restart-button");
     const statusTitleElement = document.querySelector("#status-title");
     const statusMessageElement = document.querySelector("#status-message");
@@ -238,6 +239,7 @@ async function main() {
     const positionValueElement = document.querySelector("#position-value");
     if (!canvas ||
         !pageShell ||
+        !projectFooter ||
         !restartButton ||
         !statusTitleElement ||
         !statusMessageElement ||
@@ -246,6 +248,7 @@ async function main() {
         !positionValueElement) {
         throw new Error("The UI shell is incomplete.");
     }
+    projectFooter.hidden = platform.isYandexRuntime;
     const music = new GameMusicController([
         "./assets/audio/amber-field-directive.mp3",
         "./assets/audio/sand-between-signals.mp3",

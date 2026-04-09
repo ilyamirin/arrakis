@@ -67,7 +67,7 @@ select {
 
 .page-shell {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
   gap: 1rem;
   width: min(1320px, calc(100vw - 2rem));
   margin: 0 auto;
@@ -253,6 +253,30 @@ select {
   padding: var(--space-3);
   overflow: auto;
   overscroll-behavior: contain;
+}
+
+.site-footer {
+  margin-top: -0.25rem;
+  color: rgba(249, 241, 223, 0.48);
+  font-size: 0.72rem;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+  text-align: center;
+}
+
+.site-footer p {
+  margin: 0;
+}
+
+.site-footer a {
+  color: inherit;
+  text-decoration-color: rgba(249, 241, 223, 0.2);
+  text-underline-offset: 0.18em;
+}
+
+.site-footer a:hover {
+  color: rgba(249, 241, 223, 0.72);
+  text-decoration-color: rgba(249, 241, 223, 0.44);
 }
 
 @media (min-width: 1280px) and (min-height: 860px) {

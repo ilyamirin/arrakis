@@ -61,6 +61,9 @@ export class PlatformBridge {
     markReady() {
         this.ysdk?.features?.LoadingAPI?.ready();
     }
+    get isYandexRuntime() {
+        return this.ysdk !== null;
+    }
     setGameplayActive(isActive) {
         if (this.gameplayActive === isActive) {
             return;

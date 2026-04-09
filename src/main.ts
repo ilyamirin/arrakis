@@ -289,6 +289,7 @@ async function main(): Promise<void> {
 
   const canvas = document.querySelector<HTMLCanvasElement>("#game-canvas");
   const pageShell = document.querySelector<HTMLElement>(".page-shell");
+  const projectFooter = document.querySelector<HTMLElement>("#project-footer");
   const restartButton = document.querySelector<HTMLButtonElement>("#restart-button");
   const statusTitleElement = document.querySelector<HTMLElement>("#status-title");
   const statusMessageElement = document.querySelector<HTMLElement>("#status-message");
@@ -299,6 +300,7 @@ async function main(): Promise<void> {
   if (
     !canvas ||
     !pageShell ||
+    !projectFooter ||
     !restartButton ||
     !statusTitleElement ||
     !statusMessageElement ||
@@ -308,6 +310,8 @@ async function main(): Promise<void> {
   ) {
     throw new Error("The UI shell is incomplete.");
   }
+
+  projectFooter.hidden = platform.isYandexRuntime;
 
   const music = new GameMusicController([
     "./assets/audio/amber-field-directive.mp3",
@@ -323,6 +327,7 @@ async function main(): Promise<void> {
     sinkjawAttack: { url: "./assets/audio/sfx/sinkjaw-attack.mp3", volume: 0.52 },
     victory: { url: "./assets/audio/sfx/victory.mp3", volume: 0.56 },
   });
+
   const unlockMusic = (): void => {
     music.unlock();
     sfx.unlock();
