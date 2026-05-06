@@ -1,6 +1,6 @@
 # Amber Dunes Harvest
 
-Retro-futurist desert game with AI-generated code, art, music, copy, and interface. You guide a `Collector` across a `6x6` grid in `The Amber Waste`, gather all `amber`, and survive `Sinkjaw` strikes. Sound effects use CC0 assets from OpenGameArt.
+Retro-futurist desert game with AI-generated code, art, music, copy, and interface. You guide a `Collector` across an `8x8` grid in `The Amber Waste`, gather all `amber`, and survive `Sinkjaw` strikes. Sound effects use CC0 assets from OpenGameArt.
 
 ## Run locally
 
@@ -46,7 +46,7 @@ Notes:
 
 The current live rules are:
 
-- board size: `6x6`
+- board size: `8x8`
 - start deposits: `20` amber
 - win condition: collect all `20` amber
 - `Sinkjaw` threat radius: `4`
@@ -56,44 +56,47 @@ The current live rules are:
 
 - normal spawns stay in the local threat radius around the `Collector`
 - direct strikes are no longer taken from the ordinary spawn pool
-- instead, the instant-kill chance grows exponentially with move count
+- instead, the instant-kill chance stays low through move `31`, then spikes
 
 The direct strike chance is:
 
 ```text
-p(move) = 1 - exp(-0.0064 * exp((move - 4) / 10))
+p(move) = 0, if move <= 3
+p(move) = 0.004, if 4 <= move < 32
+p(move) = 0.85, if move >= 32
 ```
 
-That calibration is paired with the denser `6x6 / 20 amber` board so a route-focused heuristic player wins about half of runs, with winning runs landing in the `25-30` move band.
+That calibration keeps the `8x8 / 20 amber` board and changes only the direct `Sinkjaw` strike chance by move number. The route-focused balance target is about half of runs won, with winning runs averaging in the `25-30` move band.
 
 ### Direct strike calibration
 
-Monte Carlo check on the current direct-strike formula:
+Monte Carlo check on the current direct-strike schedule:
 
 - runs: `200000`
-- death by move `30`: `57.028%`
-- survival by move `30`: `42.972%`
+- death by move `30`: `10.248%`
+- survival by move `30`: `89.752%`
 
 Per-move direct strike chance:
 
-- move `4`: `0.64%`
-- move `10`: `1.16%`
-- move `20`: `3.12%`
-- move `30`: `8.26%`
+- move `4`: `0.40%`
+- move `10`: `0.40%`
+- move `20`: `0.40%`
+- move `30`: `0.40%`
+- move `32`: `85.00%`
 
 ### Gameplay simulations
 
-Quick heuristic runs on the current `6x6 / 20 amber` ruleset target an overall win rate near `50%`.
+Quick heuristic runs on the current `8x8 / 20 amber` ruleset target an overall win rate near `50%`.
 
 `4000` deterministic runs for the balance check:
 
 | Strategy | Collector win rate | Sinkjaw attack losses | Avg. winning moves |
 |---|---:|---:|---:|
-| `route_heuristic` | `~50%` | `~50%` | `25-30` |
+| `route_heuristic` | `51.48%` | `48.52%` | `29.71` |
 
 ### Takeaway
 
-The `Sinkjaw` attack curve remains a readable exponential ramp instead of a dirty random one-shot from the generic spawn pool. The current objective pace is tuned so a player who plans a compact route can plausibly clear all 20 deposits around half of the time before the late-run danger takes over.
+The `Sinkjaw` attack schedule now gives the player a mostly clean route-planning window, then sharply punishes runs that have not finished by the low thirties. The board size and objective stay at the original `8x8 / 20 amber`.
 
 ## License
 

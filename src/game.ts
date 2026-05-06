@@ -23,8 +23,9 @@ import {
 const SINKJAW_SPAWN_RADIUS = 4;
 const SAFE_ONESHOT_TURNS = 3;
 const STORM_CLUSTER_SIZE = 3;
-const SINKJAW_ATTACK_ALPHA = 0.0064;
-const SINKJAW_ATTACK_GROWTH = 10;
+const SINKJAW_EARLY_STRIKE_CHANCE = 0.004;
+const SINKJAW_LATE_STRIKE_TURN = 32;
+const SINKJAW_LATE_STRIKE_CHANCE = 0.85;
 
 const KNIGHT_OFFSETS: Position[] = [
   { x: -2, y: -1 },
@@ -428,8 +429,11 @@ export class AmberDunesGame {
       return 0;
     }
 
-    const exponent = (moveNumber - (SAFE_ONESHOT_TURNS + 1)) / SINKJAW_ATTACK_GROWTH;
-    return 1 - Math.exp(-SINKJAW_ATTACK_ALPHA * Math.exp(exponent));
+    if (moveNumber >= SINKJAW_LATE_STRIKE_TURN) {
+      return SINKJAW_LATE_STRIKE_CHANCE;
+    }
+
+    return SINKJAW_EARLY_STRIKE_CHANCE;
   }
 
   private computeStormDriftTargets(): Position[] {
