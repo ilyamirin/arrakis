@@ -1,5 +1,6 @@
 import {
   BOARD_SIZE,
+  AMBER_DEPOSIT_COUNT,
   CENTER_INDEX,
   TOTAL_AMBER,
   type CellState,
@@ -22,7 +23,7 @@ import {
 const SINKJAW_SPAWN_RADIUS = 4;
 const SAFE_ONESHOT_TURNS = 3;
 const STORM_CLUSTER_SIZE = 3;
-const SINKJAW_ATTACK_ALPHA = 0.004989576199796389;
+const SINKJAW_ATTACK_ALPHA = 0.0064;
 const SINKJAW_ATTACK_GROWTH = 10;
 
 const KNIGHT_OFFSETS: Position[] = [
@@ -269,7 +270,7 @@ export class AmberDunesGame {
 
     const amberCells = available.filter((cell) => !stormKeys.has(this.positionKey(cell)));
 
-    for (const cell of amberCells.slice(0, TOTAL_AMBER)) {
+    for (const cell of amberCells.slice(0, AMBER_DEPOSIT_COUNT)) {
       board[cell.y][cell.x].hasAmber = true;
     }
 

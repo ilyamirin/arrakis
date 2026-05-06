@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "balance": "npm run build && node tools/balance-check.mjs",
     "lint": "eslint src --max-warnings=0",
     "serve": "python3 server.py"
   },

@@ -47,7 +47,8 @@ Notes:
 The current live rules are:
 
 - board size: `8x8`
-- win condition: collect all `20` amber
+- start deposits: `20` amber
+- win condition: collect `18` amber
 - `Sinkjaw` threat radius: `4`
 - direct `Sinkjaw` strike unlock: after move `3`
 
@@ -60,43 +61,39 @@ The current live rules are:
 The direct strike chance is:
 
 ```text
-p(move) = 1 - exp(-0.005252185473469883 * exp((move - 4) / 10))
+p(move) = 1 - exp(-0.0064 * exp((move - 4) / 10))
 ```
 
-That calibration was chosen so that cumulative death-by-`30` from direct `Sinkjaw` strikes is about `50%`.
+That calibration is paired with 20 placed deposits and an `18 amber` objective so a route-focused heuristic player wins about half of runs, with winning runs landing in the `25-30` move band.
 
 ### Direct strike calibration
 
-Monte Carlo check on the current formula:
+Monte Carlo check on the current direct-strike formula:
 
 - runs: `200000`
-- death by move `30`: `50.141%`
-- survival by move `30`: `49.859%`
+- death by move `30`: `57.028%`
+- survival by move `30`: `42.972%`
 
 Per-move direct strike chance:
 
-- move `4`: `0.52%`
-- move `10`: `0.95%`
-- move `20`: `2.57%`
-- move `30`: `6.83%`
+- move `4`: `0.64%`
+- move `10`: `1.16%`
+- move `20`: `3.12%`
+- move `30`: `8.26%`
 
 ### Gameplay simulations
 
-Quick heuristic runs on the current `8x8 / 20 amber` ruleset still show that overall victory is much rarer than simple survival to move `30`.
+Quick heuristic runs on the current `8x8 / 20 placed amber / 18 required amber` ruleset target an overall win rate near `50%`.
 
-`3000` runs per strategy:
+`8000` deterministic runs for the balance check:
 
-| Strategy | Collector win rate | Sinkjaw attack losses | Trap losses | Avg. moves | Avg. amber |
-|---|---:|---:|---:|---:|---:|
-| `amber_hunter` | `0.10%` | `99.90%` | `0.00%` | `29.25` | `9.97 / 20` |
-| `avoid_repeats` | `5.73%` | `94.27%` | `0.00%` | `29.06` | `14.76 / 20` |
-| `lookahead_1step` | `0.20%` | `99.80%` | `0.00%` | `29.16` | `9.75 / 20` |
+| Strategy | Collector win rate | Sinkjaw attack losses | Avg. winning moves |
+|---|---:|---:|---:|
+| `route_heuristic` | `~50%` | `~50%` | `25-30` |
 
 ### Takeaway
 
-The `Sinkjaw` attack curve is now calibrated to a readable exponential ramp instead of a dirty random one-shot from the generic spawn pool. That fixes the worst fairness issue.
-
-It does **not** mean the game is now `50%` winnable by move `30`. On the current objective (`20 amber` on `8x8`), the run goal itself is still much harder than the calibrated survival target. If overall win rate needs to move toward `50%`, the next balancing lever should be the objective pace: `TOTAL_AMBER`, board size, or route pressure, not a harsher `Sinkjaw`.
+The `Sinkjaw` attack curve remains a readable exponential ramp instead of a dirty random one-shot from the generic spawn pool. The current objective pace is tuned so a player who prioritizes nearby amber can plausibly win around half of runs before the late-run danger takes over.
 
 ## License
 
