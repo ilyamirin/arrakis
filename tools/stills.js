@@ -1,8 +1,9 @@
 import { CanvasRenderer } from "../dist/renderer.js";
+import { BOARD_SIZE } from "../dist/types.js";
 
 function createBoard() {
-  return Array.from({ length: 8 }, () =>
-    Array.from({ length: 8 }, () => ({ hasAmber: false, hasStorm: false })),
+  return Array.from({ length: BOARD_SIZE }, () =>
+    Array.from({ length: BOARD_SIZE }, () => ({ hasAmber: false, hasStorm: false })),
   );
 }
 
@@ -50,44 +51,44 @@ async function loadAssets() {
 }
 
 function boardLabel(x, y) {
-  return `${String.fromCharCode(65 + x)}${8 - y}`;
+  return `${String.fromCharCode(65 + x)}${BOARD_SIZE - y}`;
 }
 
 function buildScenes() {
   const opening = createBoard();
   markCells(opening, [
-    [1, 1], [3, 1], [5, 1], [6, 2], [2, 3], [5, 3], [6, 5], [2, 6], [4, 6], [7, 6],
-    [0, 4], [1, 5], [3, 5], [5, 5], [6, 6], [1, 7], [3, 7], [5, 7], [7, 4], [7, 2],
+    [0, 0], [2, 0], [4, 0], [5, 0], [1, 1], [3, 1], [5, 1], [0, 2], [2, 2], [4, 2],
+    [1, 3], [5, 3], [2, 4], [3, 4], [5, 4], [0, 5], [2, 5], [3, 5], [4, 5], [5, 5],
   ], "hasAmber");
-  markCells(opening, [[0, 6], [1, 6], [1, 7]], "hasStorm");
+  markCells(opening, [[0, 4], [1, 4], [1, 5]], "hasStorm");
 
   const threat = createBoard();
   markCells(threat, [
-    [0, 0], [2, 0], [4, 1], [6, 0], [1, 2], [2, 2], [4, 2], [7, 2], [0, 4], [3, 4],
-    [5, 4], [6, 4], [1, 5], [3, 6], [6, 6], [0, 7], [2, 7], [4, 7], [5, 7], [7, 7],
+    [0, 0], [2, 0], [3, 0], [1, 1], [3, 1], [4, 1], [0, 2], [2, 2], [5, 2], [0, 3],
+    [2, 3], [4, 3], [5, 3], [0, 4], [3, 4], [5, 4], [0, 5], [2, 5], [3, 5], [5, 5],
   ], "hasAmber");
-  markCells(threat, [[5, 0], [6, 0], [6, 1]], "hasStorm");
+  markCells(threat, [[4, 0], [5, 0], [5, 1]], "hasStorm");
 
   const stormApproach = createBoard();
   markCells(stormApproach, [
-    [0, 1], [2, 1], [4, 1], [7, 1], [1, 2], [5, 2], [7, 3], [0, 4], [2, 4], [4, 4],
-    [6, 4], [1, 5], [5, 5], [7, 5], [0, 6], [2, 6], [4, 6], [6, 6], [1, 7], [5, 7],
+    [0, 0], [2, 0], [4, 0], [5, 0], [0, 1], [2, 1], [4, 1], [3, 5], [3, 2], [5, 2],
+    [0, 3], [4, 3], [5, 3], [0, 4], [2, 4], [4, 4], [1, 5], [2, 5], [4, 5], [5, 5],
   ], "hasAmber");
-  markCells(stormApproach, [[2, 2], [2, 3], [3, 3]], "hasStorm");
+  markCells(stormApproach, [[1, 2], [1, 3], [2, 3]], "hasStorm");
 
   const stormDrift = createBoard();
   markCells(stormDrift, [
-    [0, 0], [3, 0], [6, 0], [1, 1], [5, 1], [7, 1], [0, 3], [2, 3], [5, 3], [6, 3],
-    [1, 4], [4, 4], [7, 4], [0, 6], [3, 6], [5, 6], [1, 7], [4, 7], [6, 7], [7, 6],
+    [0, 0], [2, 0], [4, 0], [5, 0], [0, 1], [2, 1], [5, 1], [1, 2], [3, 2], [2, 2],
+    [0, 3], [2, 3], [4, 4], [0, 4], [1, 4], [3, 4], [5, 4], [1, 5], [3, 5], [5, 5],
   ], "hasAmber");
-  markCells(stormDrift, [[4, 2], [5, 2], [5, 3]], "hasStorm");
+  markCells(stormDrift, [[4, 2], [4, 3], [5, 2]], "hasStorm");
 
   const consumed = createBoard();
   markCells(consumed, [
-    [1, 0], [3, 0], [5, 0], [7, 0], [0, 2], [2, 2], [6, 2], [1, 4], [3, 4], [5, 4],
-    [7, 4], [0, 5], [2, 6], [4, 6], [6, 6], [1, 7], [3, 7], [5, 7], [7, 7], [6, 1],
+    [0, 0], [1, 0], [3, 0], [5, 0], [0, 1], [2, 1], [4, 1], [5, 1], [2, 2], [5, 2],
+    [0, 3], [2, 3], [4, 3], [1, 4], [3, 4], [5, 4], [0, 5], [2, 5], [4, 5], [5, 5],
   ], "hasAmber");
-  markCells(consumed, [[0, 1], [1, 1], [1, 2]], "hasStorm");
+  markCells(consumed, [[0, 2], [1, 2], [1, 3]], "hasStorm");
 
   return {
     opening_run: {
@@ -95,7 +96,7 @@ function buildScenes() {
       subtitle: "The first drop into the Amber Waste with every legal landing square still open.",
       badge: "Scene 01",
       footer: "A clean opening frame: no Sinkjaw on the field yet, but the first tremor read is already steering the run east.",
-      status: "Pilot: Put down at G2. Sinkjaw favors the east reach.",
+      status: "Pilot: Put down at F2. Sinkjaw favors the east reach.",
       stats: [
         ["Mode", "Fullscreen Mobile"],
         ["Focus", "First Tremor Read"],
@@ -103,17 +104,17 @@ function buildScenes() {
       ],
       state: {
         board: opening,
-        collector: { x: 4, y: 4 },
+        collector: { x: 3, y: 3 },
         sinkjaw: null,
         validMoves: [
-          moveOption({ x: 6, y: 5 }, "east", { pilotLine: "Pilot: Put down at G3. Sinkjaw favors the east reach." }),
-          moveOption({ x: 5, y: 6 }, "east"),
-          moveOption({ x: 3, y: 6 }, "encircling"),
-          moveOption({ x: 2, y: 5 }, "west"),
-          moveOption({ x: 2, y: 3 }, "west"),
-          moveOption({ x: 3, y: 2 }, "northwest"),
-          moveOption({ x: 5, y: 2 }, "north"),
-          moveOption({ x: 6, y: 3 }, "northeast"),
+          moveOption({ x: 5, y: 4 }, "east", { pilotLine: "Pilot: Put down at F2. Sinkjaw favors the east reach." }),
+          moveOption({ x: 4, y: 5 }, "east"),
+          moveOption({ x: 2, y: 5 }, "encircling"),
+          moveOption({ x: 1, y: 4 }, "west"),
+          moveOption({ x: 1, y: 2 }, "west"),
+          moveOption({ x: 2, y: 1 }, "northwest"),
+          moveOption({ x: 4, y: 1 }, "north"),
+          moveOption({ x: 5, y: 2 }, "northeast"),
         ],
         totalAmber: 20,
         collectedAmber: 0,
@@ -123,13 +124,13 @@ function buildScenes() {
         lossReason: null,
       },
       previewMove: moveOption(
-        { x: 6, y: 5 },
+        { x: 5, y: 4 },
         "east",
-        { pilotLine: "Pilot: Put down at G3. Sinkjaw favors the east reach." },
+        { pilotLine: "Pilot: Put down at F2. Sinkjaw favors the east reach." },
       ),
-      amberValue: "0 / 18",
+      amberValue: "0 / 20",
       movesValue: "0",
-      positionValue: boardLabel(4, 4),
+      positionValue: boardLabel(3, 3),
     },
     threat_east: {
       title: "Threat East",
@@ -144,17 +145,13 @@ function buildScenes() {
       ],
       state: {
         board: threat,
-        collector: { x: 2, y: 5 },
-        sinkjaw: { x: 5, y: 5 },
+        collector: { x: 1, y: 4 },
+        sinkjaw: { x: 4, y: 4 },
         validMoves: [
-          moveOption({ x: 4, y: 6 }, "east"),
-          moveOption({ x: 4, y: 4 }, "east"),
-          moveOption({ x: 3, y: 3 }, "northeast"),
-          moveOption({ x: 1, y: 3 }, "northwest"),
-          moveOption({ x: 0, y: 4 }, "west"),
-          moveOption({ x: 0, y: 6 }, "west"),
-          moveOption({ x: 1, y: 7 }, "southwest"),
-          moveOption({ x: 3, y: 7 }, "south"),
+          moveOption({ x: 3, y: 5 }, "east"),
+          moveOption({ x: 3, y: 3 }, "east"),
+          moveOption({ x: 2, y: 2 }, "northeast"),
+          moveOption({ x: 0, y: 2 }, "northwest"),
         ],
         totalAmber: 20,
         collectedAmber: 6,
@@ -163,10 +160,10 @@ function buildScenes() {
         message: "Sinkjaw sighted in sector F3.",
         lossReason: null,
       },
-      previewMove: moveOption({ x: 4, y: 4 }, "east"),
-      amberValue: "6 / 18",
+      previewMove: moveOption({ x: 3, y: 3 }, "east"),
+      amberValue: "6 / 20",
       movesValue: "7",
-      positionValue: boardLabel(2, 5),
+      positionValue: boardLabel(1, 4),
     },
     storm_front: {
       title: "Storm Front",
@@ -181,17 +178,17 @@ function buildScenes() {
       ],
       state: {
         board: stormApproach,
-        collector: { x: 4, y: 4 },
-        sinkjaw: { x: 6, y: 2 },
+        collector: { x: 3, y: 3 },
+        sinkjaw: { x: 5, y: 1 },
         validMoves: [
-          moveOption({ x: 2, y: 3 }, "obscured", { isStormLanding: true }),
-          moveOption({ x: 3, y: 2 }, "northwest"),
-          moveOption({ x: 5, y: 2 }, "north"),
-          moveOption({ x: 6, y: 3 }, "east"),
-          moveOption({ x: 6, y: 5 }, "east"),
-          moveOption({ x: 5, y: 6 }, "south"),
-          moveOption({ x: 3, y: 6 }, "southwest"),
-          moveOption({ x: 2, y: 5 }, "west"),
+          moveOption({ x: 1, y: 2 }, "obscured", { isStormLanding: true }),
+          moveOption({ x: 2, y: 1 }, "northwest"),
+          moveOption({ x: 4, y: 1 }, "north"),
+          moveOption({ x: 5, y: 2 }, "east"),
+          moveOption({ x: 5, y: 4 }, "east"),
+          moveOption({ x: 4, y: 5 }, "south"),
+          moveOption({ x: 2, y: 5 }, "southwest"),
+          moveOption({ x: 1, y: 4 }, "west"),
         ],
         totalAmber: 20,
         collectedAmber: 11,
@@ -200,17 +197,17 @@ function buildScenes() {
         message: "Sinkjaw sighted in sector G6.",
         lossReason: null,
       },
-      previewMove: moveOption({ x: 2, y: 3 }, "obscured", { isStormLanding: true }),
+      previewMove: moveOption({ x: 1, y: 2 }, "obscured", { isStormLanding: true }),
       animation: animationFrame(
-        { x: 2, y: 3 },
-        { x: 3.15, y: 3.55 },
+        { x: 1, y: 2 },
+        { x: 2.15, y: 2.55 },
         -2.32,
-        { x: 3.15, y: 3.67 },
+        { x: 2.15, y: 2.67 },
         null,
       ),
-      amberValue: "11 / 18",
+      amberValue: "11 / 20",
       movesValue: "12",
-      positionValue: `${boardLabel(4, 4)} -> ${boardLabel(2, 3)}`,
+      positionValue: `${boardLabel(3, 3)} -> ${boardLabel(1, 2)}`,
     },
     storm_drift: {
       title: "Blind Drift",
@@ -225,17 +222,15 @@ function buildScenes() {
       ],
       state: {
         board: stormDrift,
-        collector: { x: 4, y: 2 },
-        sinkjaw: { x: 6, y: 4 },
+        collector: { x: 3, y: 1 },
+        sinkjaw: { x: 5, y: 3 },
         validMoves: [
-          moveOption({ x: 6, y: 3 }, "southeast"),
-          moveOption({ x: 6, y: 1 }, "east"),
-          moveOption({ x: 5, y: 0 }, "northeast"),
-          moveOption({ x: 3, y: 0 }, "north"),
-          moveOption({ x: 2, y: 1 }, "northwest"),
-          moveOption({ x: 2, y: 3 }, "west"),
-          moveOption({ x: 3, y: 4 }, "southwest"),
-          moveOption({ x: 5, y: 4 }, "south"),
+          moveOption({ x: 5, y: 2 }, "southeast"),
+          moveOption({ x: 5, y: 0 }, "east"),
+          moveOption({ x: 1, y: 0 }, "north"),
+          moveOption({ x: 1, y: 2 }, "west"),
+          moveOption({ x: 2, y: 3 }, "southwest"),
+          moveOption({ x: 4, y: 3 }, "south"),
         ],
         totalAmber: 20,
         collectedAmber: 15,
@@ -246,15 +241,15 @@ function buildScenes() {
       },
       previewMove: null,
       animation: animationFrame(
-        { x: 6, y: 3 },
-        { x: 5.28, y: 3.42 },
+        { x: 5, y: 2 },
+        { x: 4.28, y: 2.42 },
         0.78,
-        { x: 5.28, y: 3.54 },
+        { x: 4.28, y: 2.54 },
         null,
       ),
-      amberValue: "15 / 18",
+      amberValue: "15 / 20",
       movesValue: "16",
-      positionValue: `${boardLabel(4, 2)} -> ${boardLabel(6, 3)}`,
+      positionValue: `${boardLabel(3, 1)} -> ${boardLabel(5, 2)}`,
     },
     consumed: {
       title: "Collector Consumed",
@@ -269,20 +264,20 @@ function buildScenes() {
       ],
       state: {
         board: consumed,
-        collector: { x: 4, y: 3 },
-        sinkjaw: { x: 4, y: 3 },
+        collector: { x: 3, y: 2 },
+        sinkjaw: { x: 3, y: 2 },
         validMoves: [],
         totalAmber: 20,
-        collectedAmber: 17,
+        collectedAmber: 19,
         moves: 19,
         status: "lost",
         message: "Sinkjaw broke surface beneath the Collector. The expedition is done.",
         lossReason: "sinkjaw_attack",
       },
       previewMove: null,
-      amberValue: "17 / 18",
+      amberValue: "19 / 20",
       movesValue: "19",
-      positionValue: boardLabel(4, 3),
+      positionValue: boardLabel(3, 2),
     },
   };
 }

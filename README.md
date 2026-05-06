@@ -1,6 +1,6 @@
 # Amber Dunes Harvest
 
-Retro-futurist desert game with AI-generated code, art, music, copy, and interface. You guide a `Collector` across an `8x8` grid in `The Amber Waste`, gather all `amber`, and survive `Sinkjaw` strikes. Sound effects use CC0 assets from OpenGameArt.
+Retro-futurist desert game with AI-generated code, art, music, copy, and interface. You guide a `Collector` across a `6x6` grid in `The Amber Waste`, gather all `amber`, and survive `Sinkjaw` strikes. Sound effects use CC0 assets from OpenGameArt.
 
 ## Run locally
 
@@ -46,9 +46,9 @@ Notes:
 
 The current live rules are:
 
-- board size: `8x8`
+- board size: `6x6`
 - start deposits: `20` amber
-- win condition: collect `18` amber
+- win condition: collect all `20` amber
 - `Sinkjaw` threat radius: `4`
 - direct `Sinkjaw` strike unlock: after move `3`
 
@@ -64,7 +64,7 @@ The direct strike chance is:
 p(move) = 1 - exp(-0.0064 * exp((move - 4) / 10))
 ```
 
-That calibration is paired with 20 placed deposits and an `18 amber` objective so a route-focused heuristic player wins about half of runs, with winning runs landing in the `25-30` move band.
+That calibration is paired with the denser `6x6 / 20 amber` board so a route-focused heuristic player wins about half of runs, with winning runs landing in the `25-30` move band.
 
 ### Direct strike calibration
 
@@ -83,9 +83,9 @@ Per-move direct strike chance:
 
 ### Gameplay simulations
 
-Quick heuristic runs on the current `8x8 / 20 placed amber / 18 required amber` ruleset target an overall win rate near `50%`.
+Quick heuristic runs on the current `6x6 / 20 amber` ruleset target an overall win rate near `50%`.
 
-`8000` deterministic runs for the balance check:
+`4000` deterministic runs for the balance check:
 
 | Strategy | Collector win rate | Sinkjaw attack losses | Avg. winning moves |
 |---|---:|---:|---:|
@@ -93,7 +93,7 @@ Quick heuristic runs on the current `8x8 / 20 placed amber / 18 required amber` 
 
 ### Takeaway
 
-The `Sinkjaw` attack curve remains a readable exponential ramp instead of a dirty random one-shot from the generic spawn pool. The current objective pace is tuned so a player who prioritizes nearby amber can plausibly win around half of runs before the late-run danger takes over.
+The `Sinkjaw` attack curve remains a readable exponential ramp instead of a dirty random one-shot from the generic spawn pool. The current objective pace is tuned so a player who plans a compact route can plausibly clear all 20 deposits around half of the time before the late-run danger takes over.
 
 ## License
 

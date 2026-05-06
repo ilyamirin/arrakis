@@ -33,9 +33,9 @@ const EN_COPY: StaticCopy = {
   htmlLang: "en",
   title: "Amber Dunes Harvest",
   metaDescription:
-    "Amber Dunes Harvest is a retro-futurist desert game shaped with AI-generated code, art, music, copy, and interface. Guide the Collector across an 8x8 grid in the Amber Waste, gather every amber deposit, and stay ahead of Sinkjaw.",
+    "Amber Dunes Harvest is a retro-futurist desert game shaped with AI-generated code, art, music, copy, and interface. Guide the Collector across a 6x6 grid in the Amber Waste, gather every amber deposit, and stay ahead of Sinkjaw.",
   ogDescription:
-    "A retro-futurist desert game by Ilya Mirin with AI-generated code, art, music, copy, and interface. Guide the Collector through the Amber Waste, gather amber, and outlast Sinkjaw on an 8x8 board.",
+    "A retro-futurist desert game by Ilya Mirin with AI-generated code, art, music, copy, and interface. Guide the Collector through the Amber Waste, gather amber, and outlast Sinkjaw on a 6x6 board.",
   twitterDescription:
     "A retro-futurist desert game with AI-generated code, art, music, copy, and interface: gather amber, move like a knight, and stay clear of Sinkjaw.",
   eyebrow: "Retro-Futurist Desert Game",
@@ -52,7 +52,7 @@ const EN_COPY: StaticCopy = {
   legendSinkjawTitle: "Sinkjaw",
   legendSinkjawText: "Breaks surface within four tiles and closes a square to you.",
   legendAmberTitle: "Amber",
-  legendAmberText: "To win, you must take 18 deposits.",
+  legendAmberText: "To win, clear all 20 deposits.",
   legendSkimmerTitle: "Skimmer",
   legendSkimmerText: "Carries the Collector to the legal square you choose.",
   legendStormTitle: "Storm front",
@@ -64,9 +64,9 @@ const RU_COPY: StaticCopy = {
   htmlLang: "ru",
   title: "Amber Dunes Harvest",
   metaDescription:
-    "Amber Dunes Harvest — ретрофутуристическая пустынная игра с AI-generated кодом, артом, музыкой, текстами и интерфейсом. Проведите Collector по сетке 8x8 через The Amber Waste, соберите весь amber и уклонитесь от ударов Sinkjaw.",
+    "Amber Dunes Harvest — ретрофутуристическая пустынная игра с AI-generated кодом, артом, музыкой, текстами и интерфейсом. Проведите Collector по сетке 6x6 через The Amber Waste, соберите весь amber и уклонитесь от ударов Sinkjaw.",
   ogDescription:
-    "Ретрофутуристическая пустынная игра Ильи Мирина с AI-generated кодом, артом, музыкой, текстами и интерфейсом. Проведите Collector через The Amber Waste, соберите amber и переживите удары Sinkjaw на поле 8x8.",
+    "Ретрофутуристическая пустынная игра Ильи Мирина с AI-generated кодом, артом, музыкой, текстами и интерфейсом. Проведите Collector через The Amber Waste, соберите amber и переживите удары Sinkjaw на поле 6x6.",
   twitterDescription:
     "Ретрофутуристическая пустынная игра с AI-generated кодом, артом, музыкой, текстами и интерфейсом: собирайте amber, ходите как конь и уходите от Sinkjaw.",
   eyebrow: "Ретрофутуристическая пустынная игра",
@@ -83,7 +83,7 @@ const RU_COPY: StaticCopy = {
   legendSinkjawTitle: "Sinkjaw",
   legendSinkjawText: "Всплывает в пределах четырёх клеток и закрывает квадрат.",
   legendAmberTitle: "Amber",
-  legendAmberText: "Чтобы победить, нужно собрать 18 залежей.",
+  legendAmberText: "Чтобы победить, нужно зачистить все 20 залежей.",
   legendSkimmerTitle: "Skimmer",
   legendSkimmerText: "Переносит Collector на выбранную допустимую клетку.",
   legendStormTitle: "Фронт бури",
@@ -95,9 +95,9 @@ const TR_COPY: StaticCopy = {
   htmlLang: "tr",
   title: "Amber Dunes Harvest",
   metaDescription:
-    "Amber Dunes Harvest, yapay zekâyla üretilmiş kod, görseller, müzik, metinler ve arayüzle hazırlanmış retro-fütüristik bir çöl oyunudur. Collector'ı 8x8 tahtada Amber Waste boyunca yönlendirin, amber toplayın ve Sinkjaw saldırılarından kaçının.",
+    "Amber Dunes Harvest, yapay zekâyla üretilmiş kod, görseller, müzik, metinler ve arayüzle hazırlanmış retro-fütüristik bir çöl oyunudur. Collector'ı 6x6 tahtada Amber Waste boyunca yönlendirin, amber toplayın ve Sinkjaw saldırılarından kaçının.",
   ogDescription:
-    "Ilya Mirin imzalı retro-fütüristik çöl oyunu. Yapay zekâyla üretilmiş kod, görseller, müzik, metinler ve arayüzle Amber Waste'te amber toplayın ve 8x8 tahtada Sinkjaw saldırılarından kurtulun.",
+    "Ilya Mirin imzalı retro-fütüristik çöl oyunu. Yapay zekâyla üretilmiş kod, görseller, müzik, metinler ve arayüzle Amber Waste'te amber toplayın ve 6x6 tahtada Sinkjaw saldırılarından kurtulun.",
   twitterDescription:
     "Yapay zekâyla üretilmiş kod, görseller, müzik, metinler ve arayüze sahip retro-fütüristik bir çöl oyunu: amber topla, at gibi ilerle, Sinkjaw'dan kaç.",
   eyebrow: "Retro-Fütüristik Çöl Oyunu",
@@ -114,7 +114,7 @@ const TR_COPY: StaticCopy = {
   legendSinkjawTitle: "Sinkjaw",
   legendSinkjawText: "Dört kare içinde yüzeye çıkar ve bir kareyi kapatır.",
   legendAmberTitle: "Amber",
-  legendAmberText: "Kazanmak için 18 yatak toplamalısınız.",
+  legendAmberText: "Kazanmak için 20 yatağın tamamını temizlemelisiniz.",
   legendSkimmerTitle: "Skimmer",
   legendSkimmerText: "Collector'ı seçtiğiniz geçerli kareye taşır.",
   legendStormTitle: "Fırtına cephesi",

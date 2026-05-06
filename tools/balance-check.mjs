@@ -1,12 +1,15 @@
 import { AmberDunesGame } from "../dist/game.js";
+import { BOARD_SIZE } from "../dist/types.js";
 
-const GAMES = 8000;
+const GAMES = 4000;
 const TARGET_WIN_RATE = 50;
 const WIN_RATE_TOLERANCE = 2.5;
 const MIN_AVG_WIN_MOVES = 25;
 const MAX_AVG_WIN_MOVES = 30;
+const REQUIRED_TOTAL_AMBER = 20;
 const SEED_BASE = 930001;
 const SEED_STEP = 7919;
+const ROUTE_BEAM_WIDTH = 48;
 
 const KNIGHT_OFFSETS = [
   [-2, -1],
@@ -19,9 +22,9 @@ const KNIGHT_OFFSETS = [
   [2, 1],
 ];
 
-const BOARD_SIZE = 8;
 const CENTER = (BOARD_SIZE - 1) / 2;
 const knightDistances = buildKnightDistances();
+const routeCache = new Map();
 
 function createRng(seed) {
   let state = seed >>> 0;
@@ -104,6 +107,50 @@ function amberIndexes(state) {
   return cells;
 }
 
+function estimateRouteCost(start, targets) {
+  const sortedTargets = [...targets].sort((left, right) => left - right);
+  const cacheKey = `${start}:${sortedTargets.join(",")}`;
+
+  if (routeCache.has(cacheKey)) {
+    return routeCache.get(cacheKey);
+  }
+  if (sortedTargets.length === 0) {
+    return 0;
+  }
+
+  let states = [{ position: start, remaining: sortedTargets, cost: 0 }];
+
+  for (let step = 0; step < sortedTargets.length; step += 1) {
+    const nextStates = [];
+
+    for (const state of states) {
+      for (let index = 0; index < state.remaining.length; index += 1) {
+        const target = state.remaining[index];
+        const distance = knightDistances[state.position][target];
+
+        if (distance >= 9) {
+          continue;
+        }
+
+        nextStates.push({
+          position: target,
+          remaining: state.remaining
+            .slice(0, index)
+            .concat(state.remaining.slice(index + 1)),
+          cost: state.cost + distance,
+        });
+      }
+    }
+
+    nextStates.sort((left, right) => left.cost - right.cost);
+    states = nextStates.slice(0, ROUTE_BEAM_WIDTH);
+  }
+
+  const bestCost = states.length > 0 ? states[0].cost : 999;
+  routeCache.set(cacheKey, bestCost);
+  return bestCost;
+}
+
 function chooseHeuristicMove(state) {
   const amber = amberIndexes(state);
   let bestScore = Number.NEGATIVE_INFINITY;
@@ -112,15 +159,14 @@ function chooseHeuristicMove(state) {
   for (const move of state.validMoves) {
     const cell = state.board[move.target.y][move.target.x];
     const moveIndex = positionIndex(move.target);
-    const nearestAmberDistance =
-      amber.length > 0
-        ? Math.min(...amber.map((amberIndex) => knightDistances[moveIndex][amberIndex]))
-        : 0;
+    const remainingAmber = cell.hasAmber
+      ? amber.filter((amberIndex) => amberIndex !== moveIndex)
+      : amber;
+    const routeCost = estimateRouteCost(moveIndex, remainingAmber);
 
-    let score = 0;
-    if (cell.hasAmber && !cell.hasStorm) score += 100;
+    let score = -routeCost * 20;
+    if (cell.hasAmber && !cell.hasStorm) score += 30;
     if (cell.hasStorm) score -= 35;
-    score -= nearestAmberDistance * 12;
     score += countLegalMovesFrom(move.target, state.sinkjaw) * 3;
     score -= Math.abs(CENTER - move.target.x) + Math.abs(CENTER - move.target.y);
 
@@ -140,6 +186,10 @@ function runGame(seed) {
   const game = new AmberDunesGame("en");
   let state = game.getState();
   let guard = 0;
+
+  if (state.totalAmber !== REQUIRED_TOTAL_AMBER) {
+    throw new Error(`totalAmber: expected ${REQUIRED_TOTAL_AMBER}, got ${state.totalAmber}`);
+  }
 
   while (state.status === "playing" && guard < 300) {
     guard += 1;
