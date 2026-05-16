@@ -308,13 +308,28 @@ function applySceneText(scene) {
   );
 }
 
+function createTextlessScene(scene) {
+  return {
+    ...scene,
+    state: {
+      ...scene.state,
+      status: "playing",
+      message: "",
+      lossReason: null,
+    },
+    previewMove: null,
+  };
+}
+
 async function main() {
   const params = new URLSearchParams(window.location.search);
   const sceneName = params.get("scene") ?? "opening_run";
   const isClean = params.get("layout") === "clean";
   const isPortrait = params.get("orientation") === "portrait";
+  const isTextless = params.get("textless") === "1";
   const scenes = buildScenes();
-  const scene = scenes[sceneName] ?? scenes.opening_run;
+  const baseScene = scenes[sceneName] ?? scenes.opening_run;
+  const scene = isTextless ? createTextlessScene(baseScene) : baseScene;
   const canvas = document.getElementById("scene-canvas");
   const renderer = new CanvasRenderer(canvas, await loadAssets());
 
