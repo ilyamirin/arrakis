@@ -37,14 +37,27 @@
   </head>
   <body>
     <div class="page-shell">
-      <header class="hero">
+      <header class="hero topbar">
         <div class="hero-copy">
           <p id="eyebrow" class="eyebrow">Retro-Futurist Desert Game</p>
           <h1>Amber Dunes Harvest</h1>
         </div>
-        <button id="restart-button" class="primary-button" type="button">
-          New Run
-        </button>
+        <div class="topbar-actions">
+          <button
+            id="help-button"
+            class="icon-button"
+            type="button"
+            aria-controls="help-panel"
+            aria-expanded="false"
+            aria-label="Help"
+            title="Help"
+          >
+            ?
+          </button>
+          <button id="restart-button" class="primary-button" type="button">
+            New Run
+          </button>
+        </div>
       </header>
 
       <main class="layout">
@@ -60,16 +73,6 @@
         </section>
 
         <aside class="sidebar">
-          <section class="panel status-panel">
-            <div class="panel-header">
-              <p id="state-kicker" class="panel-kicker">Current state</p>
-              <h2 id="status-title">Run Underway</h2>
-            </div>
-            <p id="status-message" class="status-message">
-              Choose one of the lit squares to move the Collector.
-            </p>
-          </section>
-
           <section class="panel metrics-panel">
             <div class="metric">
               <span id="amber-label" class="metric-label">Amber</span>
@@ -85,7 +88,28 @@
             </div>
           </section>
 
-          <section class="panel legend-panel">
+          <section class="panel status-panel">
+            <div class="panel-header">
+              <p id="state-kicker" class="panel-kicker">Current state</p>
+              <h2 id="status-title">Run Underway</h2>
+            </div>
+            <p id="status-message" class="status-message">
+              Choose one of the lit squares to move the Collector.
+            </p>
+          </section>
+        </aside>
+      </main>
+
+      <section id="help-panel" class="help-overlay" role="dialog" aria-modal="true" aria-labelledby="help-title" hidden>
+        <div class="help-dialog">
+          <header class="help-header">
+            <h2 id="help-title">Guide</h2>
+            <button id="help-close-button" class="icon-button" type="button" aria-label="Close" title="Close">
+              ×
+            </button>
+          </header>
+
+          <section class="legend-panel">
             <div class="legend-item">
               <img src="./assets/collector.svg" alt="" />
               <div>
@@ -122,9 +146,8 @@
               </div>
             </div>
           </section>
-
-        </aside>
-      </main>
+        </div>
+      </section>
 
       <footer id="project-footer" class="site-footer" hidden>
         <p>
