@@ -37,7 +37,7 @@ const SECRET_VICTORY_SEQUENCE = [
   "KeyE",
   "KeyR",
 ];
-const SAVE_KEY = "amber-dunes-harvest.run-state.v1";
+const SAVE_KEY = "amber-dunes-harvest.run-state.v2";
 
 function boardLabel(x: number, y: number): string {
   return `${String.fromCharCode(65 + x)}${BOARD_SIZE - y}`;
@@ -223,10 +223,18 @@ function applyStaticCopy(locale: Locale): void {
   document.title = copy.title;
 
   const metaDescription = document.querySelector<HTMLMetaElement>('meta[name="description"]');
+  const ogTitle = document.querySelector<HTMLMetaElement>('meta[property="og:title"]');
   const ogDescription = document.querySelector<HTMLMetaElement>('meta[property="og:description"]');
+  const ogSiteName = document.querySelector<HTMLMetaElement>('meta[property="og:site_name"]');
+  const ogImageAlt = document.querySelector<HTMLMetaElement>('meta[property="og:image:alt"]');
+  const twitterTitle = document.querySelector<HTMLMetaElement>('meta[name="twitter:title"]');
   const twitterDescription = document.querySelector<HTMLMetaElement>('meta[name="twitter:description"]');
   if (metaDescription) metaDescription.content = copy.metaDescription;
+  if (ogTitle) ogTitle.content = copy.title;
   if (ogDescription) ogDescription.content = copy.ogDescription;
+  if (ogSiteName) ogSiteName.content = copy.title;
+  if (ogImageAlt) ogImageAlt.content = copy.canvasLabel;
+  if (twitterTitle) twitterTitle.content = copy.title;
   if (twitterDescription) twitterDescription.content = copy.twitterDescription;
 
   const setText = (selector: string, value: string): void => {
@@ -237,7 +245,9 @@ function applyStaticCopy(locale: Locale): void {
   };
 
   setText("#eyebrow", copy.eyebrow);
+  setText(".hero h1", copy.title);
   setText("#restart-button", copy.restart);
+  setText("#help-title", copy.helpTitle);
   setText("#state-kicker", copy.stateKicker);
   setText("#status-title", copy.initialStatusTitle);
   setText("#status-message", copy.initialStatusMessage);
@@ -258,6 +268,38 @@ function applyStaticCopy(locale: Locale): void {
   const canvas = document.querySelector<HTMLCanvasElement>("#game-canvas");
   if (canvas) {
     canvas.setAttribute("aria-label", copy.canvasLabel);
+  }
+
+  const helpButton = document.querySelector<HTMLButtonElement>("#help-button");
+  if (helpButton) {
+    helpButton.setAttribute("aria-label", copy.helpOpen);
+    helpButton.title = copy.helpOpen;
+  }
+
+  const helpCloseButton = document.querySelector<HTMLButtonElement>("#help-close-button");
+  if (helpCloseButton) {
+    helpCloseButton.setAttribute("aria-label", copy.helpClose);
+    helpCloseButton.title = copy.helpClose;
+  }
+
+  const footer = document.querySelector<HTMLElement>("#project-footer p");
+  if (footer) {
+    footer.replaceChildren(
+      document.createTextNode(`© ${copy.footerPrefix} · `),
+      Object.assign(document.createElement("a"), {
+        href: "./LICENSE",
+        target: "_blank",
+        rel: "noreferrer",
+        textContent: "MIT",
+      }),
+      document.createTextNode(` · ${copy.footerAi} · ${copy.footerAudio} · `),
+      Object.assign(document.createElement("a"), {
+        href: "https://www.linkedin.com/in/ilyamirin/",
+        target: "_blank",
+        rel: "noreferrer",
+        textContent: "LinkedIn",
+      }),
+    );
   }
 }
 
@@ -291,6 +333,9 @@ async function main(): Promise<void> {
   const pageShell = document.querySelector<HTMLElement>(".page-shell");
   const projectFooter = document.querySelector<HTMLElement>("#project-footer");
   const restartButton = document.querySelector<HTMLButtonElement>("#restart-button");
+  const helpButton = document.querySelector<HTMLButtonElement>("#help-button");
+  const helpPanel = document.querySelector<HTMLElement>("#help-panel");
+  const helpCloseButton = document.querySelector<HTMLButtonElement>("#help-close-button");
   const statusTitleElement = document.querySelector<HTMLElement>("#status-title");
   const statusMessageElement = document.querySelector<HTMLElement>("#status-message");
   const amberValueElement = document.querySelector<HTMLElement>("#amber-value");
@@ -377,6 +422,7 @@ async function main(): Promise<void> {
         source: Position;
         target: Position;
         plan: PlannedMove;
+        pendingState: GameState;
         startedAt: number;
         duration: number;
         animationFrameId: number | null;
@@ -593,12 +639,9 @@ async function main(): Promise<void> {
       return;
     }
 
-    const planToCommit = {
-      target: { ...activeFlight.plan.target },
-      driftTarget: activeFlight.plan.driftTarget ? { ...activeFlight.plan.driftTarget } : null,
-    };
+    const pendingState = activeFlight.pendingState;
     stopFlight();
-    update(game.moveToWithPlan(planToCommit));
+    update(pendingState);
   };
 
   const playStateTransitionSfx = (previousState: GameState, nextState: GameState): void => {
@@ -651,14 +694,20 @@ async function main(): Promise<void> {
     ) {
       previewMove = null;
     }
+    const shouldShowEndAd = previousState.status === "playing" && currentState.status !== "playing";
+
     playStateTransitionSfx(previousState, currentState);
     persistRunState(game);
+
+    if (shouldShowEndAd) {
+      enterAdMode();
+    }
+
     syncGameplayState();
     renderView();
 
-    if (previousState.status === "playing" && currentState.status !== "playing") {
+    if (shouldShowEndAd) {
       void (async () => {
-        enterAdMode();
         await platform.showInterstitial();
         exitAdMode();
       })();
@@ -720,15 +769,24 @@ async function main(): Promise<void> {
       return;
     }
 
+    const source = { ...currentState.collector };
+    const nextState = game.moveToWithPlan(plan);
+
+    if (nextState.status !== "playing") {
+      previewMove = null;
+      update(nextState);
+      return;
+    }
+
     sfx.play("moveSelect");
     sfx.play("skimmerTakeoff");
 
-    const source = { ...currentState.collector };
     activeFlight = {
       phase: move.isStormLanding ? "storm-approach" : "flight",
       source,
       target: { ...move.target },
       plan,
+      pendingState: nextState,
       startedAt: performance.now(),
       duration: SKIMMER_FLIGHT_MS,
       animationFrameId: null,
@@ -858,7 +916,40 @@ async function main(): Promise<void> {
 
   const unbindPauseResume = platform.bindPauseResume(pauseGame, resumeGame);
 
+  const openHelp = (): void => {
+    if (!helpPanel || !helpButton) {
+      return;
+    }
+
+    helpPanel.hidden = false;
+    helpButton.setAttribute("aria-expanded", "true");
+    helpCloseButton?.focus();
+  };
+
+  const closeHelp = (): void => {
+    if (!helpPanel || !helpButton || helpPanel.hidden) {
+      return;
+    }
+
+    helpPanel.hidden = true;
+    helpButton.setAttribute("aria-expanded", "false");
+    helpButton.focus();
+  };
+
+  helpButton?.addEventListener("click", openHelp);
+  helpCloseButton?.addEventListener("click", closeHelp);
+  helpPanel?.addEventListener("click", (event) => {
+    if (event.target === helpPanel) {
+      closeHelp();
+    }
+  });
+
   window.addEventListener("keydown", (event) => {
+    if (event.code === "Escape" && helpPanel && !helpPanel.hidden) {
+      closeHelp();
+      return;
+    }
+
     if (
       event.repeat ||
       activeFlight ||
