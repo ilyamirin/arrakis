@@ -86,7 +86,8 @@ export class AmberDunesGame {
 
   public exportState(): SavedRunState {
     return {
-      version: 1,
+      version: 2,
+      locale: this.locale,
       board: this.board.map((row) => row.map((cell) => ({ ...cell }))),
       collector: { ...this.collector },
       sinkjaw: this.sinkjaw ? { ...this.sinkjaw } : null,
@@ -282,7 +283,7 @@ export class AmberDunesGame {
   }
 
   private isValidSavedState(savedState: SavedRunState): boolean {
-    if (savedState.version !== 1) {
+    if (savedState.version !== 2 || savedState.locale !== this.locale) {
       return false;
     }
     if (

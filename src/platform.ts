@@ -104,7 +104,8 @@ export class PlatformBridge {
       }
     }
 
-    const locale = normalizeLocale(ysdk?.environment?.i18n?.lang ?? navigator.language);
+    const queryLocale = new URLSearchParams(window.location.search).get("lang");
+    const locale = normalizeLocale(queryLocale ?? ysdk?.environment?.i18n?.lang ?? navigator.language);
     return new PlatformBridge(ysdk, locale);
   }
 

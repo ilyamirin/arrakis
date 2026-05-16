@@ -55,7 +55,8 @@ export class PlatformBridge {
                 console.warn("Yandex Games SDK is unavailable. Falling back to browser mode.", error);
             }
         }
-        const locale = normalizeLocale(ysdk?.environment?.i18n?.lang ?? navigator.language);
+        const queryLocale = new URLSearchParams(window.location.search).get("lang");
+        const locale = normalizeLocale(queryLocale ?? ysdk?.environment?.i18n?.lang ?? navigator.language);
         return new PlatformBridge(ysdk, locale);
     }
     markReady() {

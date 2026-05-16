@@ -10,6 +10,9 @@ export interface StaticCopy {
   twitterDescription: string;
   eyebrow: string;
   restart: string;
+  helpOpen: string;
+  helpTitle: string;
+  helpClose: string;
   canvasLabel: string;
   stateKicker: string;
   initialStatusTitle: string;
@@ -27,6 +30,9 @@ export interface StaticCopy {
   legendSkimmerText: string;
   legendStormTitle: string;
   legendStormText: string;
+  footerPrefix: string;
+  footerAi: string;
+  footerAudio: string;
 }
 
 const EN_COPY: StaticCopy = {
@@ -40,6 +46,9 @@ const EN_COPY: StaticCopy = {
     "A retro-futurist desert game with AI-generated code, art, music, copy, and interface: gather amber, move like a knight, and stay clear of Sinkjaw.",
   eyebrow: "Retro-Futurist Desert Game",
   restart: "New Run",
+  helpOpen: "Guide",
+  helpTitle: "Field Guide",
+  helpClose: "Close guide",
   canvasLabel: "Amber Dunes Harvest game board",
   stateKicker: "Status",
   initialStatusTitle: "Expedition underway",
@@ -58,68 +67,83 @@ const EN_COPY: StaticCopy = {
   legendStormTitle: "Storm front",
   legendStormText:
     "Drifts one square each turn. If you fly into it, the squall throws the Collector clear.",
+  footerPrefix: "Ilya G Mirin",
+  footerAi: "AI-generated project",
+  footerAudio: "CC0 sound effects",
 };
 
 const RU_COPY: StaticCopy = {
   htmlLang: "ru",
-  title: "Amber Dunes Harvest",
+  title: "Жатва Янтарных Дюн",
   metaDescription:
-    "Amber Dunes Harvest — ретрофутуристическая пустынная игра с AI-generated кодом, артом, музыкой, текстами и интерфейсом. Проведите Collector по сетке 8x8 через The Amber Waste, соберите весь amber и уклонитесь от ударов Sinkjaw.",
+    "Жатва Янтарных Дюн — ретрофутуристическая пустынная игра с кодом, артом, музыкой, текстами и интерфейсом, созданными ИИ. Проведите Собирателя по сетке 8x8 через Янтарную Пустошь, соберите весь янтарь и уйдите от Пескозева.",
   ogDescription:
-    "Ретрофутуристическая пустынная игра Ильи Мирина с AI-generated кодом, артом, музыкой, текстами и интерфейсом. Проведите Collector через The Amber Waste, соберите amber и переживите удары Sinkjaw на поле 8x8.",
+    "Ретрофутуристическая пустынная игра Ильи Мирина с кодом, артом, музыкой, текстами и интерфейсом, созданными ИИ. Проведите Собирателя через Янтарную Пустошь, соберите янтарь и переживите удары Пескозева на поле 8x8.",
   twitterDescription:
-    "Ретрофутуристическая пустынная игра с AI-generated кодом, артом, музыкой, текстами и интерфейсом: собирайте amber, ходите как конь и уходите от Sinkjaw.",
+    "Ретрофутуристическая пустынная игра с кодом, артом, музыкой, текстами и интерфейсом, созданными ИИ: собирайте янтарь, ходите как конь и уходите от Пескозева.",
   eyebrow: "Ретрофутуристическая пустынная игра",
   restart: "Новая экспедиция",
-  canvasLabel: "Игровое поле Amber Dunes Harvest",
+  helpOpen: "Справка",
+  helpTitle: "Полевой справочник",
+  helpClose: "Закрыть справочник",
+  canvasLabel: "Игровое поле Жатвы Янтарных Дюн",
   stateKicker: "Статус",
   initialStatusTitle: "Экспедиция идёт",
   initialStatusMessage: "Выберите одну из подсвеченных клеток.",
-  amberLabel: "Amber",
+  amberLabel: "Янтарь",
   movesLabel: "Ходы",
   positionLabel: "Позиция",
-  legendCollectorTitle: "Collector",
-  legendCollectorText: "Забирает amber сразу при приземлении.",
-  legendSinkjawTitle: "Sinkjaw",
+  legendCollectorTitle: "Собиратель",
+  legendCollectorText: "Забирает янтарь сразу при приземлении.",
+  legendSinkjawTitle: "Пескозев",
   legendSinkjawText: "Всплывает в пределах четырёх клеток и закрывает квадрат.",
-  legendAmberTitle: "Amber",
+  legendAmberTitle: "Янтарь",
   legendAmberText: "Чтобы победить, нужно зачистить все 20 залежей.",
-  legendSkimmerTitle: "Skimmer",
-  legendSkimmerText: "Переносит Collector на выбранную допустимую клетку.",
-  legendStormTitle: "Фронт бури",
+  legendSkimmerTitle: "Песколёт",
+  legendSkimmerText: "Переносит Собирателя на выбранную допустимую клетку.",
+  legendStormTitle: "Грозовой фронт",
   legendStormText:
-    "Сдвигается на одну клетку за ход. Если войти в бурю, шквал выбросит Collector прочь.",
+    "Сдвигается на одну клетку за ход. Если войти в бурю, шквал выбросит Собирателя прочь.",
+  footerPrefix: "Илья Г. Мирин",
+  footerAi: "проект создан ИИ",
+  footerAudio: "звуковые эффекты CC0",
 };
 
 const TR_COPY: StaticCopy = {
   htmlLang: "tr",
-  title: "Amber Dunes Harvest",
+  title: "Kehribar Kumları Hasadı",
   metaDescription:
-    "Amber Dunes Harvest, yapay zekâyla üretilmiş kod, görseller, müzik, metinler ve arayüzle hazırlanmış retro-fütüristik bir çöl oyunudur. Collector'ı 8x8 tahtada Amber Waste boyunca yönlendirin, amber toplayın ve Sinkjaw saldırılarından kaçının.",
+    "Kehribar Kumları Hasadı, yapay zekayla üretilmiş kod, görseller, müzik, metinler ve arayüzle hazırlanmış retro-fütüristik bir çöl oyunudur. Toplayıcı'yı 8x8 tahtada Kehribar Çoraklığı boyunca yönlendirin, kehribar toplayın ve Kumçene saldırılarından kaçının.",
   ogDescription:
-    "Ilya Mirin imzalı retro-fütüristik çöl oyunu. Yapay zekâyla üretilmiş kod, görseller, müzik, metinler ve arayüzle Amber Waste'te amber toplayın ve 8x8 tahtada Sinkjaw saldırılarından kurtulun.",
+    "Ilya Mirin imzalı retro-fütüristik çöl oyunu. Yapay zekayla üretilmiş kod, görseller, müzik, metinler ve arayüzle Kehribar Çoraklığı'nda kehribar toplayın ve 8x8 tahtada Kumçene saldırılarından kurtulun.",
   twitterDescription:
-    "Yapay zekâyla üretilmiş kod, görseller, müzik, metinler ve arayüze sahip retro-fütüristik bir çöl oyunu: amber topla, at gibi ilerle, Sinkjaw'dan kaç.",
+    "Yapay zekayla üretilmiş kod, görseller, müzik, metinler ve arayüze sahip retro-fütüristik bir çöl oyunu: kehribar topla, at gibi ilerle, Kumçene'den kaç.",
   eyebrow: "Retro-Fütüristik Çöl Oyunu",
   restart: "Yeni Sefer",
-  canvasLabel: "Amber Dunes Harvest oyun alanı",
+  helpOpen: "Rehber",
+  helpTitle: "Saha Rehberi",
+  helpClose: "Rehberi kapat",
+  canvasLabel: "Kehribar Kumları Hasadı oyun alanı",
   stateKicker: "Durum",
   initialStatusTitle: "Sefer sürüyor",
   initialStatusMessage: "Vurgulanan karelerden birini seçin.",
-  amberLabel: "Amber",
+  amberLabel: "Kehribar",
   movesLabel: "Hamle",
   positionLabel: "Konum",
-  legendCollectorTitle: "Collector",
-  legendCollectorText: "Konar konmaz amber'ı toplar.",
-  legendSinkjawTitle: "Sinkjaw",
+  legendCollectorTitle: "Toplayıcı",
+  legendCollectorText: "Konar konmaz kehribarı toplar.",
+  legendSinkjawTitle: "Kumçene",
   legendSinkjawText: "Dört kare içinde yüzeye çıkar ve bir kareyi kapatır.",
-  legendAmberTitle: "Amber",
+  legendAmberTitle: "Kehribar",
   legendAmberText: "Kazanmak için 20 yatağın tamamını temizlemelisiniz.",
-  legendSkimmerTitle: "Skimmer",
-  legendSkimmerText: "Collector'ı seçtiğiniz geçerli kareye taşır.",
-  legendStormTitle: "Fırtına cephesi",
+  legendSkimmerTitle: "Kumkayak",
+  legendSkimmerText: "Toplayıcı'yı seçtiğiniz geçerli kareye taşır.",
+  legendStormTitle: "Fırtına hattı",
   legendStormText:
-    "Her tur bir kare kayar. İçine inerseniz Collector'ı açık bir kareye savurur.",
+    "Her tur bir kare kayar. İçine inerseniz Toplayıcı'yı açık bir kareye savurur.",
+  footerPrefix: "Ilya G Mirin",
+  footerAi: "yapay zeka üretimli proje",
+  footerAudio: "CC0 ses efektleri",
 };
 
 export function normalizeLocale(rawLocale?: string | null): Locale {
@@ -156,8 +180,8 @@ export function statusTitleCopy(
   }
   if (status === "lost") {
     if (lossReason === "sinkjaw_attack") {
-      if (locale === "ru") return "Collector потерян";
-      if (locale === "tr") return "Collector kaybedildi";
+      if (locale === "ru") return "Собиратель потерян";
+      if (locale === "tr") return "Toplayıcı kaybedildi";
       return "Collector lost";
     }
     if (locale === "ru") return "Выхода нет";
@@ -174,8 +198,8 @@ export function flightTitleCopy(
   phase: "storm-approach" | "storm-drift" | "flight",
 ): string {
   if (phase === "storm-approach") {
-    if (locale === "ru") return "Фронт бури";
-    if (locale === "tr") return "Fırtına cephesi";
+    if (locale === "ru") return "Грозовой фронт";
+    if (locale === "tr") return "Fırtına hattı";
     return "Storm front";
   }
   if (phase === "storm-drift") {
@@ -183,8 +207,8 @@ export function flightTitleCopy(
     if (locale === "tr") return "Rüzgâr sürüklemesi";
     return "Wind shear";
   }
-  if (locale === "ru") return "Skimmer в пути";
-  if (locale === "tr") return "Skimmer yolda";
+  if (locale === "ru") return "Песколёт в пути";
+  if (locale === "tr") return "Kumkayak yolda";
   return "Skimmer inbound";
 }
 
@@ -194,17 +218,17 @@ export function flightMessageCopy(
   sector: string,
 ): string {
   if (phase === "storm-approach") {
-    if (locale === "ru") return `Skimmer входит в бурю у сектора ${sector}.`;
-    if (locale === "tr") return `Skimmer, ${sector} sektöründeki fırtınaya giriyor.`;
+    if (locale === "ru") return `Песколёт входит в бурю у сектора ${sector}.`;
+    if (locale === "tr") return `Kumkayak, ${sector} sektöründeki fırtınaya giriyor.`;
     return `The Skimmer cuts into the squall at sector ${sector}.`;
   }
   if (phase === "storm-drift") {
-    if (locale === "ru") return `Шквал тащит Skimmer к сектору ${sector}.`;
-    if (locale === "tr") return `Fırtına Skimmer'ı ${sector} sektörüne sürüklüyor.`;
+    if (locale === "ru") return `Шквал тащит Песколёт к сектору ${sector}.`;
+    if (locale === "tr") return `Fırtına Kumkayak'ı ${sector} sektörüne sürüklüyor.`;
     return `The squall catches the Skimmer and drags it toward sector ${sector}.`;
   }
-  if (locale === "ru") return `Skimmer идёт к сектору ${sector}.`;
-  if (locale === "tr") return `Skimmer ${sector} sektörüne ilerliyor.`;
+  if (locale === "ru") return `Песколёт идёт к сектору ${sector}.`;
+  if (locale === "tr") return `Kumkayak ${sector} sektörüne ilerliyor.`;
   return `The Skimmer bears the Collector toward sector ${sector}.`;
 }
 
@@ -229,24 +253,24 @@ export function gameMessageCopy(
       if (locale === "tr") return "Vurgulanan karelerden birini seçip sefere başlayın.";
       return "Choose one of the lit squares and begin the crossing.";
     case "cheat_victory":
-      if (locale === "ru") return "Скрытый сигнал прорезал пустошь. Collector выведен, линия ваша.";
-      if (locale === "tr") return "Gizli bir sinyal çölü yardı. Collector kurtuldu; amber hattı artık sizin.";
+      if (locale === "ru") return "Скрытый сигнал прорезал пустошь. Собиратель выведен, линия ваша.";
+      if (locale === "tr") return "Gizli bir sinyal çölü yardı. Toplayıcı kurtuldu; kehribar hattı artık sizin.";
       return "A hidden signal cut across the Waste. The Collector is clear, and the amber line is yours.";
     case "invalid_move":
       if (locale === "ru") return "Так ходить нельзя. Выберите одну из подсвеченных клеток.";
       if (locale === "tr") return "Bu hamle geçersiz. Vurgulanan karelerden birini seçin.";
       return "That jump will not hold. Take one of the lit squares.";
     case "storm_trapped":
-      if (locale === "ru") return "Буря сомкнулась, но выбросить Collector уже было некуда.";
-      if (locale === "tr") return "Fırtına kapandı ama Collector'ı savuracak boş kare kalmadı.";
+      if (locale === "ru") return "Буря сомкнулась, но выбросить Собирателя уже было некуда.";
+      if (locale === "tr") return "Fırtına kapandı ama Toplayıcı'yı savuracak boş kare kalmadı.";
       return "The storm closed around the Collector, but there was nowhere left to cast it.";
     case "amber_taken":
-      if (locale === "ru") return "Amber взят. Sinkjaw наверняка почувствовал дрожь.";
-      if (locale === "tr") return "Amber alındı. Sinkjaw sarsıntıyı hissetmiş olmalı.";
+      if (locale === "ru") return "Янтарь взят. Пескозев наверняка почувствовал дрожь.";
+      if (locale === "tr") return "Kehribar alındı. Kumçene sarsıntıyı hissetmiş olmalı.";
       return "Amber taken. Sinkjaw will have felt the tremor.";
     case "amber_waiting":
-      if (locale === "ru") return " Там уже лежал amber.";
-      if (locale === "tr") return " Orada zaten amber vardı.";
+      if (locale === "ru") return " Там уже лежал янтарь.";
+      if (locale === "tr") return " Orada zaten kehribar vardı.";
       return " Amber was waiting there.";
     case "empty_cell":
       if (locale === "ru") return "Пустая клетка. Держите темп.";
@@ -257,25 +281,25 @@ export function gameMessageCopy(
       if (locale === "tr") return `Sefer ${params.moves ?? 0} hamlede tamamlandı. Saha temiz.`;
       return `Expedition complete in ${params.moves ?? 0} moves. The field is stripped clean.`;
     case "no_moves":
-      if (locale === "ru") return "Ходов больше нет. Collector зажат.";
-      if (locale === "tr") return "Hamle kalmadı. Collector sıkıştı.";
+      if (locale === "ru") return "Ходов больше нет. Собиратель зажат.";
+      if (locale === "tr") return "Hamle kalmadı. Toplayıcı sıkıştı.";
       return "No jumps remain. The Collector has been boxed in.";
     case "sinkjaw_attack":
-      if (locale === "ru") return "Sinkjaw всплыл прямо под Collector. Экспедиция окончена.";
-      if (locale === "tr") return "Sinkjaw tam Collector'ın altında yüzeye çıktı. Sefer bitti.";
+      if (locale === "ru") return "Пескозев всплыл прямо под Собирателем. Экспедиция окончена.";
+      if (locale === "tr") return "Kumçene tam Toplayıcı'nın altında yüzeye çıktı. Sefer bitti.";
       return "Sinkjaw broke surface beneath the Collector. The expedition is over.";
   }
 }
 
 export function stormDriftMessageCopy(locale: Locale, sector: string): string {
-  if (locale === "ru") return `Шквал выбросил Collector в сектор ${sector}.`;
-  if (locale === "tr") return `Fırtına Collector'ı ${sector} sektörüne savurdu.`;
+  if (locale === "ru") return `Шквал выбросил Собирателя в сектор ${sector}.`;
+  if (locale === "tr") return `Fırtına Toplayıcı'yı ${sector} sektörüne savurdu.`;
   return `The squall flung the Collector clear to sector ${sector}.`;
 }
 
 export function sinkjawSightedCopy(locale: Locale, sector: string): string {
-  if (locale === "ru") return `Sinkjaw замечен в секторе ${sector}.`;
-  if (locale === "tr") return `Sinkjaw ${sector} sektöründe görüldü.`;
+  if (locale === "ru") return `Пескозев замечен в секторе ${sector}.`;
+  if (locale === "tr") return `Kumçene ${sector} sektöründe görüldü.`;
   return `Sinkjaw sighted in sector ${sector}.`;
 }
 
@@ -446,12 +470,12 @@ export function overlayTitleCopy(
     return "FIELD SECURED";
   }
   if (lossReason === "sinkjaw_attack") {
-    if (locale === "ru") return "COLLECTOR ПОТЕРЯН";
-    if (locale === "tr") return "COLLECTOR KAYIP";
+    if (locale === "ru") return "СОБИРАТЕЛЬ ПОТЕРЯН";
+    if (locale === "tr") return "TOPLAYICI KAYIP";
     return "COLLECTOR LOST";
   }
-  if (locale === "ru") return "УДАР SINKJAW";
-  if (locale === "tr") return "SINKJAW SALDIRISI";
+  if (locale === "ru") return "УДАР ПЕСКОЗЕВА";
+  if (locale === "tr") return "KUMÇENE SALDIRISI";
   return "SINKJAW STRIKE";
 }
 
@@ -462,19 +486,19 @@ export function overlayBodyCopy(
 ): string {
   if (status === "won") {
     if (locale === "ru") {
-      return "Skimmer успел вытащить Collector. Нажмите «Новая экспедиция» и выходите в поле снова.";
+      return "Песколёт успел вытащить Собирателя. Нажмите «Новая экспедиция» и выходите в поле снова.";
     }
     if (locale === "tr") {
-      return 'Skimmer, Collector\'ı son anda çekip aldı. "Yeni Sefer" ile yeniden sahaya çıkın.';
+      return 'Kumkayak, Toplayıcı\'yı son anda çekip aldı. "Yeni Sefer" ile yeniden sahaya çıkın.';
     }
     return "The Skimmer hauled the Collector clear. Press New Run and cut another line across the Amber Waste.";
   }
   if (lossReason === "sinkjaw_attack") {
     if (locale === "ru") {
-      return "Sinkjaw забрал Collector. Нажмите «Новая экспедиция» и отправьте новый экипаж.";
+      return "Пескозев забрал Собирателя. Нажмите «Новая экспедиция» и отправьте новый экипаж.";
     }
     if (locale === "tr") {
-      return 'Sinkjaw Collector\'ı aldı. "Yeni Sefer" ile yeni bir ekip gönderin.';
+      return 'Kumçene Toplayıcı\'yı aldı. "Yeni Sefer" ile yeni bir ekip gönderin.';
     }
     return "Sinkjaw took the Collector. Press New Run and send another expedition.";
   }

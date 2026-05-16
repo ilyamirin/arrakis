@@ -57,7 +57,8 @@ export interface GameState {
 }
 
 export interface SavedRunState {
-  version: 1;
+  version: 2;
+  locale: "en" | "ru" | "tr";
   board: CellState[][];
   collector: Position;
   sinkjaw: Position | null;
