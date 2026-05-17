@@ -2,10 +2,12 @@ import { AmberDunesGame } from "../dist/game.js";
 import { BOARD_SIZE } from "../dist/types.js";
 
 const GAMES = 4000;
-const TARGET_WIN_RATE = 50;
-const WIN_RATE_TOLERANCE = 2.5;
-const MIN_AVG_WIN_MOVES = 25;
-const MAX_AVG_WIN_MOVES = 30;
+const CHILD_TARGET_WIN_RATE = 50;
+const CHILD_WIN_RATE_TOLERANCE = 4;
+const MIN_CHILD_AVG_WIN_MOVES = 31;
+const MAX_CHILD_AVG_WIN_MOVES = 36;
+const MIN_OPTIMIZED_WIN_RATE = 65;
+const MAX_OPTIMIZED_WIN_RATE = 85;
 const REQUIRED_TOTAL_AMBER = 20;
 const SEED_BASE = 930001;
 const SEED_STEP = 7919;
@@ -181,7 +183,37 @@ function chooseHeuristicMove(state) {
   return bestMoves[Math.floor(Math.random() * bestMoves.length)].target;
 }
 
-function runGame(seed) {
+function nearestAmberDistance(position, amber) {
+  const start = positionIndex(position);
+  return Math.min(...amber.map((amberIndex) => knightDistances[start][amberIndex]), 9);
+}
+
+function chooseChildLikeMove(state) {
+  const amber = amberIndexes(state);
+  let bestScore = Number.NEGATIVE_INFINITY;
+  let bestMoves = [];
+
+  for (const move of state.validMoves) {
+    const cell = state.board[move.target.y][move.target.x];
+    let score = 0;
+
+    if (cell.hasAmber && !cell.hasStorm) score += 100;
+    if (cell.hasStorm) score -= 40;
+    score -= nearestAmberDistance(move.target, amber) * 18;
+    score += countLegalMovesFrom(move.target, state.sinkjaw) * 2;
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestMoves = [move];
+    } else if (score === bestScore) {
+      bestMoves.push(move);
+    }
+  }
+
+  return bestMoves[Math.floor(Math.random() * bestMoves.length)].target;
+}
+
+function runGame(seed, chooseMove) {
   Math.random = createRng(seed);
   const game = new AmberDunesGame("en");
   let state = game.getState();
@@ -193,7 +225,7 @@ function runGame(seed) {
 
   while (state.status === "playing" && guard < 300) {
     guard += 1;
-    const target = chooseHeuristicMove(state);
+    const target = chooseMove(state);
     const plan = game.planMove(target);
     state = plan ? game.moveToWithPlan(plan) : game.moveTo(target);
   }
@@ -208,43 +240,74 @@ function assertWithin(label, actual, expected, tolerance) {
   }
 }
 
-let wins = 0;
-let losses = 0;
-let winMoves = 0;
-let sinkjawLosses = 0;
+function runSuite(label, chooseMove) {
+  let wins = 0;
+  let losses = 0;
+  let winMoves = 0;
+  let lossMoves = 0;
+  let sinkjawLosses = 0;
 
-for (let index = 0; index < GAMES; index += 1) {
-  const state = runGame(SEED_BASE + index * SEED_STEP);
+  for (let index = 0; index < GAMES; index += 1) {
+    const state = runGame(SEED_BASE + index * SEED_STEP, chooseMove);
 
-  if (state.status === "won") {
-    wins += 1;
-    winMoves += state.moves;
-  } else {
-    losses += 1;
-    if (state.lossReason === "sinkjaw_attack") {
-      sinkjawLosses += 1;
+    if (state.status === "won") {
+      wins += 1;
+      winMoves += state.moves;
+    } else {
+      losses += 1;
+      lossMoves += state.moves;
+      if (state.lossReason === "sinkjaw_attack") {
+        sinkjawLosses += 1;
+      }
     }
   }
+
+  const winRate = (wins / GAMES) * 100;
+  const avgWinMoves = wins > 0 ? winMoves / wins : 0;
+  const avgLossMoves = losses > 0 ? lossMoves / losses : 0;
+
+  return {
+    label,
+    games: GAMES,
+    wins,
+    losses,
+    winRate: Number(winRate.toFixed(2)),
+    avgWinMoves: Number(avgWinMoves.toFixed(2)),
+    avgLossMoves: Number(avgLossMoves.toFixed(2)),
+    sinkjawLossRate: Number(((sinkjawLosses / GAMES) * 100).toFixed(2)),
+  };
 }
 
-const winRate = (wins / GAMES) * 100;
-const avgWinMoves = winMoves / wins;
-
+const childLikeSummary = runSuite("child_like", chooseChildLikeMove);
+const optimizedSummary = runSuite("route_optimized", chooseHeuristicMove);
 const summary = {
   games: GAMES,
-  wins,
-  losses,
-  winRate: Number(winRate.toFixed(2)),
-  avgWinMoves: Number(avgWinMoves.toFixed(2)),
-  sinkjawLossRate: Number(((sinkjawLosses / GAMES) * 100).toFixed(2)),
+  profiles: [childLikeSummary, optimizedSummary],
 };
 
 console.log(JSON.stringify(summary, null, 2));
 
-assertWithin("winRate", winRate, TARGET_WIN_RATE, WIN_RATE_TOLERANCE);
+assertWithin(
+  "child_like.winRate",
+  childLikeSummary.winRate,
+  CHILD_TARGET_WIN_RATE,
+  CHILD_WIN_RATE_TOLERANCE,
+);
 
-if (avgWinMoves < MIN_AVG_WIN_MOVES || avgWinMoves > MAX_AVG_WIN_MOVES) {
+if (
+  childLikeSummary.avgWinMoves < MIN_CHILD_AVG_WIN_MOVES ||
+  childLikeSummary.avgWinMoves > MAX_CHILD_AVG_WIN_MOVES
+) {
   throw new Error(
-    `avgWinMoves: expected ${MIN_AVG_WIN_MOVES}-${MAX_AVG_WIN_MOVES}, got ${avgWinMoves.toFixed(2)}`,
+    `child_like.avgWinMoves: expected ${MIN_CHILD_AVG_WIN_MOVES}-${MAX_CHILD_AVG_WIN_MOVES}, got ${childLikeSummary.avgWinMoves.toFixed(2)}`,
+  );
+}
+
+if (
+  optimizedSummary.winRate < MIN_OPTIMIZED_WIN_RATE ||
+  optimizedSummary.winRate > MAX_OPTIMIZED_WIN_RATE
+) {
+  throw new Error(
+    `route_optimized.winRate: expected ${MIN_OPTIMIZED_WIN_RATE}-${MAX_OPTIMIZED_WIN_RATE}, got ${optimizedSummary.winRate.toFixed(2)}`,
   );
 }
